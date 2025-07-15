@@ -1,39 +1,46 @@
 import streamlit as st
 import os
 import importlib.util
+import requests
+
+# 🟢 إرسال الاسم والقروب إلى تليجرام
+def send_to_telegram(name, group):
+    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
+    chat_id = "6283768537"
+    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    requests.post(url, data={"chat_id": chat_id, "text": msg})
+
+# 🛑 إيقاف الموقع حتى يكتب المستخدم الاسم والقروب
+if "user_logged" not in st.session_state:
+    st.header("👤 أدخل معلوماتك للبدء")
+    name = st.text_input("✍️ اسمك الكامل")
+    group = st.text_input("👥 اسم القروب")
+
+    if st.button("✅ موافق"):
+        if name.strip() == "" or group.strip() == "":
+            st.warning("يرجى ملء كل الحقول.")
+        else:
+            send_to_telegram(name, group)
+            st.session_state.user_logged = True
+            st.session_state.visitor_name = name
+            st.session_state.visitor_group = group
+            st.rerun()
+    st.stop()
+
 
 # 🗂️ أسماء مخصصة للمحاضرات
 custom_titles = {
-    "endodontics": {
-        1: "Lecture 1 name"
-    },
-    "generalmedicine": {
-        1: "Lecture 1 name"
-    },
-    "generalsurgery": {
-        1: "Lecture 1 name"
-    },
-    "operative": {
-        1: "Lecture 1 name"
-    },
-    "oralpathology": {
-        1: "Lecture 1 name"
-    },
-    "oralsurgery": {
-        1: "Lecture 1 name"
-    },
-    "orthodontics": {
-        1: "Lecture 1 name"
-    },
-    "pedodontics": {
-        1: "Lecture 1 name"
-    },
-    "periodontology": {
-        1: "Lecture 1 name"
-    },
-    "prosthodontics": {
-        1: "Lecture 1 name"
-    }
+    "endodontics": {1: "Lecture 1 name"},
+    "generalmedicine": {1: "Lecture 1 name"},
+    "generalsurgery": {1: "Lecture 1 name"},
+    "operative": {1: "Lecture 1 name"},
+    "oralpathology": {1: "Lecture 1 name"},
+    "oralsurgery": {1: "Lecture 1 name"},
+    "orthodontics": {1: "Lecture 1 name"},
+    "pedodontics": {1: "Lecture 1 name"},
+    "periodontology": {1: "Lecture 1 name"},
+    "prosthodontics": {1: "Lecture 1 name"}
 }
 
 def count_lectures(subject_name, base_path="."):
@@ -85,7 +92,6 @@ def orders_o():
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
-    # استخراج رقم المحاضرة من الاسم
     lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
