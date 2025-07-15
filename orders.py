@@ -1,8 +1,45 @@
 import streamlit as st
 import os
 import importlib.util
+import pyrebase
 
-# تعريف عناوين المحاضرات المخصصة
+# --- إعداد Firebase من secrets ---
+firebaseConfig = {
+    "apiKey": st.secrets["firebase"]["apiKey"],
+    "authDomain": st.secrets["firebase"]["authDomain"],
+    "databaseURL": st.secrets["firebase"]["databaseURL"],
+    "projectId": st.secrets["firebase"]["projectId"],
+    "storageBucket": st.secrets["firebase"]["storageBucket"],
+    "messagingSenderId": st.secrets["firebase"]["messagingSenderId"],
+    "appId": st.secrets["firebase"]["appId"]
+}
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
+
+# --- دالة تسجيل الدخول ---
+def login():
+    st.title("تسجيل الدخول")
+
+    email = st.text_input("البريد الإلكتروني")
+    password = st.text_input("كلمة المرور", type="password")
+
+    if st.button("دخول"):
+        try:
+            user = auth.sign_in_with_email_and_password(email, password)
+            st.success(f"مرحباً {email}!")
+            st.session_state['user'] = user
+            st.experimental_rerun()
+        except Exception:
+            st.error("خطأ في البريد الإلكتروني أو كلمة المرور")
+
+# --- دالة تسجيل الخروج ---
+def logout():
+    if st.button("تسجيل الخروج"):
+        st.session_state.pop('user', None)
+        st.experimental_rerun()
+
+# --- عناوين مخصصة للمحاضرات ---
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -35,25 +72,16 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
     spec.loader.exec_module(module)
     return module
 
-def normalize_answer(q):
-    answer = q.get("answer") or q.get("correct_answer")
-    options = q["options"]
-
-    if isinstance(answer, int) and 0 <= answer < len(options):
-        return options[answer]
-
-    if isinstance(answer, str):
-        answer_clean = answer.strip().upper()
-        if answer_clean in ["A", "B", "C", "D"]:
-            idx = ord(answer_clean) - ord("A")
-            if 0 <= idx < len(options):
-                return options[idx]
-        if answer in options:
-            return answer
-
-    return None
-
 def main():
+    # --- تحقق وجود المستخدم مسجل دخول ---
+    if 'user' not in st.session_state:
+        login()
+        return
+    else:
+        st.sidebar.write(f"مرحبا، {st.session_state['user']['email']}")
+        logout()
+
+    # --- الكود الأصلي لواجهة الاختبار ---
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -83,7 +111,13 @@ def main():
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
-    lecture_num = int(lecture.split()[1])
+    # استخراج رقم المحاضرة من الاسم
+    try:
+        lecture_num = int(lecture.split()[1])
+    except:
+        st.error("خطأ في تحديد رقم المحاضرة")
+        return
+
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
         st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
@@ -103,6 +137,24 @@ def main():
         st.session_state.quiz_completed = False
         st.session_state.current_lecture = lecture
         st.session_state.current_subject = subject
+
+    def normalize_answer(q):
+        answer = q.get("answer") or q.get("correct_answer")
+        options = q["options"]
+
+        if isinstance(answer, int) and 0 <= answer < len(options):
+            return options[answer]
+
+        if isinstance(answer, str):
+            answer_clean = answer.strip().upper()
+            if answer_clean in ["A", "B", "C", "D"]:
+                idx = ord(answer_clean) - ord("A")
+                if 0 <= idx < len(options):
+                    return options[idx]
+            if answer in options:
+                return answer
+
+        return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
@@ -143,7 +195,7 @@ def main():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -156,7 +208,7 @@ def main():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
+                st.rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -178,4 +230,4 @@ def main():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
+            st.rerun()
