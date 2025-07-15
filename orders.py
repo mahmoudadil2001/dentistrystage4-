@@ -6,7 +6,7 @@ from firebase_admin import credentials
 import requests
 
 # ✅ إعداد Firebase مرة واحدة فقط
-cred = credentials.Certificate("aooo.js")  # ← اسم ملف مفاتيح Firebase
+cred = credentials.Certificate("aooo.json")  # ← اسم ملف مفاتيح Firebase
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
