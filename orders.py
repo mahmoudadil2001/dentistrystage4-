@@ -5,9 +5,7 @@ import importlib.util
 # 🗂️ أسماء مخصصة للمحاضرات
 custom_titles = {
     "endodontics": {
-        1: "Lecture 1 name",
-        2: "Lecture 2 name",
-        3: "Lecture 3 killer"
+        1: "Lecture 1 name"
     },
     "generalmedicine": {
         1: "Lecture 1 name"
