@@ -185,4 +185,18 @@ def orders_o():
         st.header("🎉 تم الانتهاء من الاختبار!")
         correct = 0
         for i, q in enumerate(questions):
-            corre
+            correct_text = normalize_answer(q)
+            user = st.session_state.user_answers[i]
+            if user == correct_text:
+                correct += 1
+                st.write(f"Q{i+1}: ✅ صحيحة")
+            else:
+                st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
+        st.success(f"النتيجة: {correct} من {len(questions)}")
+
+        if st.button("🔁 أعد الاختبار"):
+            st.session_state.current_question = 0
+            st.session_state.user_answers = [None] * len(questions)
+            st.session_state.answer_shown = [False] * len(questions)
+            st.session_state.quiz_completed = False
+            st.rerun()
