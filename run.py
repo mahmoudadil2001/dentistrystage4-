@@ -1,29 +1,7 @@
-import firebase_admin
-from firebase_admin import credentials, auth
-import streamlit as st
+from orders import main
 
-# تهيئة Firebase (مرة واحدة فقط)
-if "firebase_initialized" not in st.session_state:
-    cred = credentials.Certificate("aooo.json")  # ← غيّر الاسم لو الملف عندك اسمه غير هذا
-    firebase_admin.initialize_app(cred)
-    st.session_state.firebase_initialized = True
-
-# دالة تسجيل الدخول
-def sign_in(email, password):
-    import requests
-    api_key = "AIzaSyC7fpq7eVdxt5L5Vd22GfsU1BUMJ3Wc5oU"  # ← غيّرها بـ API Key الخاص بك من Firebase
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
-    payload = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
-
+if __name__ == "__main__":
+    main()
 
 from orders import orders_o
 orders_o ()
