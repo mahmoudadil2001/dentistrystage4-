@@ -39,6 +39,8 @@ def orders_o():
     lecture_titles = {
         "endodontics": {
             1: "Lecture 1 introduction"
+        "generalsurgery": {
+            1: "Lecture 1 like"
             # يمكن إضافة باقي المحاضرات هنا
         }
     }
