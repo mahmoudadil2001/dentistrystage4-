@@ -22,7 +22,6 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
     return module
 
 def orders_o():
-    # قائمة المواد (أسماء المجلدات بدون فراغات)
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -36,6 +35,14 @@ def orders_o():
         "prosthodontics"
     ]
 
+    # عناوين مخصصة للمحاضرات
+    lecture_titles = {
+        "endodontics": {
+            1: "Lecture 1 introduction"
+            # يمكن إضافة باقي المحاضرات هنا
+        }
+    }
+
     subject = st.selectbox("اختر المادة", subjects)
 
     total_lectures = count_lectures(subject)
@@ -43,9 +50,16 @@ def orders_o():
         st.error(f"⚠️ لا يوجد ملفات محاضرات للمادة {subject}!")
         return
 
-    lectures = [f"Lecture {i}" for i in range(1, total_lectures + 1)]
+    lectures = []
+    for i in range(1, total_lectures + 1):
+        if subject in lecture_titles and i in lecture_titles[subject]:
+            lectures.append(lecture_titles[subject][i])
+        else:
+            lectures.append(f"Lecture {i}")
+
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
+    # استخراج رقم المحاضرة من النص
     lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
