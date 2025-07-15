@@ -11,7 +11,7 @@ if "firebase_initialized" not in st.session_state:
 # دالة تسجيل الدخول
 def sign_in(email, password):
     import requests
-    api_key = "YOUR_FIREBASE_API_KEY"  # ← غيّرها بـ API Key الخاص بك من Firebase
+    api_key = "AIzaSyC7fpq7eVdxt5L5Vd22GfsU1BUMJ3Wc5oU"  # ← غيّرها بـ API Key الخاص بك من Firebase
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
     payload = {
         "email": email,
