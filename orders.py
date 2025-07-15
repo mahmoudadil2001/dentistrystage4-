@@ -3,6 +3,7 @@ import os
 import importlib.util
 import requests
 
+# 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
@@ -10,6 +11,7 @@ def send_to_telegram(name, group):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
 
+# 🛑 إيقاف الموقع حتى يكتب المستخدم الاسم والقروب
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
     name = st.text_input("✍️ اسمك الكامل")
@@ -26,6 +28,8 @@ if "user_logged" not in st.session_state:
             st.rerun()
     st.stop()
 
+
+# 🗂️ أسماء مخصصة للمحاضرات
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -128,13 +132,6 @@ def orders_o():
         return None
 
     with st.sidebar:
-        # ✅ شعار Dr.Cube في الشريط الجانبي
-        st.markdown("""
-            <div style="text-align:center; margin-bottom:10px;">
-                <span style="font-weight:bold; color:#2ecc71; font-size:20px;">🔷 Dr.Cube</span>
-            </div>
-        """, unsafe_allow_html=True)
-
         st.markdown(f"### 🧪 {subject.upper()}")
 
         for i in range(len(questions)):
