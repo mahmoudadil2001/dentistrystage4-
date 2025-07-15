@@ -6,7 +6,8 @@ import importlib.util
 custom_titles = {
     "endodontics": {
         1: "Lecture 1 name",
-        2: "Lecture 2 name"
+        2: "Lecture 2 name",
+        3: "Lecture 3 killer"
     },
     "generalmedicine": {
         1: "Lecture 1 name"
