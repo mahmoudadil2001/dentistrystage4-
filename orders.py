@@ -1,9 +1,3 @@
-def send_to_telegram(name, group):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": msg})
 import streamlit as st
 import os
 import importlib.util
