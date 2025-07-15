@@ -5,30 +5,30 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
 
-# قراءة بيانات Firebase من secrets
-firebase_info = st.secrets["firebase"]
+# نسخ بيانات Firebase من secrets لتعديل المفتاح الخاص
+firebase_info = dict(st.secrets["firebase"])
 
-# استبدال "\\n" بأسطر جديدة فعلية في المفتاح الخاص
+# استبدال نص '\\n' بأسطر جديدة فعلية في المفتاح الخاص
 firebase_info['private_key'] = firebase_info['private_key'].replace('\\n', '\n')
 
-# تحويل كل القيم إلى نصوص لضمان تسلسل JSON صحيح
+# تحويل كل القيم لنصوص لضمان تخزين JSON صحيح
 firebase_info_str = {k: str(v) for k, v in firebase_info.items()}
 
-# كتابة بيانات JSON مؤقتة
+# إنشاء ملف JSON مؤقت باسم ثابت (سيُعاد إنشاؤه في كل تشغيل)
 with open("temp_firebase_key.json", "w") as f:
     json.dump(firebase_info_str, f)
 
-# إنشاء بيانات الاعتماد
+# إنشاء بيانات الاعتماد باستخدام الملف المؤقت
 cred = credentials.Certificate("temp_firebase_key.json")
 
-# تهيئة Firebase إذا لم يكن مهيأ
+# تهيئة Firebase إذا لم يتم تهيئته سابقًا
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
-# جلب API Key (لو تحتاج تستخدمه لاحقاً)
+# جلب API Key من secrets (لو تحتاجه)
 firebase_api_key = st.secrets["firebase_api"]["api_key"]
 
-# === كود التطبيق ===
+# ===== كود التطبيق الخاص بك =====
 
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
