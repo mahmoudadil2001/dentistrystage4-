@@ -35,16 +35,8 @@ def orders_o():
         "prosthodontics"
     ]
 
-    # عناوين مخصصة للمحاضرات
-    lecture_titles = {
-        "endodontics": {
-            1: "Lecture 1 introduction",
-            2: "Lecture 2 names"
-        },
-        "oralsurgery": {
-            1: "Lecture 1 introduction"
-        }
-    }
+    # تعيين "Lecture 1 name" لجميع المواد
+    lecture_titles = {subject: {1: "Lecture 1 name"} for subject in subjects}
 
     subject = st.selectbox("اختر المادة", subjects)
 
@@ -62,7 +54,6 @@ def orders_o():
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
-    # استخراج رقم المحاضرة من النص
     lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
