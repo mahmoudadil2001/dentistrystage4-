@@ -36,15 +36,15 @@ def orders_o():
     ]
 
     # عناوين مخصصة للمحاضرات
-   # عناوين مخصصة للمحاضرات
-lecture_titles = {
-    "endodontics": {
-        1: "Lecture 1 introduction"
-    },
-    "oralsurgery": {
-        1: "Lecture 1 introduction"
+    lecture_titles = {
+        "endodontics": {
+            1: "Lecture 1 introduction",
+            2: "Lecture 2 names"
+        },
+        "oralsurgery": {
+            1: "Lecture 1 introduction"
+        }
     }
-}
 
     subject = st.selectbox("اختر المادة", subjects)
 
