@@ -1,5 +1,5 @@
 import streamlit as st
-from orders import orders_o, send_to_telegram
+from orders import orders_o, send_to_telegram, show_online_users
 
 # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
 if "user_logged" not in st.session_state:
@@ -17,6 +17,9 @@ if "user_logged" not in st.session_state:
             st.session_state.visitor_group = group
             st.rerun()
     st.stop()  # لا تكمل تشغيل الموقع
+
+# ✅ عرض عدد المتصلين
+show_online_users()
 
 # ✅ بعد تسجيل الاسم، نعرض ترحيب
 st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
