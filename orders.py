@@ -12,7 +12,7 @@ if not firebase_admin._apps:
 
 # ✅ دالة تسجيل الدخول
 def sign_in(email, password):
-    api_key = "YOUR_FIREBASE_API_KEY"  # ← غيّره بمفتاح Web API Key من Firebase
+    api_key = "AIzaSyC7fpq7eVdxt5L5Vd22GfsU1BUMJ3Wc5oU"  # ← غيّره بمفتاح Web API Key من Firebase
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
     payload = {
         "email": email,
