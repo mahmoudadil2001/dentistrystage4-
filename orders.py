@@ -1,30 +1,63 @@
 import streamlit as st
-import importlib
+import os
+import importlib.util
+
+def count_lectures(subject_name, base_path="."):
+    subject_path = os.path.join(base_path, subject_name)
+    if not os.path.exists(subject_path):
+        return 0
+    files = [f for f in os.listdir(subject_path) if f.startswith(subject_name) and f.endswith(".py")]
+    return len(files)
+
+def import_module_from_folder(subject_name, lecture_num, base_path="."):
+    subject_path = os.path.join(base_path, subject_name)
+    module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}.py")
+
+    if not os.path.exists(module_file):
+        return None
+
+    spec = importlib.util.spec_from_file_location(f"{subject_name}{lecture_num}", module_file)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 def orders_o():
-    # إعداد قائمة المحاضرات تلقائيًا من 1 إلى 15
-    lectures = [f"Lecture {i}" for i in range(1, 16)]
+    # قائمة المواد (أسماء المجلدات بدون فراغات)
+    subjects = [
+        "endodontics",
+        "generalmedicine",
+        "generalsurgery",
+        "operative",
+        "oralpathology",
+        "oralsurgery",
+        "orthodontics",
+        "pedodontics",
+        "periodontology",
+        "prosthodontics"
+    ]
 
-    lecture = st.selectbox("اختر المحاضرة", lectures)
+    subject = st.selectbox("اختر المادة", subjects)
 
-    # استخراج رقم المحاضرة من النص "Lecture X"
-    lecture_num = int(lecture.split()[1])
-    module_name = f"mcqs{lecture_num}"
-
-    try:
-        questions_module = importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        st.error(f"ملف الأسئلة للمحاضرة {lecture} غير موجود!")
+    total_lectures = count_lectures(subject)
+    if total_lectures == 0:
+        st.error(f"⚠️ لا يوجد ملفات محاضرات للمادة {subject}!")
         return
 
-    question_prefix = f"Q{lecture_num}"
+    lectures = [f"Lecture {i}" for i in range(1, total_lectures + 1)]
+    lecture = st.selectbox("اختر المحاضرة", lectures)
+
+    lecture_num = int(lecture.split()[1])
+    questions_module = import_module_from_folder(subject, lecture_num)
+    if questions_module is None:
+        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
+        return
 
     questions = questions_module.questions
 
-    # إعادة تهيئة session_state عند تغيير عدد الأسئلة أو المحاضرة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture", None) != lecture):
+       (st.session_state.get("current_lecture", None) != lecture) or \
+       (st.session_state.get("current_subject", None) != subject):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -32,6 +65,7 @@ def orders_o():
         st.session_state.answer_shown = [False] * len(questions)
         st.session_state.quiz_completed = False
         st.session_state.current_lecture = lecture
+        st.session_state.current_subject = subject
 
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
@@ -52,15 +86,7 @@ def orders_o():
         return None
 
     with st.sidebar:
-        st.markdown("""
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-          <h3>🧭 الأسئلة وإجاباتها</h3>
-          <a href="https://t.me/IO_620" target="_blank"
-             style="background:#0088cc; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" style="width:24px; height:24px;">
-          </a>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"### 🧪 {subject.upper()}")
 
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
@@ -79,7 +105,9 @@ def orders_o():
         q = questions[index]
         correct_text = normalize_answer(q)
 
-        st.markdown(f"### {question_prefix}/{index + 1}: {q['question']}")
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
@@ -124,9 +152,9 @@ def orders_o():
                 st.write(f"Q{i+1}: ✅ صحيحة")
             else:
                 st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
-        st.success(f"أجبت إجابة صحيحة على {correct} من أصل {len(questions)}")
+        st.success(f"النتيجة: {correct} من {len(questions)}")
 
-        if st.button("🔄 أعد الاختبار"):
+        if st.button("🔁 أعد الاختبار"):
             st.session_state.current_question = 0
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
