@@ -8,12 +8,15 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 # ✅ إعداد Firebase (مرة واحدة)
-if "firebase_initialized" not in st.session_state:
-    cred = credentials.Certificate("firebase_config.json")  # تأكد أن الملف هذا موجود في مجلد المشروع
+import firebase_admin
+from firebase_admin import credentials, db
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate("firebase_config.json")
     firebase_admin.initialize_app(cred, {
         "databaseURL": "https://nothing-ddb83-default-rtdb.firebaseio.com/"
     })
-    st.session_state.firebase_initialized = True
+
 
 # دالة عرض عدد المستخدمين المتصلين حالياً
 def show_online_users():
