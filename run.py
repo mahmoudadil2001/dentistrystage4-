@@ -4,8 +4,8 @@ from orders import orders_o, send_to_telegram
 # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
-    name = st.text_input("✍️ اسمك؟")
-    group = st.text_input("👥 يا كروب؟")
+    name = st.text_input("✍️ اسمك؟ ")
+    group = st.text_input("👥 كروبك؟")
 
     if st.button("✅ موافق"):
         if name.strip() == "" or group.strip() == "":
@@ -17,6 +17,9 @@ if "user_logged" not in st.session_state:
             st.session_state.visitor_group = group
             st.rerun()
     st.stop()  # لا تكمل تشغيل الموقع
+
+# ✅ بعد تسجيل الاسم، نعرض ترحيب
+st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
 # ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
 orders_o()
