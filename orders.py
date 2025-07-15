@@ -5,15 +5,14 @@ import firebase_admin
 from firebase_admin import credentials
 import requests
 
-# ✅ إعداد Firebase
-if "firebase_initialized" not in st.session_state:
-    cred = credentials.Certificate("aooo.json")  # ← غيّر الاسم إذا مختلف
+# ✅ إعداد Firebase مرة واحدة فقط
+cred = credentials.Certificate("aooo.js")  # ← اسم ملف مفاتيح Firebase
+if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
-    st.session_state.firebase_initialized = True
 
 # ✅ دالة تسجيل الدخول
 def sign_in(email, password):
-    api_key = "AIzaSyC7fpq7eVdxt5L5Vd22GfsU1BUMJ3Wc5oU"  # ← غيّرها بمفتاح الـ API الخاص بك من Firebase
+    api_key = "YOUR_FIREBASE_API_KEY"  # ← غيّره بمفتاح Web API Key من Firebase
     url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
     payload = {
         "email": email,
@@ -26,7 +25,7 @@ def sign_in(email, password):
     else:
         return None
 
-# ✅ تسجيل الدخول قبل عرض المحاضرات
+# ✅ دالة رئيسية
 def main():
     if "user" not in st.session_state:
         st.title("🔐 تسجيل الدخول")
@@ -47,9 +46,9 @@ def main():
             del st.session_state.user
             st.experimental_rerun()
 
-        orders_o()
+        orders_o()  # ← يبدأ عرض الأسئلة بعد تسجيل الدخول فقط
 
-# 🗂️ أسماء مخصصة للمحاضرات
+# باقي كود عرض الأسئلة (بدون تغيير جوهري)
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -82,16 +81,9 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
 
 def orders_o():
     subjects = [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
+        "endodontics", "generalmedicine", "generalsurgery", "operative",
+        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
+        "periodontology", "prosthodontics"
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
@@ -112,7 +104,7 @@ def orders_o():
     lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
-        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
+        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود.")
         return
 
     questions = questions_module.questions
@@ -150,21 +142,14 @@ def orders_o():
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
+            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Q{index+1}/{len(questions)}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
@@ -211,7 +196,3 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.rerun()
-
-# ✅ تشغيل البرنامج
-if __name__ == "__main__":
-    main()
