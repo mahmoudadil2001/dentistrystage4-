@@ -7,7 +7,7 @@ import requests
 
 # ✅ إعداد Firebase
 if "firebase_initialized" not in st.session_state:
-    cred = credentials.Certificate("firebase-key.json")  # ← غيّر الاسم إذا مختلف
+    cred = credentials.Certificate("aooo.json")  # ← غيّر الاسم إذا مختلف
     firebase_admin.initialize_app(cred)
     st.session_state.firebase_initialized = True
 
