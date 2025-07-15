@@ -2,6 +2,41 @@ import streamlit as st
 import os
 import importlib.util
 
+# 🗂️ أسماء مخصصة للمحاضرات
+custom_titles = {
+    "endodontics": {
+        1: "Lecture 1 name",
+        2: "Lecture 2 name"
+    },
+    "generalmedicine": {
+        1: "Lecture 1 name"
+    },
+    "generalsurgery": {
+        1: "Lecture 1 name"
+    },
+    "operative": {
+        1: "Lecture 1 name"
+    },
+    "oralpathology": {
+        1: "Lecture 1 name"
+    },
+    "oralsurgery": {
+        1: "Lecture 1 name"
+    },
+    "orthodontics": {
+        1: "Lecture 1 name"
+    },
+    "pedodontics": {
+        1: "Lecture 1 name"
+    },
+    "periodontology": {
+        1: "Lecture 1 name"
+    },
+    "prosthodontics": {
+        1: "Lecture 1 name"
+    }
+}
+
 def count_lectures(subject_name, base_path="."):
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
@@ -35,9 +70,6 @@ def orders_o():
         "prosthodontics"
     ]
 
-    # تعيين "Lecture 1 name" لجميع المواد
-    lecture_titles = {subject: {1: "Lecture 1 name"} for subject in subjects}
-
     subject = st.selectbox("اختر المادة", subjects)
 
     total_lectures = count_lectures(subject)
@@ -47,13 +79,14 @@ def orders_o():
 
     lectures = []
     for i in range(1, total_lectures + 1):
-        if subject in lecture_titles and i in lecture_titles[subject]:
-            lectures.append(lecture_titles[subject][i])
+        if subject in custom_titles and i in custom_titles[subject]:
+            lectures.append(custom_titles[subject][i])
         else:
             lectures.append(f"Lecture {i}")
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
+    # استخراج رقم المحاضرة من الاسم
     lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
@@ -153,18 +186,4 @@ def orders_o():
         st.header("🎉 تم الانتهاء من الاختبار!")
         correct = 0
         for i, q in enumerate(questions):
-            correct_text = normalize_answer(q)
-            user = st.session_state.user_answers[i]
-            if user == correct_text:
-                correct += 1
-                st.write(f"Q{i+1}: ✅ صحيحة")
-            else:
-                st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
-        st.success(f"النتيجة: {correct} من {len(questions)}")
-
-        if st.button("🔁 أعد الاختبار"):
-            st.session_state.current_question = 0
-            st.session_state.user_answers = [None] * len(questions)
-            st.session_state.answer_shown = [False] * len(questions)
-            st.session_state.quiz_completed = False
-            st.rerun()
+            corre
