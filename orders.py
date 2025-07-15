@@ -8,14 +8,14 @@ from firebase_admin import credentials
 # === تهيئة Firebase باستخدام بيانات من Secrets ===
 firebase_info = st.secrets["firebase"]
 
-# حفظ بيانات Firebase في ملف JSON مؤقت
-with open("temp_firebase_key.json", "w") as f:
-    json.dump(firebase_info, f)
+# تحويل القيم كلها إلى نصوص لتجنب مشاكل التسلسل
+firebase_info_str = {k: str(v) for k, v in firebase_info.items()}
 
-# إنشاء بيانات الاعتماد
+with open("temp_firebase_key.json", "w") as f:
+    json.dump(firebase_info_str, f)
+
 cred = credentials.Certificate("temp_firebase_key.json")
 
-# تهيئة Firebase إذا لم يكن مهيأ من قبل
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
