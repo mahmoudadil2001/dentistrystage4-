@@ -2,3 +2,4 @@ streamlit
 streamlit-cookies-manager
 requests
 firebase-admin
+pyrebase4
