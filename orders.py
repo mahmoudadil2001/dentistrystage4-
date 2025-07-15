@@ -1,54 +1,29 @@
-import streamlit as st
 import os
 import importlib.util
+import json
+import streamlit as st
 import firebase_admin
 from firebase_admin import credentials
-import requests
 
-# ✅ إعداد Firebase مرة واحدة فقط
-cred = credentials.Certificate("aooo.json")  # ← اسم ملف مفاتيح Firebase
+# === تهيئة Firebase باستخدام بيانات من Secrets ===
+firebase_info = st.secrets["firebase"]
+
+# حفظ بيانات Firebase في ملف JSON مؤقت
+with open("temp_firebase_key.json", "w") as f:
+    json.dump(firebase_info, f)
+
+# إنشاء بيانات الاعتماد
+cred = credentials.Certificate("temp_firebase_key.json")
+
+# تهيئة Firebase إذا لم يكن مهيأ من قبل
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
-# ✅ دالة تسجيل الدخول
-def sign_in(email, password):
-    api_key = "AIzaSyC7fpq7eVdxt5L5Vd22GfsU1BUMJ3Wc5oU"  # ← غيّره بمفتاح Web API Key من Firebase
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
-    payload = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
+# جلب مفتاح API من Secrets (لو تحتاجه)
+firebase_api_key = st.secrets["firebase_api"]["api_key"]
 
-# ✅ دالة رئيسية
-def main():
-    if "user" not in st.session_state:
-        st.title("🔐 تسجيل الدخول")
+# === بداية كود التطبيق ===
 
-        email = st.text_input("البريد الإلكتروني")
-        password = st.text_input("كلمة المرور", type="password")
-        if st.button("تسجيل الدخول"):
-            user_data = sign_in(email, password)
-            if user_data:
-                st.session_state.user = user_data
-                st.success("✅ تم تسجيل الدخول بنجاح")
-                st.experimental_rerun()
-            else:
-                st.error("❌ فشل تسجيل الدخول")
-    else:
-        st.sidebar.success(f"مرحبًا {st.session_state.user['email']}")
-        if st.sidebar.button("تسجيل الخروج"):
-            del st.session_state.user
-            st.experimental_rerun()
-
-        orders_o()  # ← يبدأ عرض الأسئلة بعد تسجيل الدخول فقط
-
-# باقي كود عرض الأسئلة (بدون تغيير جوهري)
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -59,7 +34,7 @@ custom_titles = {
     "orthodontics": {1: "Lecture 1 name"},
     "pedodontics": {1: "Lecture 1 name"},
     "periodontology": {1: "Lecture 1 name"},
-    "prosthodontics": {1: "Lecture 1 name"}
+    "prosthodontics": {1: "Lecture 1 name"},
 }
 
 def count_lectures(subject_name, base_path="."):
@@ -72,18 +47,27 @@ def count_lectures(subject_name, base_path="."):
 def import_module_from_folder(subject_name, lecture_num, base_path="."):
     subject_path = os.path.join(base_path, subject_name)
     module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}.py")
+
     if not os.path.exists(module_file):
         return None
+
     spec = importlib.util.spec_from_file_location(f"{subject_name}{lecture_num}", module_file)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
-def orders_o():
+def main():
     subjects = [
-        "endodontics", "generalmedicine", "generalsurgery", "operative",
-        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
-        "periodontology", "prosthodontics"
+        "endodontics",
+        "generalmedicine",
+        "generalsurgery",
+        "operative",
+        "oralpathology",
+        "oralsurgery",
+        "orthodontics",
+        "pedodontics",
+        "periodontology",
+        "prosthodontics",
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
@@ -101,10 +85,15 @@ def orders_o():
             lectures.append(f"Lecture {i}")
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
-    lecture_num = int(lecture.split()[1])
+
+    try:
+        lecture_num = int(lecture.split()[1])
+    except:
+        lecture_num = 1
+
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
-        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود.")
+        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
         return
 
     questions = questions_module.questions
@@ -125,8 +114,10 @@ def orders_o():
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
+
         if isinstance(answer, int) and 0 <= answer < len(options):
             return options[answer]
+
         if isinstance(answer, str):
             answer_clean = answer.strip().upper()
             if answer_clean in ["A", "B", "C", "D"]:
@@ -135,33 +126,49 @@ def orders_o():
                     return options[idx]
             if answer in options:
                 return answer
+
         return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
+
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-        st.markdown(f"### Q{index+1}/{len(questions)}: {q['question']}")
+
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
 
         if not st.session_state.answer_shown[index]:
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -174,7 +181,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -190,9 +197,10 @@ def orders_o():
             else:
                 st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
         st.success(f"النتيجة: {correct} من {len(questions)}")
+
         if st.button("🔁 أعد الاختبار"):
             st.session_state.current_question = 0
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
