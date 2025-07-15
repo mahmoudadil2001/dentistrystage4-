@@ -1,27 +1,8 @@
+import streamlit as st
 import os
 import importlib.util
-import json
-import streamlit as st
-import firebase_admin
-from firebase_admin import credentials
 
-# تحميل بيانات Firebase من secrets
-firebase_info = dict(st.secrets["firebase"])
-firebase_info['private_key'] = firebase_info['private_key'].replace('\\n', '\n')
-firebase_info_str = {k: str(v) for k, v in firebase_info.items()}
-
-# إنشاء ملف JSON مؤقت
-with open("temp_firebase_key.json", "w") as f:
-    json.dump(firebase_info_str, f)
-
-# تهيئة Firebase مرة واحدة فقط
-cred = credentials.Certificate("temp_firebase_key.json")
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
-
-firebase_api_key = st.secrets["firebase_api"]["api_key"]
-
-# عناوين المحاضرات المخصصة
+# تعريف عناوين المحاضرات المخصصة
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -54,6 +35,24 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
     spec.loader.exec_module(module)
     return module
 
+def normalize_answer(q):
+    answer = q.get("answer") or q.get("correct_answer")
+    options = q["options"]
+
+    if isinstance(answer, int) and 0 <= answer < len(options):
+        return options[answer]
+
+    if isinstance(answer, str):
+        answer_clean = answer.strip().upper()
+        if answer_clean in ["A", "B", "C", "D"]:
+            idx = ord(answer_clean) - ord("A")
+            if 0 <= idx < len(options):
+                return options[idx]
+        if answer in options:
+            return answer
+
+    return None
+
 def main():
     subjects = [
         "endodontics",
@@ -65,7 +64,7 @@ def main():
         "orthodontics",
         "pedodontics",
         "periodontology",
-        "prosthodontics",
+        "prosthodontics"
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
@@ -84,11 +83,7 @@ def main():
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
-    try:
-        lecture_num = int(lecture.split()[1])
-    except:
-        lecture_num = 1
-
+    lecture_num = int(lecture.split()[1])
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
         st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
@@ -108,24 +103,6 @@ def main():
         st.session_state.quiz_completed = False
         st.session_state.current_lecture = lecture
         st.session_state.current_subject = subject
-
-    def normalize_answer(q):
-        answer = q.get("answer") or q.get("correct_answer")
-        options = q["options"]
-
-        if isinstance(answer, int) and 0 <= answer < len(options):
-            return options[answer]
-
-        if isinstance(answer, str):
-            answer_clean = answer.strip().upper()
-            if answer_clean in ["A", "B", "C", "D"]:
-                idx = ord(answer_clean) - ord("A")
-                if 0 <= idx < len(options):
-                    return options[idx]
-            if answer in options:
-                return answer
-
-        return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
@@ -166,7 +143,7 @@ def main():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -179,7 +156,7 @@ def main():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -201,4 +178,4 @@ def main():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()  # <-- حسب طلبك، مع احتمال الخطأ
