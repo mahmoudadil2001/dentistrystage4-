@@ -4,7 +4,7 @@ import streamlit as st
 
 # تهيئة Firebase (مرة واحدة فقط)
 if "firebase_initialized" not in st.session_state:
-    cred = credentials.Certificate("firebase-key.json")  # ← غيّر الاسم لو الملف عندك اسمه غير هذا
+    cred = credentials.Certificate("aooo.json")  # ← غيّر الاسم لو الملف عندك اسمه غير هذا
     firebase_admin.initialize_app(cred)
     st.session_state.firebase_initialized = True
 
