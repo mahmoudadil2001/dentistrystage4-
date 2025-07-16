@@ -31,8 +31,8 @@ if "user_logged" not in st.session_state:
 # ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
-    ("endodontics", 2): "Lecture 2 test",
-    ("generalmedicine", 1): "Lecture 1 a"
+    ("endodontics", 2): "Lecture 2 periapical disease classification",
+    ("generalmedicine", 1): "Lecture 1 name"
 }
 
 # تحويلها إلى شكل القاموس المستخدم في الكود
