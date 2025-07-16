@@ -7,11 +7,13 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, db
 
-# تهيئة Firebase Admin SDK - تأكد من رفع ملف JSON الخاص بالخدمة مع الكود
 cred = credentials.Certificate("firebase_config.json")
-firebase_admin.initialize_app(cred, {
-    "databaseURL": "https://nothing-ddb83-default-rtdb.firebaseio.com/"
-})
+
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": "https://nothing-ddb83-default-rtdb.firebaseio.com/"
+    })
+
 
 def send_to_telegram(name, group):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
