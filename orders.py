@@ -2,19 +2,8 @@ import streamlit as st
 import os
 import importlib.util
 import requests
-import re
-from datetime import datetime
-import firebase_admin
-from firebase_admin import credentials, db
 
-cred = credentials.Certificate("firebase_config.json")
-
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://nothing-ddb83-default-rtdb.firebaseio.com/"
-    })
-
-
+# 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
@@ -22,28 +11,25 @@ def send_to_telegram(name, group):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
 
-# تنظيف النص ليصبح صالح لمسارات Firebase
-def clean_path(s):
-    return re.sub(r'[^a-zA-Z0-9_-]', '_', s)
+# 🛑 إيقاف الموقع حتى يكتب المستخدم الاسم والقروب
+if "user_logged" not in st.session_state:
+    st.header("👤 أدخل معلوماتك للبدء")
+    name = st.text_input("✍️ اسمك الكامل")
+    group = st.text_input("👥 اسم القروب")
 
-def show_online_users():
-    if "visitor_name" not in st.session_state or "visitor_group" not in st.session_state:
-        return
+    if st.button("✅ موافق"):
+        if name.strip() == "" or group.strip() == "":
+            st.warning("يرجى ملء كل الحقول.")
+        else:
+            send_to_telegram(name, group)
+            st.session_state.user_logged = True
+            st.session_state.visitor_name = name
+            st.session_state.visitor_group = group
+            st.rerun()
+    st.stop()
 
-    user_id = f"{clean_path(st.session_state.visitor_name)}_{clean_path(st.session_state.visitor_group)}"
-    now = datetime.now().isoformat()
 
-    ref = db.reference(f"online_users/{user_id}")
-    ref.set(now)
-
-    users_ref = db.reference("online_users")
-    users = users_ref.get() or {}
-
-    st.sidebar.markdown(f"### عدد المتصلين: {len(users)}")
-    for uid, last_seen in users.items():
-        st.sidebar.write(f"- {uid} (آخر ظهور: {last_seen})")
-
-# أسماء مخصصة للمحاضرات
+# 🗂️ أسماء مخصصة للمحاضرات
 custom_titles = {
     "endodontics": {1: "Lecture 1 name"},
     "generalmedicine": {1: "Lecture 1 name"},
@@ -184,7 +170,7 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -197,7 +183,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -219,4 +205,4 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
