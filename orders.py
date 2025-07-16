@@ -43,6 +43,13 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
     spec.loader.exec_module(module)
     return module
 
+# دالة لفحص وجود حروف عربية في النص
+def contains_arabic(text):
+    for ch in text:
+        if '\u0600' <= ch <= '\u06FF' or '\u0750' <= ch <= '\u077F' or '\u08A0' <= ch <= '\u08FF':
+            return True
+    return False
+
 def orders_o():
     subjects = [
         "endodontics",
@@ -156,22 +163,36 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
                 st.success("✅ إجابة صحيحة")
             else:
                 st.error(f"❌ الإجابة الصحيحة: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 الشرح: {q['explanation']}")
+                if "explanation" in q and q["explanation"].strip() != "":
+                    expl = q["explanation"]
+                    if contains_arabic(expl):
+                        # عربي أو مختلط -> RTL
+                        st.markdown(
+                            f"<div style='direction: rtl; unicode-bidi: embed; margin-top: 10px; background-color:#f0f0f0; padding:10px; border-radius:5px;'>"
+                            f"💡 الشرح: {expl}</div>",
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        # إنجليزي فقط -> LTR
+                        st.markdown(
+                            f"<div style='direction: ltr; margin-top: 10px; background-color:#f0f0f0; padding:10px; border-radius:5px;'>"
+                            f"💡 Explanation: {expl}</div>",
+                            unsafe_allow_html=True
+                        )
 
             if st.button("السؤال التالي", key=f"next_{index}"):
                 if index + 1 < len(questions):
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -193,4 +214,4 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
