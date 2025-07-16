@@ -11,23 +11,6 @@ def send_to_telegram(name, group):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
 
-# 🛑 إيقاف الموقع حتى يكتب المستخدم الاسم والقروب
-if "user_logged" not in st.session_state:
-    st.header("👤 أدخل معلوماتك للبدء")
-    name = st.text_input("✍️ اسمك الكامل")
-    group = st.text_input("👥 اسم القروب")
-
-    if st.button("✅ موافق"):
-        if name.strip() == "" or group.strip() == "":
-            st.warning("يرجى ملء كل الحقول.")
-        else:
-            send_to_telegram(name, group)
-            st.session_state.user_logged = True
-            st.session_state.visitor_name = name
-            st.session_state.visitor_group = group
-            st.rerun()
-    st.stop()
-
 # ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
@@ -180,6 +163,8 @@ def orders_o():
                 st.success("✅ إجابة صحيحة")
             else:
                 st.error(f"❌ الإجابة الصحيحة: {correct_text}")
+                if "explanation" in q:
+                    st.info(f"💡 الشرح: {q['explanation']}")
 
             if st.button("السؤال التالي", key=f"next_{index}"):
                 if index + 1 < len(questions):
