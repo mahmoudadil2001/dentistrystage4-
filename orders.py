@@ -31,7 +31,7 @@ if "user_logged" not in st.session_state:
 
 # 🗂️ أسماء مخصصة للمحاضرات
 custom_titles = {
-    "endodontics": {1: "Lecture 1 name"},
+    "endodontics": {1: "Lecture 1 inroduction"},
     "generalmedicine": {1: "Lecture 1 name"},
     "generalsurgery": {1: "Lecture 1 name"},
     "operative": {1: "Lecture 1 name"},
