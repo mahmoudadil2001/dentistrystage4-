@@ -32,6 +32,7 @@ if "user_logged" not in st.session_state:
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
+    ("endodontics", 3): "Lecture 3 name",
     ("generalmedicine", 1): "Lecture 1 name"
 }
 
