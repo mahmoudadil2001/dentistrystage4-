@@ -28,23 +28,17 @@ if "user_logged" not in st.session_state:
             st.rerun()
     st.stop()
 
-
-# 🗂️ أسماء مخصصة للمحاضرات
-custom_titles = {
-    "endodontics": {
-        1: "Lecture 1 inroduction",
-        2: "Lecture 2 periapical disease classification"
-    },
-    "generalmedicine": {1: "Lecture 1 name"},
-    "generalsurgery": {1: "Lecture 1 name"},
-    "operative": {1: "Lecture 1 name"},
-    "oralpathology": {1: "Lecture 1 name"},
-    "oralsurgery": {1: "Lecture 1 name"},
-    "orthodontics": {1: "Lecture 1 name"},
-    "pedodontics": {1: "Lecture 1 name"},
-    "periodontology": {1: "Lecture 1 name"},
-    "prosthodontics": {1: "Lecture 1 name"}
+# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
+custom_titles_data = {
+    ("endodontics", 1): "Lecture 1 introduction",
+    ("endodontics", 2): "Lecture 2 test",
+    ("generalmedicine", 1): "Lecture 1 a"
 }
+
+# تحويلها إلى شكل القاموس المستخدم في الكود
+custom_titles = {}
+for (subject, num), title in custom_titles_data.items():
+    custom_titles.setdefault(subject, {})[num] = title
 
 def count_lectures(subject_name, base_path="."):
     subject_path = os.path.join(base_path, subject_name)
@@ -95,7 +89,12 @@ def orders_o():
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
-    lecture_num = int(lecture.split()[1])
+    try:
+        lecture_num = int(lecture.split()[1])
+    except:
+        st.error("⚠️ حدث خطأ في قراءة رقم المحاضرة.")
+        return
+
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
         st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
