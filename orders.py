@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import importlib.util
 import requests
+import extras  # ربط ملف الإضافات extras.py
 
 # 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
@@ -238,3 +239,5 @@ def main():
     </div>
     ''', unsafe_allow_html=True)
 
+    # --- استدعاء قسم الإضافات من ملف extras.py ---
+    extras.main()
