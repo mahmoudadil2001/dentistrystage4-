@@ -1,3 +1,2 @@
-import streamlit as st
-
-def extras_feature():
+def main():
+    pass
