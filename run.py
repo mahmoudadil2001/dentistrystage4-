@@ -13,8 +13,8 @@ if "user_logged" not in st.session_state:
         else:
             send_to_telegram(name, group)
             st.session_state.user_logged = True
-            st.session_state.visitor_name = name
-            st.session_state.visitor_group = group
+            st.session_state.visitor_name = name.strip()
+            st.session_state.visitor_group = group.strip()
             st.rerun()
     st.stop()  # لا تكمل تشغيل الموقع
 
@@ -41,3 +41,25 @@ st.markdown('''
     اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
 </div>
 ''', unsafe_allow_html=True)
+
+# 🟢 زر عائم يفتح روم الدردشة على gartic.io باسم المستخدم
+chat_url = f"https://gartic.io/4911W3/{st.session_state.visitor_name}"
+st.markdown(f"""
+<style>
+.chat-button {{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #f39c12;
+    color: white;
+    padding: 14px 18px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 18px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 9999;
+}}
+</style>
+<a href="{chat_url}" target="_blank" class="chat-button">💬</a>
+""", unsafe_allow_html=True)
