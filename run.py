@@ -42,24 +42,71 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# 🟢 زر عائم يفتح روم الدردشة على gartic.io باسم المستخدم
-chat_url = f"https://gartic.io/4911W3/{st.session_state.visitor_name}"
+# === زر دردشة عائم يفتح بطاقة دردشة مع iframe ===
+
+# اسم روم الدردشة في tlk.io (تغيره كما تريد)
+chat_room_name = "dentistryroom"
+
 st.markdown(f"""
 <style>
+/* زر الدردشة العائم */
 .chat-button {{
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #f39c12;
+    background-color: #0088cc;
     color: white;
     padding: 14px 18px;
     border-radius: 50%;
-    text-align: center;
-    font-size: 18px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    font-size: 22px;
     cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     z-index: 9999;
+    text-align: center;
 }}
+
+/* البطاقة العائمة */
+.chat-card {{
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 350px;
+    height: 450px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: white;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+}}
+
+/* زر إغلاق البطاقة */
+.close-btn {{
+    align-self: flex-end;
+    margin: 8px;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    color: #555;
+}}
+
 </style>
-<a href="{chat_url}" target="_blank" class="chat-button">💬</a>
+
+<div class="chat-button" onclick="toggleChat()">💬</div>
+
+<div id="chatCard" class="chat-card">
+    <div class="close-btn" onclick="toggleChat()">✖</div>
+    <iframe src="https://tlk.io/{chat_room_name}" style="border:none; width:100%; height:100%; border-radius:0 0 12px 12px;"></iframe>
+</div>
+
+<script>
+function toggleChat() {{
+    const card = document.getElementById('chatCard');
+    if (card.style.display === 'flex') {{
+        card.style.display = 'none';
+    }} else {{
+        card.style.display = 'flex';
+    }}
+}}
+</script>
 """, unsafe_allow_html=True)
