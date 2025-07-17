@@ -1,7 +1,7 @@
 import streamlit as st
 from orders import orders_o, send_to_telegram
 
-# 🛡️ تأكد أن المستخدم سجل بياناته
+# 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
     name = st.text_input("✍️ اسمك؟ ")
@@ -13,20 +13,18 @@ if "user_logged" not in st.session_state:
         else:
             send_to_telegram(name, group)
             st.session_state.user_logged = True
-            st.session_state.visitor_name = name.strip()
-            st.session_state.visitor_group = group.strip()
-            st.session_state.chat_open = False
-            st.rerun()  # تم الاستبدال بناءً على طلبك
+            st.session_state.visitor_name = name
+            st.session_state.visitor_group = group
+            st.rerun()
+    st.stop()  # لا تكمل تشغيل الموقع
 
-    st.stop()
-
-# بعد التسجيل نرحب بالزائر
+# ✅ بعد تسجيل الاسم، نعرض ترحيب
 st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
-# شغل التطبيق الأساسي
+# ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
 orders_o()
 
-# زر قناة التلي
+# 🔵 زر قناة التلي + جملة تحت الزر
 st.markdown('''
 <div style="display:flex; justify-content:center; margin-top:50px;">
     <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
@@ -43,18 +41,3 @@ st.markdown('''
     اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
 </div>
 ''', unsafe_allow_html=True)
-
-# اسم روم tlk.io للدردشة
-chat_room_name = "dentistryroom"
-
-# زر Streamlit عادي لفتح وإغلاق الدردشة
-if st.button("💬 دردشة"):
-    st.session_state.chat_open = not st.session_state.get("chat_open", False)
-
-# إذا الدردشة مفتوحة، عرض بطاقة دردشة
-if st.session_state.get("chat_open", False):
-    st.markdown(f"""
-    <div style="position: fixed; bottom: 80px; right: 20px; width: 350px; height: 450px; border: 1px solid #ccc; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: white; z-index: 9999;">
-        <iframe src="https://tlk.io/{chat_room_name}" width="100%" height="100%" frameborder="0"></iframe>
-    </div>
-    """, unsafe_allow_html=True)
