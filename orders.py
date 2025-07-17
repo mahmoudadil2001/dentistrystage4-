@@ -1,6 +1,7 @@
-import streamlit as st
 import os
 import importlib.util
+import requests
+import streamlit as st
 
 # ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
@@ -186,15 +187,3 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.experimental_rerun()
-
-# دالة إرسال رسالة التليجرام
-def send_to_telegram(name, group):
-    import requests
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    try:
-        requests.post(url, data={"chat_id": chat_id, "text": msg})
-    except Exception as e:
-        print("Failed to send telegram message:", e)
