@@ -2,57 +2,50 @@ import streamlit as st
 import requests
 import time
 
-# 🟢 إعدادات Sendbird
-APP_ID = "6EABD2CE-687E-4302-B9A2-6AE2A0C81CDC"
-API_TOKEN = "77e4dab0d9568f41dadd61befe71d71405ba0c4d"
-CHANNEL_URL = "dentistrystage4"
-
-# 🟢 دالة جلب عدد المستخدمين الأونلاين
-def get_online_user_count():
-    url = f"https://api-{APP_ID}.sendbird.com/v3/group_channels/{CHANNEL_URL}"
+# 🟢 دالة عرض عدد الأشخاص الأونلاين
+def get_online_users_count():
     headers = {
-        "Api-Token": API_TOKEN,
-        "Content-Type": "application/json"
+        "Api-Token": "77e4dab0d9568f41dadd61befe71d71405ba0c4d"
     }
-    response = requests.get(url, headers=headers)
+
+    response = requests.get(
+        "https://api-{app_id}.sendbird.com/v3/group_channels/dentistrystage4".format(app_id="6EABD2CE-687E-4302-B9A2-6AE2A0C81CDC"),
+        headers=headers
+    )
+
     if response.status_code == 200:
         data = response.json()
-        return data.get("member_count", 0)
+        return data.get("member_count", "غير معروف")
     else:
-        return "❌ خطأ في الاتصال"
+        return "❌ خطأ في جلب البيانات"
 
-# 🟢 عرض عدد الأونلاين ببطاقة صغيرة أنيقة
-def online_card():
-    count = get_online_user_count()
-    st.markdown(
-        f"""
-        <div style='background-color:#f0f2f6;padding:10px 20px;border-radius:12px;box-shadow:2px 2px 5px rgba(0,0,0,0.1);display:inline-block'>
-            <span style='font-size:18px;'>👥 المستخدمون الأونلاين: <strong style='color:green'>{count}</strong></span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# 🟢 هنا كل الكود داخل هذه الدالة
+def orders_o():
+    st.set_page_config(page_title="دردشة طب الأسنان", layout="centered")
 
-# 🟢 التحديث كل 10 ثواني تلقائيًا
-def auto_refresh_online_status():
-    count_placeholder = st.empty()
-    while True:
-        with count_placeholder.container():
-            online_card()
-        time.sleep(10)
-        st.rerun()  # إعادة تشغيل الصفحة تلقائيًا
+    # ⏱️ تحديث تلقائي كل 10 ثواني
+    st.experimental_rerun_interval = 10
 
-# 🟢 تشغيل المكون في الموقع
-if st.session_state.get("user_logged", False):
-    online_card()
-    # إضافة زر للدردشة (Talk.io أو غيره)
-    st.markdown(
-        """
-        <div style="margin-top: 20px;">
-            <iframe src="https://talk.io/embed/6EABD2CE-687E-4302-B9A2-6AE2A0C81CDC"
-                    width="100%" height="400px"
-                    style="border-radius: 15px; border: none;"></iframe>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # 🟢 عرض عدد الأشخاص الأونلاين
+    with st.container():
+        st.markdown("### 👥 عدد المستخدمين الأونلاين الآن")
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            st.info("🔄 يتم التحديث كل 10 ثواني")
+        with col2:
+            count = get_online_users_count()
+            st.success(f"🟢 {count} مستخدم داخل الغرفة")
+
+    st.markdown("---")
+
+    # 🟣 تضمين شات Talk.io
+    st.markdown("""
+        <iframe src="https://talk.io/embed?channel=dentistrystage4" 
+                width="100%" height="500px" frameborder="0" 
+                style="border-radius: 10px;">
+        </iframe>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.caption("تم بناء هذه الصفحة باستخدام Streamlit و Sendbird API.")
+
