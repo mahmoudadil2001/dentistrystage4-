@@ -15,8 +15,9 @@ if "user_logged" not in st.session_state:
             st.session_state.user_logged = True
             st.session_state.visitor_name = name.strip()
             st.session_state.visitor_group = group.strip()
-            st.session_state.chat_open = False  # حالة الدردشة مغلقة افتراضيًا
-            st.experimental_rerun()
+            st.session_state.chat_open = False
+            st.experimental_rerun()  # إعادة تحميل الصفحة بعد التسجيل
+
     st.stop()
 
 # بعد التسجيل نرحب بالزائر
