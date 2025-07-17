@@ -240,4 +240,4 @@ def main():
     ''', unsafe_allow_html=True)
 
     # --- استدعاء قسم الإضافات من ملف extras.py ---
-    extras.main()
+    
