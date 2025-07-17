@@ -1,5 +1,3 @@
-def main():
-    pass
 import streamlit as st
 
 def chatango_popup_button():
