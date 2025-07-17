@@ -60,5 +60,5 @@ def chatango_popup_button():
     </script>
     """, unsafe_allow_html=True)
 
-def main():
-    chatango_popup_button()
+# استدعاء تلقائي عند استيراد الملف
+chatango_popup_button()
