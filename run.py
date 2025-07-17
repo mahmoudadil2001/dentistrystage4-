@@ -1,95 +1,66 @@
 import streamlit as st
+import os
+import importlib.util
+import requests
 
-# بداية الكود بعد تسجيل الدخول وغيره
+# 🟢 إرسال الاسم والقروب إلى تليجرام
+def send_to_telegram(name, group):
+    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
+    chat_id = "6283768537"
+    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    requests.post(url, data={"chat_id": chat_id, "text": msg})
 
+# ... (كود المحاضرات والأسئلة كما هو، اختصرته هنا لسهولة القراءة) ...
+
+# ضع هنا جميع وظائف orders_o وcount_lectures وimport_module_from_folder كما في كودك الأصلي
+
+# ——————————— بداية تشغيل الموقع ———————————
+
+if "user_logged" not in st.session_state:
+    st.header("👤 أدخل معلوماتك للبدء")
+    name = st.text_input("✍️ اسمك؟ ")
+    group = st.text_input("👥 كروبك؟")
+
+    if st.button("✅ موافق"):
+        if name.strip() == "" or group.strip() == "":
+            st.warning("يرجى ملء كل الحقول.")
+        else:
+            send_to_telegram(name, group)
+            st.session_state.user_logged = True
+            st.session_state.visitor_name = name
+            st.session_state.visitor_group = group
+            st.experimental_rerun()
+    st.stop()
+
+st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+
+orders_o()
+
+# زر فتح دردشة Chatango
 st.markdown("""
-<style>
-#online_count {
-    font-weight: bold;
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: #2c7be5;
-    text-align: center;
-}
-#chatango_button {
-    display: block;
-    margin: 0 auto;
-    background-color: #0088cc;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-family: sans-serif;
-    font-size: 16px;
-    text-align: center;
-    width: 200px;
-}
-</style>
-
-<div id="online_count">جاري تحميل عدد الأشخاص...</div>
-
-<button id="chatango_button">💬 افتح دردشة الموقع</button>
-
-<script>
-const openChatango = () => {
-    if(document.getElementById('chatango_embed')) return; // لو مفتوح بالفعل
-
-    const iframe = document.createElement('iframe');
-    iframe.src = 'https://dentistrychat.chatango.com/';
-    iframe.id = 'chatango_embed';
-    iframe.style.position = 'fixed';
-    iframe.style.bottom = '20px';
-    iframe.style.right = '20px';
-    iframe.style.width = '350px';
-    iframe.style.height = '400px';
-    iframe.style.border = '1px solid #ccc';
-    iframe.style.borderRadius = '8px';
-    iframe.style.zIndex = 9999;
-    iframe.style.backgroundColor = 'white';
-    document.body.appendChild(iframe);
-
-    // إضافة زر إغلاق
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✖';
-    closeBtn.style.position = 'fixed';
-    closeBtn.style.bottom = '425px';
-    closeBtn.style.right = '20px';
-    closeBtn.style.zIndex = 10000;
-    closeBtn.style.background = '#ff5c5c';
-    closeBtn.style.color = 'white';
-    closeBtn.style.border = 'none';
-    closeBtn.style.borderRadius = '50%';
-    closeBtn.style.width = '30px';
-    closeBtn.style.height = '30px';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.onclick = () => {
-        iframe.remove();
-        closeBtn.remove();
-    }
-    document.body.appendChild(closeBtn);
-
-    // بعد فتح iframe نبدأ تحديث العدد كل 5 ثواني
-    setTimeout(updateOnlineCount, 3000); // تأخير بسيط للتحميل
-};
-
-document.getElementById('chatango_button').onclick = openChatango;
-
-// دالة تحديث عدد المستخدمين الأونلاين من iframe (لو كان بإمكاننا الوصول للـiframe داخلياً)
-function updateOnlineCount() {
-    const onlineCountDiv = document.getElementById('online_count');
-
-    // ** ملاحظة مهمة: لا يمكن جلب بيانات من iframe في دومين مختلف (cross-origin)
-    // لذا نحتاج طريقة أخرى أو أن يكون مزود الدردشة يوفر API أو iframe مدمج مع عداد.
-    // للأسف Chatango يمنع الوصول لمحتوى iframe خارجي لسياسة الأمان.
-
-    // بالتالي لا يمكننا قراءة العدد بشكل مباشر من iframe عبر جافاسكريبت.
-
-    // كبديل: إظهار رسالة فقط أو محاولة من خلال طرق أخرى (Websocket API، API خارجي، إذا توفرت)
-
-    onlineCountDiv.textContent = 'عدد الأشخاص الأونلاين يعرض داخل نافذة الدردشة فقط';
-}
-
-// عرض رسالة بداية
-updateOnlineCount();
-</script>
+    <div style="display:flex; justify-content:center; margin-top:40px;">
+        <button onclick="window.open('https://dentistrychat.chatango.com/', 'chatango', 'width=400,height=500,resizable=yes')" 
+                style="background:#00b8ff; color:#fff; border:none; padding:12px 25px; border-radius:25px; cursor:pointer; font-size:16px; font-family:sans-serif;">
+            💬 افتح دردشة الموقع (Chatango)
+        </button>
+    </div>
 """, unsafe_allow_html=True)
+
+# زر قناة التلي تحت المحتوى
+st.markdown('''
+<div style="display:flex; justify-content:center; margin-top:30px;">
+    <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
+        قناة التلي
+        <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
+            <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
+                <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58 84.6l-19.7 92.8c-1.5 6.7-5.5 8.4-11.1 5.2l-30.8-22.7-14.9 14.3c-1.7 1.7-3.1 3.1-6.4 3.1l2.3-32.5 59.1-53.3c2.6-2.3-.6-3.6-4-1.3l-72.8 45.7-31.4-9.8c-6.8-2.1-6.9-6.8 1.4-10.1l123.1-47.5c5.7-2.2 10.7 1.3 8.8 10z"/>
+            </svg>
+        </span>
+    </a>
+</div>
+
+<div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
+    اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
+</div>
+''', unsafe_allow_html=True)
