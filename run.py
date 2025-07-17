@@ -1,7 +1,7 @@
 import streamlit as st
 from orders import orders_o, send_to_telegram
 
-# 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
+# 🛡️ تأكد أن المستخدم سجل بياناته
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
     name = st.text_input("✍️ اسمك؟ ")
@@ -15,16 +15,17 @@ if "user_logged" not in st.session_state:
             st.session_state.user_logged = True
             st.session_state.visitor_name = name.strip()
             st.session_state.visitor_group = group.strip()
-            st.rerun()
-    st.stop()  # لا تكمل تشغيل الموقع
+            st.session_state.chat_open = False  # حالة الدردشة مغلقة افتراضيًا
+            st.experimental_rerun()
+    st.stop()
 
-# ✅ بعد تسجيل الاسم، نعرض ترحيب
+# بعد التسجيل نرحب بالزائر
 st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
-# ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
+# شغل التطبيق الأساسي
 orders_o()
 
-# 🔵 زر قناة التلي + جملة تحت الزر
+# زر قناة التلي
 st.markdown('''
 <div style="display:flex; justify-content:center; margin-top:50px;">
     <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
@@ -42,71 +43,17 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# === زر دردشة عائم يفتح بطاقة دردشة مع iframe ===
-
-# اسم روم الدردشة في tlk.io (تغيره كما تريد)
+# اسم روم tlk.io للدردشة
 chat_room_name = "dentistryroom"
 
-st.markdown(f"""
-<style>
-/* زر الدردشة العائم */
-.chat-button {{
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #0088cc;
-    color: white;
-    padding: 14px 18px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    z-index: 9999;
-    text-align: center;
-}}
+# زر Streamlit عادي لفتح وإغلاق الدردشة
+if st.button("💬 دردشة"):
+    st.session_state.chat_open = not st.session_state.get("chat_open", False)
 
-/* البطاقة العائمة */
-.chat-card {{
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 350px;
-    height: 450px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    background: white;
-    z-index: 9999;
-    display: none;
-    flex-direction: column;
-}}
-
-/* زر إغلاق البطاقة */
-.close-btn {{
-    align-self: flex-end;
-    margin: 8px;
-    font-weight: bold;
-    font-size: 20px;
-    cursor: pointer;
-    color: #555;
-}}
-
-</style>
-
-<div class="chat-button" onclick="toggleChat()">💬</div>
-
-<div id="chatCard" class="chat-card">
-    <div class="close-btn" onclick="toggleChat()">✖</div>
-    <iframe src="https://tlk.io/{chat_room_name}" style="border:none; width:100%; height:100%; border-radius:0 0 12px 12px;"></iframe>
-</div>
-
-<script>
-function toggleChat() {{
-    const card = document.getElementById('chatCard');
-    if (card.style.display === 'flex') {{
-        card.style.display = 'none';
-    }} else {{
-        card.style.display = 'flex';
-    }}
-}}
-</script>
-""", unsafe_allow_html=True)
+# إذا الدردشة مفتوحة، عرض بطاقة دردشة
+if st.session_state.get("chat_open", False):
+    st.markdown(f"""
+    <div style="position: fixed; bottom: 80px; right: 20px; width: 350px; height: 450px; border: 1px solid #ccc; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: white; z-index: 9999;">
+        <iframe src="https://tlk.io/{chat_room_name}" width="100%" height="100%" frameborder="0"></iframe>
+    </div>
+    """, unsafe_allow_html=True)
