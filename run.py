@@ -1,6 +1,10 @@
 import streamlit as st
 from orders import orders_o, send_to_telegram
 
+# إعدادات Sendbird
+APP_ID = "6EABD2CE-687E-4302-B9A2-6AE2A0C81CDC"
+CHANNEL_URL = "dentistrystage4"
+
 # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
@@ -16,15 +20,15 @@ if "user_logged" not in st.session_state:
             st.session_state.visitor_name = name
             st.session_state.visitor_group = group
             st.rerun()
-    st.stop()  # لا تكمل تشغيل الموقع
+    st.stop()
 
-# ✅ بعد تسجيل الاسم، نعرض ترحيب
+# عرض الترحيب
 st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
-# ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
+# تشغيل الأسئلة
 orders_o()
 
-# 🔵 زر قناة التلي + جملة تحت الزر
+# زر قناة التلي
 st.markdown('''
 <div style="display:flex; justify-content:center; margin-top:50px;">
     <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
@@ -41,3 +45,67 @@ st.markdown('''
     اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
 </div>
 ''', unsafe_allow_html=True)
+
+# إضافة زر دردشة Sendbird عائم ونافذة الدردشة
+chat_html = f"""
+<style>
+#sendbird_chat_button {{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 9999;
+}}
+
+#sendbird_chat_container {{
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 9999;
+    background: white;
+}}
+
+#sendbird_chat_iframe {{
+    width: 100%;
+    height: 100%;
+    border: none;
+}}
+</style>
+
+<button id="sendbird_chat_button" title="الدردشة">💬</button>
+
+<div id="sendbird_chat_container">
+    <iframe id="sendbird_chat_iframe"
+        src="https://widget.sendbird.com/chat?app_id={APP_ID}&channel_url={CHANNEL_URL}"
+        allow="microphone; camera"
+    ></iframe>
+</div>
+
+<script>
+const chatButton = document.getElementById('sendbird_chat_button');
+const chatContainer = document.getElementById('sendbird_chat_container');
+
+chatButton.onclick = () => {{
+    if (chatContainer.style.display === 'none') {{
+        chatContainer.style.display = 'block';
+    }} else {{
+        chatContainer.style.display = 'none';
+    }}
+}};
+</script>
+"""
+
+st.components.v1.html(chat_html, height=600)
