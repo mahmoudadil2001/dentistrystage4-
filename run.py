@@ -1,129 +1,95 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
-# عنوان الموقع أو رسالة ترحيب
-st.title("موقع المحاضرات والدردشة")
+# بداية الكود بعد تسجيل الدخول وغيره
 
-# تسجيل الدخول - لو حابب تضيفه
-if "user_logged" not in st.session_state:
-    st.header("👤 أدخل معلوماتك للبدء")
-    name = st.text_input("✍️ اسمك؟")
-    group = st.text_input("👥 كروبك؟")
-
-    if st.button("✅ موافق"):
-        if not name.strip() or not group.strip():
-            st.warning("يرجى ملء كل الحقول.")
-        else:
-            st.session_state.user_logged = True
-            st.session_state.visitor_name = name
-            st.session_state.visitor_group = group
-            st.experimental_rerun()
-    st.stop()
-
-st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
-
-# -----------------------
-# زر دردشة منبثق - Floating Button & Popup Chat
-
-# حالة عرض الدردشة
-if "chat_visible" not in st.session_state:
-    st.session_state.chat_visible = False
-
-# HTML + CSS + JS لزر الدردشة المنبثق وصندوق الدردشة
-chat_html = """
+st.markdown("""
 <style>
-/* زر الدردشة الدائري */
-#chat-button {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background-color: #0088cc;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 30px;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  z-index: 1000;
-  transition: background-color 0.3s ease;
+#online_count {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: #2c7be5;
+    text-align: center;
 }
-#chat-button:hover {
-  background-color: #005f7a;
-}
-
-/* صندوق الدردشة المنبثق */
-#chat-popup {
-  position: fixed;
-  bottom: 100px;
-  right: 30px;
-  width: 350px;
-  height: 500px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  z-index: 1000;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* عنوان الصندوق */
-#chat-header {
-  background: #0088cc;
-  color: white;
-  padding: 12px;
-  font-weight: bold;
-  font-size: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* زر إغلاق الصندوق */
-#close-chat {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* iframe الدردشة */
-#chat-iframe {
-  flex-grow: 1;
-  border: none;
+#chatango_button {
+    display: block;
+    margin: 0 auto;
+    background-color: #0088cc;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: sans-serif;
+    font-size: 16px;
+    text-align: center;
+    width: 200px;
 }
 </style>
 
-<button id="chat-button" title="افتح الدردشة">💬</button>
+<div id="online_count">جاري تحميل عدد الأشخاص...</div>
 
-<div id="chat-popup">
-  <div id="chat-header">
-    دردشة الدعم المباشر
-    <button id="close-chat" title="إغلاق">×</button>
-  </div>
-  <iframe id="chat-iframe" src="https://dentistrychat.chatango.com/" ></iframe>
-</div>
+<button id="chatango_button">💬 افتح دردشة الموقع</button>
 
 <script>
-const chatBtn = document.getElementById('chat-button');
-const chatPopup = document.getElementById('chat-popup');
-const closeBtn = document.getElementById('close-chat');
+const openChatango = () => {
+    if(document.getElementById('chatango_embed')) return; // لو مفتوح بالفعل
 
-chatBtn.onclick = () => {
-  if (chatPopup.style.display === 'flex') {
-    chatPopup.style.display = 'none';
-  } else {
-    chatPopup.style.display = 'flex';
-  }
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://dentistrychat.chatango.com/';
+    iframe.id = 'chatango_embed';
+    iframe.style.position = 'fixed';
+    iframe.style.bottom = '20px';
+    iframe.style.right = '20px';
+    iframe.style.width = '350px';
+    iframe.style.height = '400px';
+    iframe.style.border = '1px solid #ccc';
+    iframe.style.borderRadius = '8px';
+    iframe.style.zIndex = 9999;
+    iframe.style.backgroundColor = 'white';
+    document.body.appendChild(iframe);
+
+    // إضافة زر إغلاق
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✖';
+    closeBtn.style.position = 'fixed';
+    closeBtn.style.bottom = '425px';
+    closeBtn.style.right = '20px';
+    closeBtn.style.zIndex = 10000;
+    closeBtn.style.background = '#ff5c5c';
+    closeBtn.style.color = 'white';
+    closeBtn.style.border = 'none';
+    closeBtn.style.borderRadius = '50%';
+    closeBtn.style.width = '30px';
+    closeBtn.style.height = '30px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = () => {
+        iframe.remove();
+        closeBtn.remove();
+    }
+    document.body.appendChild(closeBtn);
+
+    // بعد فتح iframe نبدأ تحديث العدد كل 5 ثواني
+    setTimeout(updateOnlineCount, 3000); // تأخير بسيط للتحميل
 };
 
-closeBtn.onclick = () => {
-  chatPopup.style.display = 'none';
-};
+document.getElementById('chatango_button').onclick = openChatango;
+
+// دالة تحديث عدد المستخدمين الأونلاين من iframe (لو كان بإمكاننا الوصول للـiframe داخلياً)
+function updateOnlineCount() {
+    const onlineCountDiv = document.getElementById('online_count');
+
+    // ** ملاحظة مهمة: لا يمكن جلب بيانات من iframe في دومين مختلف (cross-origin)
+    // لذا نحتاج طريقة أخرى أو أن يكون مزود الدردشة يوفر API أو iframe مدمج مع عداد.
+    // للأسف Chatango يمنع الوصول لمحتوى iframe خارجي لسياسة الأمان.
+
+    // بالتالي لا يمكننا قراءة العدد بشكل مباشر من iframe عبر جافاسكريبت.
+
+    // كبديل: إظهار رسالة فقط أو محاولة من خلال طرق أخرى (Websocket API، API خارجي، إذا توفرت)
+
+    onlineCountDiv.textContent = 'عدد الأشخاص الأونلاين يعرض داخل نافذة الدردشة فقط';
+}
+
+// عرض رسالة بداية
+updateOnlineCount();
 </script>
-"""
-
-components.html(chat_html, height=600, scrolling=False)
+""", unsafe_allow_html=True)
