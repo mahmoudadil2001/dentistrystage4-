@@ -1,6 +1,5 @@
 import streamlit as st
 
-# هذا سيتم تنفيذه تلقائيًا عند استدعاء extras داخل orders
 def chatango_popup_button():
     st.markdown("""
     <style>
@@ -59,5 +58,6 @@ def chatango_popup_button():
     </script>
     """, unsafe_allow_html=True)
 
-# ✅ يتم تنفيذ الدالة تلقائيًا عند استيراد الملف
-chatango_popup_button()
+# ✅ دالة main المطلوبة من orders.py
+def main():
+    chatango_popup_button()
