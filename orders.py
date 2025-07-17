@@ -1,48 +1,3 @@
-import streamlit as st
-import os
-import importlib.util
-import requests
-
-# 🟢 إرسال الاسم والقروب إلى تليجرام
-def send_to_telegram(name, group):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": msg})
-
-# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
-custom_titles_data = {
-    ("endodontics", 1): "Lecture 1 introduction",
-    ("endodontics", 2): "Lecture 2 periapical disease classification",
-    ("endodontics", 3): "Lecture 3 name",
-    ("generalmedicine", 1): "Lecture 1 name"
-}
-
-# تحويلها إلى شكل القاموس المستخدم في الكود
-custom_titles = {}
-for (subject, num), title in custom_titles_data.items():
-    custom_titles.setdefault(subject, {})[num] = title
-
-def count_lectures(subject_name, base_path="."):
-    subject_path = os.path.join(base_path, subject_name)
-    if not os.path.exists(subject_path):
-        return 0
-    files = [f for f in os.listdir(subject_path) if f.startswith(subject_name) and f.endswith(".py")]
-    return len(files)
-
-def import_module_from_folder(subject_name, lecture_num, base_path="."):
-    subject_path = os.path.join(base_path, subject_name)
-    module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}.py")
-
-    if not os.path.exists(module_file):
-        return None
-
-    spec = importlib.util.spec_from_file_location(f"{subject_name}{lecture_num}", module_file)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
 def orders_o():
     subjects = [
         "endodontics",
@@ -57,7 +12,7 @@ def orders_o():
         "prosthodontics"
     ]
 
-    subject = st.selectbox("اختر المادة", subjects)
+    subject = st.selectbox("اختر المادة", subjects, key="subject_select")
 
     total_lectures = count_lectures(subject)
     if total_lectures == 0:
@@ -71,7 +26,7 @@ def orders_o():
         else:
             lectures.append(f"Lecture {i}")
 
-    lecture = st.selectbox("اختر المحاضرة", lectures)
+    lecture = st.selectbox("اختر المحاضرة", lectures, key="lecture_select")
 
     try:
         lecture_num = int(lecture.split()[1])
@@ -156,7 +111,7 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -171,7 +126,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -188,9 +143,9 @@ def orders_o():
                 st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
         st.success(f"النتيجة: {correct} من {len(questions)}")
 
-        if st.button("🔁 أعد الاختبار"):
+        if st.button("🔁 أعد الاختبار", key="reset_quiz"):
             st.session_state.current_question = 0
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
