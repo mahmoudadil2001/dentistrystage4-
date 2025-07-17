@@ -1,22 +1,7 @@
 import streamlit as st
-import os
-import importlib.util
-import requests
+from orders import orders_o, send_to_telegram
 
-# 🟢 إرسال الاسم والقروب إلى تليجرام
-def send_to_telegram(name, group):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": msg})
-
-# ... (كود المحاضرات والأسئلة كما هو، اختصرته هنا لسهولة القراءة) ...
-
-# ضع هنا جميع وظائف orders_o وcount_lectures وimport_module_from_folder كما في كودك الأصلي
-
-# ——————————— بداية تشغيل الموقع ———————————
-
+# التحقق من تسجيل المستخدم
 if "user_logged" not in st.session_state:
     st.header("👤 أدخل معلوماتك للبدء")
     name = st.text_input("✍️ اسمك؟ ")
