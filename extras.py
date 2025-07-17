@@ -1,10 +1,8 @@
 import streamlit as st
 
 def chatango_popup_button():
-    # هذا الزر يظهر في الزاوية اليسرى السفلية، ويعرض شات Chatango داخل نافذة منبثقة
     st.markdown("""
     <style>
-    /* زر الدردشة */
     #chatango-button {
         position: fixed;
         bottom: 20px;
@@ -24,7 +22,6 @@ def chatango_popup_button():
         background-color: #005a9e;
     }
 
-    /* نافذة الشات المنبثقة */
     #chatango-popup {
         display: none;
         position: fixed;
