@@ -60,6 +60,5 @@ def chatango_popup_button():
     </script>
     """, unsafe_allow_html=True)
 
-# ✅ هذه الدالة تُستدعى من orders.py تلقائيًا
 def main():
     chatango_popup_button()
