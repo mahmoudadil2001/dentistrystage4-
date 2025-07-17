@@ -3,6 +3,7 @@ import streamlit as st
 def chatango_popup_button():
     st.markdown("""
     <style>
+    /* زر الدردشة */
     #chatango-button {
         position: fixed;
         bottom: 20px;
@@ -10,18 +11,19 @@ def chatango_popup_button():
         background-color: #0078d7;
         color: white;
         border: none;
-        padding: 12px 20px;
-        border-radius: 10px;
+        padding: 10px 16px;
+        border-radius: 12px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 15px;
         z-index: 9999;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.25);
     }
+
     #chatango-button:hover {
         background-color: #005a9e;
     }
 
+    /* نافذة الشات */
     #chatango-popup {
         display: none;
         position: fixed;
@@ -31,7 +33,7 @@ def chatango_popup_button():
         height: 400px;
         border: 2px solid #0078d7;
         border-radius: 12px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.35);
         z-index: 9999;
         background-color: white;
         overflow: hidden;
@@ -58,6 +60,6 @@ def chatango_popup_button():
     </script>
     """, unsafe_allow_html=True)
 
-# ✅ دالة main المطلوبة من orders.py
+# ✅ هذه الدالة تُستدعى من orders.py تلقائيًا
 def main():
     chatango_popup_button()
