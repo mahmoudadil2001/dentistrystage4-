@@ -1,11 +1,10 @@
 import streamlit as st
 
 def chatango_popup_button():
-    # هنا نكتب CSS و HTML + JS لزر الدردشة المنبثق
-
+    # هذا الزر يظهر في الزاوية اليسرى السفلية، ويعرض شات Chatango داخل نافذة منبثقة
     st.markdown("""
     <style>
-    /* زر ثابت بالزاوية السفلية اليسرى */
+    /* زر الدردشة */
     #chatango-button {
         position: fixed;
         bottom: 20px;
@@ -25,11 +24,11 @@ def chatango_popup_button():
         background-color: #005a9e;
     }
 
-    /* صندوق الدردشة المنبثق */
+    /* نافذة الشات المنبثقة */
     #chatango-popup {
-        display: none; /* مخفي بالافتراض */
+        display: none;
         position: fixed;
-        bottom: 70px; /* فوق الزر */
+        bottom: 70px;
         left: 20px;
         width: 350px;
         height: 400px;
@@ -38,6 +37,7 @@ def chatango_popup_button():
         box-shadow: 0 8px 16px rgba(0,0,0,0.4);
         z-index: 9999;
         background-color: white;
+        overflow: hidden;
     }
     </style>
 
