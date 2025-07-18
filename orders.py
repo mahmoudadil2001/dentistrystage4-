@@ -198,80 +198,21 @@ def orders_o():
 # --- الكود الخاص بتسجيل الاسم وتشغيل الموقع ---
 def main():
     # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
-  if "user_logged" not in st.session_state:
-    st.markdown("""
-        <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 90vh;
-        }
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            font-family: 'Arial', sans-serif;
-        }
-        .login-box h2 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-        .login-box input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        .login-box button {
-            width: 95%;
-            padding: 10px;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 18px;
-            margin-top: 15px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .login-box button:hover {
-            background-color: #45a049;
-        }
-        </style>
+    if "user_logged" not in st.session_state:
+        st.header("👤 أدخل معلوماتك للبدء")
+        name = st.text_input("✍️ اسمك؟ ")
+        group = st.text_input("👥 كروبك؟")
 
-        <div class="login-container">
-            <div class="login-box">
-                <h2>📚 أهلاً بك في منصة طب الأسنان</h2>
-                <p>يرجى إدخال اسمك وكروبك للمتابعة</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # نضع الحقول هنا تحت التصميم
-    name = st.text_input("✍️ اسمك؟", key="html_name")
-    group = st.text_input("👥 كروبك؟", key="html_group")
-
-    if st.button("✅ دخول"):
-        if name.strip() == "" or group.strip() == "":
-            st.warning("يرجى ملء جميع الحقول.")
-        else:
-            send_to_telegram(name, group)
-            st.session_state.user_logged = True
-            st.session_state.visitor_name = name
-            st.session_state.visitor_group = group
-            st.rerun()
-
-    st.stop()
+        if st.button("✅ موافق"):
+            if name.strip() == "" or group.strip() == "":
+                st.warning("يرجى ملء كل الحقول.")
+            else:
+                send_to_telegram(name, group)
+                st.session_state.user_logged = True
+                st.session_state.visitor_name = name
+                st.session_state.visitor_group = group
+                st.rerun()
+        st.stop()  # لا تكمل تشغيل الموقع
 
     # ✅ بعد تسجيل الاسم، نعرض ترحيب
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
