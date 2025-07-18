@@ -19,3 +19,47 @@ h1, h2, h3 {
 body, p, span, label {
     color: #f0f0f0;
 }
+/* زر متوهج متحرك */
+.glow-button {
+  padding: 12px 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: #0088cc;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow:
+    0 0 5px #00bfff,
+    0 0 10px #00bfff,
+    0 0 20px #0088cc,
+    0 0 40px #0088cc;
+  animation: glow-animation 2.5s ease-in-out infinite;
+  transition: background 0.3s ease;
+}
+
+.glow-button:hover {
+  background: #005f8a;
+  box-shadow:
+    0 0 10px #00ffff,
+    0 0 20px #00ffff,
+    0 0 40px #0088cc,
+    0 0 60px #0088cc;
+}
+
+@keyframes glow-animation {
+  0%, 100% {
+    box-shadow:
+      0 0 5px #00bfff,
+      0 0 10px #00bfff,
+      0 0 20px #0088cc,
+      0 0 40px #0088cc;
+  }
+  50% {
+    box-shadow:
+      0 0 15px #00ffff,
+      0 0 30px #00ffff,
+      0 0 50px #00bfff,
+      0 0 70px #0088cc;
+  }
+}
