@@ -11,7 +11,7 @@ def send_to_telegram(name, group):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
 
-# ✔️ اسماء المحاضرات (editable)
+# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -19,6 +19,7 @@ custom_titles_data = {
     ("generalmedicine", 1): "Lecture 1 name"
 }
 
+# تحويلها إلى شكل القاموس المستخدم في الكود
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
@@ -44,12 +45,20 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
 
 def orders_o():
     subjects = [
-        "endodontics", "generalmedicine", "generalsurgery", "operative",
-        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
-        "periodontology", "prosthodontics"
+        "endodontics",
+        "generalmedicine",
+        "generalsurgery",
+        "operative",
+        "oralpathology",
+        "oralsurgery",
+        "orthodontics",
+        "pedodontics",
+        "periodontology",
+        "prosthodontics"
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
+
     total_lectures = count_lectures(subject)
     if total_lectures == 0:
         st.error(f"⚠️ لا يوجد ملفات محاضرات للمادة {subject}!")
@@ -57,26 +66,30 @@ def orders_o():
 
     lectures = []
     for i in range(1, total_lectures + 1):
-        lectures.append(custom_titles.get(subject, {}).get(i, f"Lecture {i}"))
+        if subject in custom_titles and i in custom_titles[subject]:
+            lectures.append(custom_titles[subject][i])
+        else:
+            lectures.append(f"Lecture {i}")
 
     lecture = st.selectbox("اختر المحاضرة", lectures)
 
     try:
         lecture_num = int(lecture.split()[1])
     except:
-        st.error("⚠️ حدث خطأ في رقم المحاضرة.")
+        st.error("⚠️ حدث خطأ في قراءة رقم المحاضرة.")
         return
 
     questions_module = import_module_from_folder(subject, lecture_num)
     if questions_module is None:
-        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود.")
+        st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
         return
 
     questions = questions_module.questions
-    if ("questions_count" not in st.session_state or
-        st.session_state.questions_count != len(questions) or
-        st.session_state.get("current_lecture") != lecture or
-        st.session_state.get("current_subject") != subject):
+
+    if ("questions_count" not in st.session_state) or \
+       (st.session_state.questions_count != len(questions)) or \
+       (st.session_state.get("current_lecture", None) != lecture) or \
+       (st.session_state.get("current_subject", None) != subject):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -106,21 +119,38 @@ def orders_o():
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
+
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
+
         current_q_num = index + 1
         total_qs = len(questions)
         st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
-        selected_answer = st.radio("", q["options"], index=0, key=f"radio_{index}")
+        default_idx = 0
+        if st.session_state.user_answers[index] in q["options"]:
+            default_idx = q["options"].index(st.session_state.user_answers[index])
+
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
 
         if not st.session_state.answer_shown[index]:
             if st.button("أجب", key=f"submit_{index}"):
@@ -146,15 +176,16 @@ def orders_o():
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
     else:
-        st.header("🎉 تم الانتهاء!")
-        correct = sum(
-            1 for i, q in enumerate(questions)
-            if st.session_state.user_answers[i] == normalize_answer(q)
-        )
+        st.header("🎉 تم الانتهاء من الاختبار!")
+        correct = 0
         for i, q in enumerate(questions):
             correct_text = normalize_answer(q)
             user = st.session_state.user_answers[i]
-            st.write(f"Q{i+1}: {'✅' if user == correct_text else f'❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})'}")
+            if user == correct_text:
+                correct += 1
+                st.write(f"Q{i+1}: ✅ صحيحة")
+            else:
+                st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
         st.success(f"النتيجة: {correct} من {len(questions)}")
 
         if st.button("🔁 أعد الاختبار"):
@@ -164,40 +195,45 @@ def orders_o():
             st.session_state.quiz_completed = False
             st.rerun()
 
+# --- الكود الخاص بتسجيل الاسم وتشغيل الموقع ---
 def main():
+    # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
     if "user_logged" not in st.session_state:
-        st.markdown("""
-        <div style='background: linear-gradient(to right, #e3f2fd, #b2ebf2); padding: 40px; border-radius: 20px; text-align: center;'>
-            <h2 style='color: #00796b;'>👨‍⚕️ أهلاً بك في منصة المحاضرات</h2>
-            <p>أدخل اسمك والقروب للبدء</p>
-        </div>
-        """, unsafe_allow_html=True)
-        name = st.text_input("✍️ اسمك?")
-        group = st.text_input("👥 كروبك?")
+        st.header("👤 أدخل معلوماتك للبدء")
+        name = st.text_input("✍️ اسمك؟ ")
+        group = st.text_input("👥 كروبك؟")
+
         if st.button("✅ موافق"):
-            if name.strip() and group.strip():
+            if name.strip() == "" or group.strip() == "":
+                st.warning("يرجى ملء كل الحقول.")
+            else:
                 send_to_telegram(name, group)
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
                 st.rerun()
-            else:
-                st.warning("يرجى ملء كل الحقول.")
-        st.stop()
+        st.stop()  # لا تكمل تشغيل الموقع
 
-    st.success(f"👋 مرحباً بك {st.session_state.visitor_name}")
+    # ✅ بعد تسجيل الاسم، نعرض ترحيب
+    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+
+    # ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
     orders_o()
 
+    # 🔵 زر قناة التلي + جملة تحت الزر
     st.markdown('''
-    <div style="text-align:center; margin-top:30px;">
-        <a href="https://t.me/dentistryonly0" target="_blank" style="padding:10px 20px; background:#0088cc; color:#fff; border-radius:30px; text-decoration:none;"> 
-            🔗 انضم لقناتنا على تليجرام
+    <div style="display:flex; justify-content:center; margin-top:50px;">
+        <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
+            قناة التلي
+            <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
+                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
+                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58 84.6l-19.7 92.8c-1.5 6.7-5.5 8.4-11.1 5.2l-30.8-22.7-14.9 14.3c-1.7 1.7-3.1 3.1-6.4 3.1l2.3-32.5 59.1-53.3c2.6-2.3-.6-3.6-4-1.3l-72.8 45.7-31.4-9.8c-6.8-2.1-6.9-6.8 1.4-10.1l123.1-47.5c5.7-2.2 10.7 1.3 8.8 10z"/>
+                </svg>
+            </span>
         </a>
-        <p style="color:#555; margin-top:10px;">
-            التحديثات الجديدة ستكون في القناة
-        </p>
+    </div>
+
+    <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
+        اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
     </div>
     ''', unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
