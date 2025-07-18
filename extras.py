@@ -58,10 +58,8 @@ def show_welcome_card():
 
 def show_score_animation(final_score, total):
     import time
-
     st.markdown("<div class='score-counter'>النتيجة:</div>", unsafe_allow_html=True)
     score_placeholder = st.empty()
-
     for i in range(final_score + 1):
         score_placeholder.markdown(f"<div class='score-counter'>{i} / {total}</div>", unsafe_allow_html=True)
         time.sleep(0.05)
