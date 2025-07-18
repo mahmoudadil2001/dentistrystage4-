@@ -8,6 +8,7 @@ def main():
     local_css("styles.css")
     st.button("زر تجريبي")  # جرب الزر مع التأثيرات
     # باقي كودك...
+from orders import main
 
 if __name__ == "__main__":
     main()
