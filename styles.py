@@ -34,3 +34,21 @@ def apply_custom_styles():
     }
     </style>
     """, unsafe_allow_html=True)
+button {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
+}
+
+button:hover {
+    background-color: #005a9e;
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 90, 158, 0.5);
+}
