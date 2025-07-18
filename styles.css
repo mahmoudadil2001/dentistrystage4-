@@ -16,3 +16,38 @@ button:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 12px rgba(0, 90, 158, 0.5);
 }
+
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  background-color: #f9f9f9;
+  color: #222;
+}
+
+button {
+  background-color: #0078d7;
+  color: white;
+  border-radius: 12px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #005a9e;
+  transform: scale(1.05);
+}
+
+/* تحسين مظهر sidebar */
+[data-testid="stSidebar"] {
+  background-color: #e0f0ff;
+  padding: 20px;
+  font-family: 'Tajawal', sans-serif;
+}
+
+/* أزرار التنقل الجانبية */
+.stButton button {
+  margin-bottom: 8px;
+}
+
+/* خطوط عربية */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal&display=swap');
