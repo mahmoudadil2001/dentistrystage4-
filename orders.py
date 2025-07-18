@@ -1,4 +1,12 @@
 import streamlit as st
+st.markdown("""
+<style>
+body {
+    background: linear-gradient(135deg, #f0f4f8, #d9e4f5);
+}
+</style>
+""", unsafe_allow_html=True)
+
 import os
 import importlib.util
 import requests
