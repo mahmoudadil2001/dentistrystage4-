@@ -1,7 +1,3 @@
-import streamlit as st
-import os
-import importlib.util
-import requests
 
 # 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
