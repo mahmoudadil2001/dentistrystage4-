@@ -199,11 +199,48 @@ def orders_o():
 def main():
     # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
     if "user_logged" not in st.session_state:
-        st.header("👤 أدخل معلوماتك للبدء")
-        name = st.text_input("✍️ اسمك؟ ")
-        group = st.text_input("👥 كروبك؟")
+    st.markdown("""
+        <style>
+        .login-box {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            direction: rtl;
+        }
+        .login-box input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .login-box button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .login-box button:hover {
+            background-color: #45a049;
+        }
+        </style>
+        <div class="login-box">
+            <h3>👨‍⚕️ أهلاً بك في منصة المحاضرات</h3>
+            <p>يرجى إدخال اسمك والكروب للمتابعة:</p>
+        """, unsafe_allow_html=True)
 
-        if st.button("✅ موافق"):
+    name = st.text_input("✍️ اسمك؟", key="html_name")
+    group = st.text_input("👥 كروبك؟", key="html_group")
+    
+    col1, col2 = st.columns(3)[1:3]  # محاذاة الزر في الوسط
+    with col1:
+        if st.button("✅ دخول"):
             if name.strip() == "" or group.strip() == "":
                 st.warning("يرجى ملء كل الحقول.")
             else:
@@ -212,7 +249,9 @@ def main():
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
                 st.rerun()
-        st.stop()  # لا تكمل تشغيل الموقع
+
+    st.stop()
+
 
     # ✅ بعد تسجيل الاسم، نعرض ترحيب
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
