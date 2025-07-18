@@ -23,7 +23,7 @@ def apply_custom_styles():
         transition: background-color 0.3s ease;
         cursor: pointer;
     }
-    div.stButton > button:hover {
+    div.stButton > button:hover 
         background-color: #45a049;
     }
 
