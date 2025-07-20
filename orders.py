@@ -7,34 +7,6 @@ def local_css(file_name):
     with open(file_name, encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-def main():
-    local_css("styles.css")
-
-    st.title("الصفحة الرئيسية")
-
-    # زر لفتح الدردشة
-    if st.button("فتح غرفة الدردشة"):
-        st.session_state.page = "chat"
-        st.experimental_rerun()
-
-    # --- باقي كود orders.py الخاص بالموقع ---
-    # (يمكنك وضع باقي كود الموقع هنا، أو في دالة أخرى وتناديها بعد الزر)
-
-    # مثال: عرض محتوى أساسي أو ما تبقى من الكود القديم هنا
-    # ... باقي كود orders_o أو ما تريد عرضه بالصفحة الرئيسية ...
-
-# لا تنسى استيراد الدالة main فقط من orders.py في run.py
-
-    st.title("الصفحة الرئيسية")
-
-    if st.button("فتح غرفة الدردشة"):
-        st.session_state.page = "chat"  # غير الصفحة إلى الشات
-
-if __name__ == "__main__":
-    main()
-
-
-# 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
@@ -42,7 +14,6 @@ def send_to_telegram(name, group):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
 
-# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -50,7 +21,6 @@ custom_titles_data = {
     ("generalmedicine", 1): "Lecture 1 name"
 }
 
-# تحويلها إلى شكل القاموس المستخدم في الكود
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
@@ -226,9 +196,10 @@ def orders_o():
             st.session_state.quiz_completed = False
             st.rerun()
 
-# --- الكود الخاص بتسجيل الاسم وتشغيل الموقع ---
 def main():
-    # 🛡️ التأكد من أن المستخدم سجل اسمه قبل تشغيل باقي الموقع
+    local_css("styles.css")
+
+    # تأكد من تسجيل المستخدم (اسم وكروب)
     if "user_logged" not in st.session_state:
         st.header("👤 أدخل معلوماتك للبدء")
         name = st.text_input("✍️ اسمك؟ ")
@@ -243,15 +214,12 @@ def main():
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
                 st.rerun()
-        st.stop()  # لا تكمل تشغيل الموقع
+        st.stop()
 
-    # ✅ بعد تسجيل الاسم، نعرض ترحيب
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
-    # ✅ الآن فقط بعد تسجيل الاسم، شغل التطبيق الأساسي
     orders_o()
 
-    # 🔵 زر قناة التلي + جملة تحت الزر
     st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
         <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
