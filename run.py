@@ -113,7 +113,7 @@ def show_login_page():
             st.session_state.user_id = user.id
             st.session_state.username = user.username
             st.session_state.profile_picture = user.profile_picture
-            st.experimental_rerun()
+            st.rerun()
 
 # صفحة الدردشة مع تحديث تلقائي كل 3 ثواني
 def show_chat_page():
@@ -139,7 +139,7 @@ def show_chat_page():
         st.session_state.user_id = None
         st.session_state.username = None
         st.session_state.profile_picture = None
-        st.experimental_rerun()
+        st.rerun()
 
     st.title(f"مرحباً، {st.session_state.username}")
 
@@ -172,7 +172,7 @@ def show_chat_page():
                 st.warning("يرجى كتابة رسالة أو إرفاق صورة.")
             else:
                 add_message(db, st.session_state.user_id, message_text.strip(), message_image)
-                st.experimental_rerun()
+                st.rerun()
 
 # تحميل التنسيق (اختياري)
 local_css("styles.css")
