@@ -13,3 +13,11 @@ def run_app():
 
 if __name__ == "__main__":
     run_app()
+import streamlit as st
+from chat import main as chat_main
+
+def run_app():
+    chat_main()
+
+if __name__ == "__main__":
+    run_app()
