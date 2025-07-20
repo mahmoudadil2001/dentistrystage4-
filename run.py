@@ -1,6 +1,6 @@
 import streamlit as st
 from orders import main as orders_main
-from main import main as chat_main
+from chat import main as chat_main  # استيراد من chat.py بدل main.py
 
 if "page" not in st.session_state:
     st.session_state.page = "orders"  # البداية بالصفحة الرئيسية (orders)
