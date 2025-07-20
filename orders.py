@@ -197,12 +197,15 @@ def orders_o():
             st.rerun()
 
 def main():
+import streamlit as st
+from utils import send_to_telegram, local_css
+
+def main():
     local_css("styles.css")
 
-    # تأكد من تسجيل المستخدم (اسم وكروب)
     if "user_logged" not in st.session_state:
         st.header("👤 أدخل معلوماتك للبدء")
-        name = st.text_input("✍️ اسمك؟ ")
+        name = st.text_input("✍️ اسمك؟")
         group = st.text_input("👥 كروبك؟")
 
         if st.button("✅ موافق"):
@@ -217,6 +220,11 @@ def main():
         st.stop()
 
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+    st.markdown("✅ يمكنك الآن الدخول إلى غرفة الدردشة:")
+    if st.button("💬 دخول إلى الدردشة"):
+        st.session_state.page = "chat"
+        st.rerun()
+
 
     orders_o()
 
