@@ -3,13 +3,12 @@ from orders import main as orders_main
 from chat import main as chat_main
 
 def main():
-    # تشغيل صفحة الطلبات أولاً (تسجيل المستخدم)
+    # تشغيل واجهة تسجيل المستخدم أولاً
     orders_main()
 
-    # بعد تسجيل الدخول، عرض زر فتح الدردشة
-    if "user_logged" in st.session_state and st.session_state.user_logged:
-        if st.button("💬 فتح الدردشة"):
-            chat_main()
+    # إذا تم تسجيل الدخول، أظهر خيار الدخول إلى الدردشة
+    if st.session_state.get("page") == "chat":
+        chat_main()
 
 if __name__ == "__main__":
     main()
