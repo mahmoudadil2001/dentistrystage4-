@@ -2,4 +2,6 @@ streamlit
 streamlit-cookies-manager
 gspread 
 google-auth
-pip install sqlalchemy
+pillow
+streamlit-autorefresh
+sqlalchemy
