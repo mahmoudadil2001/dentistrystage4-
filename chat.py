@@ -1,3 +1,7 @@
+def main():
+    # كل الكود الخاص بالدردشة هنا
+    ...
+
 import streamlit as st
 import os
 import uuid
