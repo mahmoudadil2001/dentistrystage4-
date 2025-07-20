@@ -88,35 +88,36 @@ def get_online_users(db, timeout_seconds=60):
     threshold = datetime.utcnow() - timedelta(seconds=timeout_seconds)
     return db.query(User).filter(User.last_seen >= threshold, User.is_online == True).all()
 
-def show_chat_page():
+# الدالة الرئيسية المتوافقة مع run.py
+def main():
     db = SessionLocal()
 
-    # تحقق من بيانات الجلسة
     if "visitor_name" not in st.session_state:
         st.warning("يرجى تسجيل الدخول أولاً.")
         st.session_state.page = "orders"
         st.rerun()
 
-    # تحديث حالة المستخدم
-    user = add_or_update_user(db, st.session_state.visitor_name)
+    username = st.session_state.visitor_name
+    group = st.session_state.visitor_group
+
+    user = add_or_update_user(db, username)
     st.session_state.user_id = user.id
     st.session_state.username = user.username
 
+    st.title("💬 غرفة الدردشة")
+    st.markdown(f"👋 مرحباً {username} ({group})")
+
     # الشريط الجانبي - المستخدمون المتصلون
-    st.sidebar.title("المستخدمون المتصلون الآن")
-    online_users = get_online_users(db)
-    for u in online_users:
-        st.sidebar.markdown(f"- {u.username}")
+    with st.sidebar:
+        st.subheader("🟢 المتصلون حالياً")
+        online_users = get_online_users(db)
+        for u in online_users:
+            st.markdown(f"- {u.username}")
+        if st.button("🔙 العودة للصفحة الرئيسية"):
+            st.session_state.page = "orders"
+            st.rerun()
 
-    if st.sidebar.button("🚪 تسجيل الخروج"):
-        mark_user_offline(db, st.session_state.user_id)
-        for key in ["user_id", "username", "visitor_name", "visitor_group", "user_logged"]:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
-
-    # محتوى الدردشة
-    st.title(f"مرحباً، {st.session_state.username}")
+    # عرض الرسائل
     messages = get_recent_messages(db, limit=100)
     for msg in messages:
         cols = st.columns([1, 10])
@@ -134,20 +135,14 @@ def show_chat_page():
                 st.image(os.path.join(UPLOAD_DIR, msg.image_filename))
             st.markdown("---")
 
-    # نموذج إرسال رسالة
+    # إرسال رسالة
     with st.form("send_message_form", clear_on_submit=True):
         message_text = st.text_area("اكتب رسالتك هنا...", height=80)
-        message_image = st.file_uploader("ارفق صورة (اختياري)", type=["png", "jpg", "jpeg", "gif", "webp"])
+        message_image = st.file_uploader("📎 صورة (اختياري)", type=["png", "jpg", "jpeg", "webp", "gif"])
         submit = st.form_submit_button("📩 إرسال")
         if submit:
-            if (not message_text.strip()) and (not message_image):
+            if not message_text.strip() and not message_image:
                 st.warning("يرجى كتابة رسالة أو إرفاق صورة.")
             else:
-                add_message(db, st.session_state.user_id, message_text.strip(), message_image)
+                add_message(db, user.id, message_text.strip(), message_image)
                 st.rerun()
-
-def main():
-    show_chat_page()
-
-if __name__ == "__main__":
-    main()
