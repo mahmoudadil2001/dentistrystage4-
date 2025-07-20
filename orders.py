@@ -3,6 +3,21 @@ import os
 import importlib.util
 import requests
 
+def local_css(file_name):
+    with open(file_name, encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+def main():
+    local_css("styles.css")
+    st.title("الصفحة الرئيسية")
+
+    if st.button("فتح غرفة الدردشة"):
+        st.session_state.page = "chat"  # غير الصفحة إلى الشات
+
+if __name__ == "__main__":
+    main()
+
+
 # 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
