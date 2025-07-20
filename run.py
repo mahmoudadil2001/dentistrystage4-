@@ -1,17 +1,15 @@
 import streamlit as st
+from orders import main as orders_main
+from main import main as chat_main
 
-def local_css(file_name):
-    with open(file_name, encoding="utf-8") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+if "page" not in st.session_state:
+    st.session_state.page = "orders"  # البداية بالصفحة الرئيسية (orders)
 
-def main():
-    local_css("styles.css")
-    st.title("مرحباً بك في التطبيق")
-
-    if st.button("فتح غرفة الدردشة"):
-        # استيراد ملف main.py وتنفيذ دالة main منه
-        from main import main as chat_main
+def run_app():
+    if st.session_state.page == "orders":
+        orders_main()
+    elif st.session_state.page == "chat":
         chat_main()
 
 if __name__ == "__main__":
-    main()
+    run_app()
