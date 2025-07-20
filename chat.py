@@ -1,22 +1,21 @@
-import streamlit as st
 import os
-import uuid
 from datetime import datetime, timedelta
 from PIL import Image
+import streamlit as st
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
-# إعداد مسارات وقاعدة بيانات
+# إعداد المسارات وقاعدة البيانات
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "static_uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'chat.db')}"
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# نماذج قاعدة البيانات
+# نماذج البيانات
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
@@ -81,13 +80,14 @@ def add_message(db, user_id, content, image_file=None):
     db.refresh(msg)
     return msg
 
-def get_recent_messages(db, limit=100):
+def get_recent_messages(db, limit=50):
     return db.query(Message).order_by(Message.timestamp.asc()).limit(limit).all()
 
 def get_online_users(db, timeout_seconds=60):
     threshold = datetime.utcnow() - timedelta(seconds=timeout_seconds)
     return db.query(User).filter(User.last_seen >= threshold, User.is_online == True).all()
 
+# صفحة تسجيل الدخول
 def show_login_page():
     db = SessionLocal()
     st.title("مرحباً بك في غرفة الدردشة")
@@ -106,6 +106,7 @@ def show_login_page():
             st.session_state.profile_picture = user.profile_picture
             st.rerun()
 
+# صفحة الدردشة مع عرض المستخدمين النشطين في الشريط الجانبي
 def show_chat_page():
     db = SessionLocal()
     user = db.query(User).filter(User.id == st.session_state.user_id).first()
@@ -115,10 +116,10 @@ def show_chat_page():
         db.commit()
 
     st.sidebar.title("المستخدمون المتصلون الآن")
-    online_users = get_online_users(db)
+    online_users = get_online_users(db, timeout_seconds=60)
     for u in online_users:
         if u.profile_picture:
-            st.sidebar.image(os.path.join(UPLOAD_DIR, u.profile_picture), width=35, caption=u.username)
+            st.sidebar.image(os.path.join(UPLOAD_DIR, u.profile_picture), width=40, caption=u.username)
         else:
             st.sidebar.markdown(f"👤 {u.username}")
 
@@ -161,19 +162,3 @@ def show_chat_page():
             else:
                 add_message(db, st.session_state.user_id, message_text.strip(), message_image)
                 st.rerun()
-
-def main():
-    if "user_id" not in st.session_state:
-        st.session_state.user_id = None
-    if "username" not in st.session_state:
-        st.session_state.username = None
-    if "profile_picture" not in st.session_state:
-        st.session_state.profile_picture = None
-
-    if st.session_state.user_id is None:
-        show_login_page()
-    else:
-        show_chat_page()
-
-if __name__ == "__main__":
-    main()
