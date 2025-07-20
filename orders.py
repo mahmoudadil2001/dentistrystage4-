@@ -9,6 +9,22 @@ def local_css(file_name):
 
 def main():
     local_css("styles.css")
+
+    st.title("الصفحة الرئيسية")
+
+    # زر لفتح الدردشة
+    if st.button("فتح غرفة الدردشة"):
+        st.session_state.page = "chat"
+        st.experimental_rerun()
+
+    # --- باقي كود orders.py الخاص بالموقع ---
+    # (يمكنك وضع باقي كود الموقع هنا، أو في دالة أخرى وتناديها بعد الزر)
+
+    # مثال: عرض محتوى أساسي أو ما تبقى من الكود القديم هنا
+    # ... باقي كود orders_o أو ما تريد عرضه بالصفحة الرئيسية ...
+
+# لا تنسى استيراد الدالة main فقط من orders.py في run.py
+
     st.title("الصفحة الرئيسية")
 
     if st.button("فتح غرفة الدردشة"):
