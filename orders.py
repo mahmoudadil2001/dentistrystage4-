@@ -19,7 +19,8 @@ custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
     ("endodontics", 3): "Lecture 3 name",
-    ("generalmedicine", 1): "Lecture 1 name"
+    ("generalmedicine", 1): "Lecture 1 name",
+    ("oralpathology", 1): "Lecture 1 biopsy"
 }
 
 # تحويلها إلى شكل القاموس المستخدم في الكود
