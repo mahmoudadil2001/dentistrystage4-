@@ -103,7 +103,7 @@ def login_page():
             if user_data:
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = user_data['username']
-                st.experimental_rerun()
+                st.rerun()
 
     if not st.session_state['show_signup']:
         username = st.text_input("اسم المستخدم", key="login_username")
@@ -152,7 +152,7 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
