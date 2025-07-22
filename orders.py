@@ -17,7 +17,7 @@ custom_titles_data = {
     ("endodontics", 2): "Lecture 2 periapical disease classification",
     ("endodontics", 3): "Lecture 3 name",
     ("generalmedicine", 1): "Lecture 1 name",
-    ("oralpathology", 1): "Lec 1 Biopsy"  # Added this line
+    ("oralpathology", 1): "Lec 1 Biopsy"
 }
 
 # تحويلها إلى شكل القاموس المستخدم في الكود
@@ -86,7 +86,7 @@ def orders_o():
         return
 
     questions = questions_module.questions
-    Links = getattr(questions_module, "Links", [])  # روابط الشرح أو قائمة فارغة
+    Links = getattr(questions_module, "Links", [])
 
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
@@ -175,6 +175,14 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
+        # عرض روابط الشرح أسفل السؤال بدون عنوان النص
+        if Links:
+            st.markdown("---")
+            # السطر التالي معلق ليختفي النص "روابط شرح المحاضرة"
+            # st.markdown("### روابط شرح المحاضرة")
+            for link in Links:
+                st.markdown(f"- [{link['title']}]({link['url']})")
+
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
     else:
@@ -196,14 +204,6 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.rerun()
-
-    # عرض روابط الشرح أسفل الأسئلة لو موجودة
-if Links:
-    st.markdown("---")
-    # st.markdown("### روابط شرح المحاضرة")
-    for link in Links:
-        st.markdown(f"- [{link['title']}]({link['url']})")
-
 
 def main():
     if "user_logged" not in st.session_state:
