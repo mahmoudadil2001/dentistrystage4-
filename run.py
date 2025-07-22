@@ -81,13 +81,13 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         just_logged_in = login_page()
         if just_logged_in:
-            st.experimental_rerun()
+            st.rerun()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.experimental_rerun()
+            st.rerun()
 
         orders_main()
 
