@@ -49,3 +49,34 @@ body {
   color: #555;
   font-size: 14px;
 }
+
+
+
+/* خلفية الصفحة */
+body {
+    background: linear-gradient(135deg, #c3d2e9, #f3f6fb);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* حاوية نموذج الدخول */
+.login-container {
+    max-width: 400px;
+    margin: 70px auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    direction: rtl;
+}
+
+/* عنوان */
+.login-container h2 {
+    text-align: center;
+    color: #1c3e6e;
+    margin-bottom: 30px;
+}
+
+/* أزرار صغيرة تحت */
+.link-buttons {
+    margin-top: 20px;
+}
