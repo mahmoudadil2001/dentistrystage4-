@@ -2,25 +2,6 @@ import streamlit as st
 import os
 import importlib.util
 
-# 🟢 تحقق من حالة الدخول
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
-    st.markdown("## 👋 مرحبًا بك في موقعنا")
-    st.markdown("يرجى تسجيل الدخول أولًا:")
-    st.markdown("[اضغط هنا لتسجيل الدخول](https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec)")
-    
-    st.warning("بعد تسجيل الدخول، عد إلى هذه الصفحة واضغط على الزر أدناه")
-    if st.button("تم تسجيل الدخول"):
-        st.session_state.logged_in = True
-        st.experimental_rerun()
-else:
-    # ✳️ هنا نبدأ التطبيق الحقيقي
-    from orders import main as orders_main
-    orders_main()
-
-
 # أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
