@@ -1,15 +1,6 @@
 import streamlit as st
 import os
 import importlib.util
-import requests
-
-# 🟢 إرسال الاسم والقروب إلى تليجرام
-def send_to_telegram(name, group):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": msg})
 
 # ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
@@ -158,7 +149,7 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -173,13 +164,11 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         # عرض روابط الشرح أسفل السؤال بدون عنوان النص
         if Links:
             st.markdown("---")
-            # السطر التالي معلق ليختفي النص "روابط شرح المحاضرة"
-            # st.markdown("### روابط شرح المحاضرة")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
@@ -203,45 +192,29 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 def main():
-    if "user_logged" not in st.session_state:
-        # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
-        st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-                border-radius: 15px;
-                padding: 20px;
-                color: #003049;
-                font-family: 'Tajawal', sans-serif;
-                font-size: 18px;
-                font-weight: 600;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 25px;
-            ">
-هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        name = st.text_input("✍️ اسمك؟ ")
-        group = st.text_input("👥 كروبك؟")
-
-        if st.button("✅ موافق"):
-            if name.strip() == "" or group.strip() == "":
-                st.warning("يرجى ملء كل الحقول.")
-            else:
-                send_to_telegram(name, group)
-                st.session_state.user_logged = True
-                st.session_state.visitor_name = name
-                st.session_state.visitor_group = group
-                st.rerun()
-        st.stop()
-    
-    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+    # حذف تسجيل الاسم والقروب، ونفتح الموقع مباشرة
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: #003049;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        ">
+        هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً اختار المادة والمحاضرة وابدأ الاختبار بالتوفيق
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     orders_o()
 
@@ -261,3 +234,6 @@ def main():
         اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
     </div>
     ''', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
