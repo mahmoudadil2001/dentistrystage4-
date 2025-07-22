@@ -36,7 +36,7 @@ def show_welcome():
     st.image(
         "https://images.unsplash.com/photo-1588776814546-44ff6a7e8d3b?auto=format&fit=crop&w=900&q=80",
         caption="Your Journey Starts Here",
-        use_column_width=True,
+        use_container_width=True,
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
