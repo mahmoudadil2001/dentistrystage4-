@@ -5,10 +5,8 @@ from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
+# 🔐 إعداد الكوكيز
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
-if not cookies.ready():
-    cookies.load()  # تحميل الكوكيز بشكل متزامن
-    st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -215,4 +213,28 @@ def forgot_password_page():
                 st.error("فشل في تحديث كلمة المرور")
 
 def main():
-    load
+    load_css("styles.css")
+
+    # تحميل الكوكيز مرة واحدة في بداية التشغيل
+    if not cookies.ready():
+        cookies.load()
+
+    if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+        if st.session_state.get('show_forgot', False):
+            forgot_password_page()
+        else:
+            login_page()
+    else:
+        st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
+        if st.sidebar.button("تسجيل خروج"):
+            st.session_state['logged_in'] = False
+            st.session_state.pop('user_name', None)
+            cookies.delete("username")
+            cookies.delete("password")
+            cookies.save()
+            st.experimental_rerun()
+
+        orders_main()
+
+if __name__ == "__main__":
+    main()
