@@ -1,4 +1,15 @@
 import streamlit as st
+import requests  # For sending message to Telegram
+
+# Replace these with your actual bot token and chat ID
+BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
+
+def send_to_telegram(name, group):
+    message = f"👤 اسم الطالب: {name}\n👥 القروب: {group}"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = {"chat_id": CHAT_ID, "text": message}
+    requests.post(url, data=data)
 
 def show_welcome():
     st.markdown(
@@ -31,9 +42,28 @@ def show_welcome():
         <div class="welcome-container">
             <h1 class="welcome-title">🦷 Welcome to Dentistry Stage 4! 🦷</h1>
             <p class="welcome-subtitle">Your journey to becoming a dental expert starts here. Let’s learn, practice, and succeed together! 💪✨</p>
-            <img src="https://images.unsplash.com/photo-1588776814546-44ff6a7e8d3b?auto=format&fit=crop&w=900&q=80" style="width: 100%; border-radius: 10px; margin-top: 20px;" />
-            <p style="text-align: center; font-style: italic; margin-top: 10px;">Your Journey Starts Here</p>
         </div>
         """,
         unsafe_allow_html=True
     )
+
+    st.image(
+        "https://images.unsplash.com/photo-1588776814546-44ff6a7e8d3b?auto=format&fit=crop&w=900&q=80",
+        caption="Your Journey Starts Here",
+        use_container_width=True,
+    )
+
+    st.markdown("---")
+    st.markdown("### 📝 ادخل معلوماتك للبدء")
+
+    name = st.text_input("اسمك")
+    group = st.text_input("قروبك")
+
+    if st.button("✅ موافق"):
+        if name.strip() and group.strip():
+            send_to_telegram(name, group)
+            st.success("✅ تم الإرسال! اضغط على الزر أدناه للمتابعة.")
+            st.session_state.welcome_shown = True
+            st.experimental_rerun()
+        else:
+            st.warning("❗ الرجاء تعبئة كل الحقول قبل المتابعة.")
