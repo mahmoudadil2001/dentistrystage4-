@@ -4,11 +4,15 @@ import pandas as pd
 GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ/export?format=csv&id=1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ&gid=0"
 
 def check_login(username, password):
-    # نقرأ CSV بدون رأس ونعطي أسماء الأعمدة يدويًا
     df = pd.read_csv(GOOGLE_SHEET_CSV_URL, header=None, names=["username", "password", "email", "phone"])
-    
+    df = df.fillna('')
+
     for _, row in df.iterrows():
-        if row['username'].lower() == username.lower() and row['password'] == password:
+        user_cell = row['username']
+        pass_cell = row['password']
+
+        if (isinstance(user_cell, str) and isinstance(pass_cell, str) and
+            user_cell.lower() == username.lower() and pass_cell == password):
             return True
     return False
 
