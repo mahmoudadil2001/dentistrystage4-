@@ -5,7 +5,7 @@ from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# 🔐 تهيئة الكوكيز
+# تهيئة الكوكيز
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
 
 def load_css(file_path):
@@ -91,19 +91,18 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # هنا ننتظر تهيئة الكوكيز كاملة قبل أي شيء
+    # تأكد من تهيئة الكوكيز
     if not cookies.ready():
         cookies.initialize()
         st.stop()
 
-    # تحمي من None عند قراءة الكوكيز
     if cookies.cookies is None:
         cookies.cookies = {}
 
     username_cookie = cookies.cookies.get("username")
     password_cookie = cookies.cookies.get("password")
 
-    # إذا يوجد كوكيز صالح نستخدمه لتسجيل الدخول تلقائياً
+    # تسجيل دخول تلقائي إذا يوجد كوكيز صالح
     if not st.session_state.get("logged_in") and username_cookie and password_cookie:
         if check_login(username_cookie, password_cookie):
             user_data = get_user_data(username_cookie)
