@@ -5,10 +5,10 @@ from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# 🔐 الكوكيز - لإبقاء المستخدم مسجلاً
+# 🔐 إعداد الكوكيز
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
 if not cookies.ready():
-    cookies.initialize()  # <-- تأكد من تهيئة الكوكيز
+    cookies.initialize()
     st.stop()
 
 def load_css(file_path):
@@ -94,10 +94,10 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # محاولة تسجيل الدخول تلقائياً من الكوكيز
-    if not st.session_state.get("logged_in") and cookies.get("username") and cookies.get("password"):
-        if check_login(cookies.get("username"), cookies.get("password")):
-            user_data = get_user_data(cookies.get("username"))
+    # محاولة تسجيل الدخول التلقائي من الكوكيز
+    if not st.session_state.get("logged_in") and cookies.cookies.get("username") and cookies.cookies.get("password"):
+        if check_login(cookies.cookies.get("username"), cookies.cookies.get("password")):
+            user_data = get_user_data(cookies.cookies.get("username"))
             if user_data:
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = user_data['username']
@@ -118,10 +118,9 @@ def login_page():
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
 
-                        # حفظ الكوكيز لو اختار المستخدم "أبقني مسجلاً"
                         if keep_logged:
-                            cookies.set("username", username)
-                            cookies.set("password", password)
+                            cookies.cookies["username"] = username
+                            cookies.cookies["password"] = password
                             cookies.save()
 
                         message = (
@@ -227,7 +226,6 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            # حذف الكوكيز عند تسجيل الخروج
             cookies.delete("username")
             cookies.delete("password")
             cookies.save()
