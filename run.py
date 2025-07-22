@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from orders import main as orders_main  # دالة العرض الأساسية في ملف orders.py
+from orders import main as orders_main  # دالة العرض من ملف orders.py
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJbXGCdU8MfdOuAAzQA1ubfsQu1655AQ53X8O2I-242BZG8Jiscybpd58l40LBkXS8/exec"
 
@@ -13,35 +13,23 @@ def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    data = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "HTML"
-    }
+    data = {"chat_id": chat_id, "text": message, "parse_mode": "HTML"}
     try:
         requests.post(url, data=data)
     except Exception as e:
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
 
 def check_login(username, password):
-    data = {
-        "action": "check",
-        "username": username,
-        "password": password
-    }
+    data = {"action": "check", "username": username, "password": password}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        # لا تعرض رد السيرفر بشكل واضح
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=10)
         return res.text.strip() == "TRUE"
     except Exception as e:
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
         return False
 
 def get_user_data(username):
-    data = {
-        "action": "get_user_data",
-        "username": username
-    }
+    data = {"action": "get_user_data", "username": username}
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
         text = res.text.strip()
@@ -77,6 +65,20 @@ def add_user(username, password, full_name, group, phone):
         st.error(f"خطأ في تسجيل المستخدم الجديد: {e}")
         return False
 
+def update_password(username, full_name, new_password):
+    data = {
+        "action": "update_password",
+        "username": username,
+        "full_name": full_name,
+        "new_password": new_password
+    }
+    try:
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        return res.text.strip() == "UPDATED"
+    except Exception as e:
+        st.error(f"خطأ في تحديث كلمة المرور: {e}")
+        return False
+
 def login_page():
     st.title("تسجيل الدخول")
 
@@ -86,7 +88,6 @@ def login_page():
         st.session_state['signup_success'] = False
 
     if not st.session_state['show_signup']:
-        # نموذج تسجيل الدخول
         username = st.text_input("اسم المستخدم", key="login_username")
         password = st.text_input("كلمة المرور", type="password", key="login_password")
 
@@ -108,7 +109,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.rerun()  # إعادة تحميل الصفحة فورًا بعد الدخول
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -118,14 +119,18 @@ def login_page():
             st.success("✅ تم إنشاء الحساب بنجاح، سجل دخولك الآن")
             st.session_state['signup_success'] = False
 
-        if st.button("إنشاء حساب جديد"):
-            st.session_state['show_signup'] = True
-            st.rerun()  # إعادة تحميل فورًا لعرض نموذج التسجيل
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("إنشاء حساب جديد"):
+                st.session_state['show_signup'] = True
+                st.rerun()
+        with col2:
+            if st.button("هل نسيت كلمة المرور؟"):
+                st.session_state['show_forgot'] = True
+                st.rerun()
 
     else:
-        # نموذج إنشاء حساب جديد
         st.title("إنشاء حساب جديد")
-
         signup_username = st.text_input("اسم المستخدم", key="signup_username")
         signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
         signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
@@ -134,28 +139,54 @@ def login_page():
 
         if st.button("تسجيل"):
             if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
-                st.warning("يرجى ملء جميع حقول التسجيل")
+                st.warning("يرجى ملء جميع الحقول")
             else:
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول مع الرسالة
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول
+            st.rerun()
 
-    return False
+def forgot_password_page():
+    st.title("استعادة كلمة المرور")
+
+    username = st.text_input("اسم المستخدم", key="forgot_username")
+    full_name = st.text_input("الاسم الكامل", key="forgot_full_name")
+
+    if st.button("تحقق"):
+        user_data = get_user_data(username)
+        if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
+            st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
+
+            new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
+            confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
+
+            if st.button("تحديث كلمة المرور"):
+                if new_password != confirm_password:
+                    st.warning("كلمة المرور غير متطابقة")
+                elif update_password(username, full_name, new_password):
+                    st.success("✅ تم تحديث كلمة المرور بنجاح، عد لتسجيل الدخول")
+                    if st.button("العودة لتسجيل الدخول"):
+                        st.session_state['show_forgot'] = False
+                        st.rerun()
+                else:
+                    st.error("فشل في تحديث كلمة المرور")
+        else:
+            st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
 
 def main():
     load_css("styles.css")
 
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        just_logged_in = login_page()
-        if just_logged_in:
-            st.rerun()
+        if 'show_forgot' in st.session_state and st.session_state['show_forgot']:
+            forgot_password_page()
+        else:
+            login_page()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
