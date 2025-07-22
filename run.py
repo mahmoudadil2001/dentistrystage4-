@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from orders import main as orders_main
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAbMUZosZP2-IYLagqCutoa4hdXHszQhLL13fW_fyhYaEpAVrG5f0lokyDS1EWoDqq/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec"
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -40,17 +40,19 @@ def add_user(username, password, email, phone):
 def login_page():
     st.title("تسجيل الدخول")
 
-    username = st.text_input("اسم المستخدم")
-    password = st.text_input("كلمة المرور", type="password")
+    username = st.text_input("اسم المستخدم", key="login_username")
+    password = st.text_input("كلمة المرور", type="password", key="login_password")
 
-    if st.button("دخول"):
+    login_clicked = st.button("دخول")
+
+    if login_clicked:
         if not username or not password:
             st.warning("يرجى ملء جميع الحقول")
         else:
             if check_login(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = username
-                st.experimental_rerun()
+                return True  # بدلًا من إعادة تشغيل هنا
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
@@ -70,12 +72,15 @@ def login_page():
                 st.success("تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول")
             else:
                 st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
+    return False
 
 def main():
     load_css("styles.css")
 
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        login_page()
+        just_logged_in = login_page()
+        if just_logged_in:
+            st.experimental_rerun()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
