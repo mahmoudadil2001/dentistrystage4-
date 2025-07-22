@@ -3,15 +3,28 @@ import pandas as pd
 
 GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ/export?format=csv&id=1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ&gid=0"
 
+def check_login(username, password):
+    # نقرأ CSV بدون رأس ونعطي أسماء الأعمدة يدويًا
+    df = pd.read_csv(GOOGLE_SHEET_CSV_URL, header=None, names=["username", "password", "email", "phone"])
+    
+    for _, row in df.iterrows():
+        if row['username'].lower() == username.lower() and row['password'] == password:
+            return True
+    return False
+
 def main():
-    st.title("معاينة ملف Google Sheets")
+    st.title("تسجيل الدخول")
 
-    df = pd.read_csv(GOOGLE_SHEET_CSV_URL)
-    st.write("أسماء الأعمدة الموجودة في ملف CSV:")
-    st.write(df.columns.tolist())
+    username = st.text_input("اسم المستخدم")
+    password = st.text_input("كلمة المرور", type="password")
+    login_button = st.button("دخول")
 
-    st.write("أول 5 صفوف من البيانات:")
-    st.write(df.head())
+    if login_button:
+        if check_login(username, password):
+            st.success(f"مرحبًا {username}، تم تسجيل الدخول بنجاح!")
+            st.write("هنا محتوى الموقع بعد الدخول")
+        else:
+            st.error("اسم المستخدم أو كلمة المرور خاطئ.")
 
 if __name__ == "__main__":
     main()
