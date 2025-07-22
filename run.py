@@ -96,11 +96,8 @@ def login_page():
         cookies.initialize()
         st.stop()
 
-    if cookies.cookies is None:
-        cookies.cookies = {}
-
-    username_cookie = cookies.cookies.get("username")
-    password_cookie = cookies.cookies.get("password")
+    username_cookie = cookies.get("username")
+    password_cookie = cookies.get("password")
 
     # تسجيل دخول تلقائي إذا يوجد كوكيز صالح
     if not st.session_state.get("logged_in") and username_cookie and password_cookie:
@@ -127,8 +124,8 @@ def login_page():
                         st.session_state['user_name'] = user_data['username']
 
                         if keep_logged:
-                            cookies.cookies["username"] = username
-                            cookies.cookies["password"] = password
+                            cookies.set("username", username)
+                            cookies.set("password", password)
                             cookies.save()
 
                         st.experimental_rerun()
