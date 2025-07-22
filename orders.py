@@ -9,9 +9,25 @@ def send_to_telegram(name, group):
     chat_id = "6283768537"
     msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": msg})
+    try:
+        requests.post(url, data={"chat_id": chat_id, "text": msg})
+    except Exception as e:
+        st.warning("تعذر إرسال بيانات التليجرام.")
 
-# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
+# 🟢 إرسال البيانات إلى Google Apps Script
+def send_to_google_script(name, group):
+    url = "https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec"
+    try:
+        data = {'name': name, 'group': group}
+        response = requests.post(url, data=data)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    except Exception as e:
+        return False
+
+# أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -158,7 +174,7 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -173,13 +189,11 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         # عرض روابط الشرح أسفل السؤال بدون عنوان النص
         if Links:
             st.markdown("---")
-            # السطر التالي معلق ليختفي النص "روابط شرح المحاضرة"
-            # st.markdown("### روابط شرح المحاضرة")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
@@ -203,11 +217,10 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 def main():
     if "user_logged" not in st.session_state:
-        # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
         st.markdown(
             """
             <div style="
@@ -222,7 +235,8 @@ def main():
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
                 margin-bottom: 25px;
             ">
-هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق            </div>
+            هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق
+            </div>
             """,
             unsafe_allow_html=True,
         )
@@ -234,13 +248,20 @@ def main():
             if name.strip() == "" or group.strip() == "":
                 st.warning("يرجى ملء كل الحقول.")
             else:
+                sent_gs = send_to_google_script(name, group)
                 send_to_telegram(name, group)
+                if sent_gs:
+                    st.success("تم تسجيل بياناتك بنجاح.")
+                else:
+                    st.warning("تعذر إرسال بياناتك لجوجل شيت.")
+
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
-                st.rerun()
+                st.experimental_rerun()
+
         st.stop()
-    
+
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
     orders_o()
