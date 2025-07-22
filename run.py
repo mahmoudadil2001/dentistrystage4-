@@ -2,105 +2,99 @@ import streamlit as st
 import requests
 from orders import main as orders_main
 
-# 🔗 رابط السكربت الخاص بتسجيل الاسم والقروب في Google Sheets
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAbMUZosZP2-IYLagqCutoa4hdXHszQhLL13fW_fyhYaEpAVrG5f0lokyDS1EWoDqq/exec"
 
-# 🎨 تحميل CSS مخصص لجمالية الواجهة
-def load_custom_css():
+# ✅ تحميل CSS
+def load_css():
     st.markdown("""
         <style>
-            /* الخلفية */
-            body {
-                background-color: #f3f4f6;
-            }
+        /* خلفية متدرجة */
+        body {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+        }
 
-            /* صندوق تسجيل الدخول */
-            .login-container {
-                background-color: white;
-                padding: 3rem;
-                border-radius: 20px;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-                width: 100%;
-                max-width: 400px;
-                margin: auto;
-            }
+        /* تخصيص صفحة ستريمليت */
+        .stApp {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-            /* العنوان */
-            .login-container h2 {
-                text-align: center;
-                color: #1f2937;
-                margin-bottom: 1.5rem;
-            }
+        /* كارت تسجيل الدخول */
+        .login-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            max-width: 400px;
+            margin: auto;
+            margin-top: 100px;
+        }
 
-            /* الحقول */
-            .login-container input {
-                width: 100%;
-                padding: 0.75rem;
-                margin-bottom: 1rem;
-                border: 1px solid #d1d5db;
-                border-radius: 10px;
-                font-size: 1rem;
-            }
+        /* الحقول */
+        input {
+            border-radius: 10px !important;
+            padding: 10px !important;
+        }
 
-            /* زر الدخول */
-            .login-container button {
-                background-color: #2563eb;
-                color: white;
-                width: 100%;
-                padding: 0.75rem;
-                font-size: 1rem;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
-            }
+        /* زر الدخول */
+        div.stButton > button {
+            background-color: #ffffff;
+            color: #2575fc;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+            transition: 0.3s ease-in-out;
+        }
 
-            .login-container button:hover {
-                background-color: #1e40af;
-            }
+        div.stButton > button:hover {
+            background-color: #2575fc;
+            color: white;
+            box-shadow: 0 0 10px white;
+        }
 
-            /* مركز الصفحة بالكامل */
-            .center-page {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 90vh;
-            }
+        h2, h3, h4, p {
+            text-align: center;
+        }
+
         </style>
     """, unsafe_allow_html=True)
 
-# 🟢 إرسال البيانات إلى Google Sheets
-def send_data_to_google_sheet(name, group):
-    try:
-        requests.post(GOOGLE_SCRIPT_URL, data={"name": name, "group": group}, timeout=5)
-    except:
-        pass
-
 # ✅ واجهة تسجيل الدخول
 def show_login():
-    load_custom_css()
-    st.markdown('<div class="center-page"><div class="login-container">', unsafe_allow_html=True)
-    st.markdown("<h2>تسجيل الدخول</h2>", unsafe_allow_html=True)
+    load_css()
 
-    name = st.text_input("الاسم الكامل")
-    group = st.text_input("المجموعة")
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown("<h2>👋 مرحبًا بك!</h2>", unsafe_allow_html=True)
+    st.markdown("<p>الرجاء تسجيل الدخول للمتابعة</p>", unsafe_allow_html=True)
 
-    if st.button("دخول"):
-        if name.strip() != "" and group.strip() != "":
-            send_data_to_google_sheet(name, group)
-            st.session_state.name = name
-            st.session_state.group = group
-            st.session_state.page = "quiz"
-            st.rerun()
-        else:
-            st.warning("يرجى إدخال الاسم والمجموعة")
+    username = st.text_input("اسم المستخدم")
+    password = st.text_input("كلمة المرور", type="password")
 
-    st.markdown('</div></div>', unsafe_allow_html=True)
+    if st.button("تسجيل الدخول"):
+        with st.spinner("جار التحقق..."):
+            try:
+                res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "login", "username": username, "password": password})
+                if res.status_code == 200 and res.text.strip() == "success":
+                    st.success("تم تسجيل الدخول بنجاح ✅")
+                    st.session_state.logged_in = True
+                else:
+                    st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة")
+            except:
+                st.error("حدث خطأ في الاتصال بالخادم")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# 🚀 تشغيل التطبيق
-if "page" not in st.session_state:
-    st.session_state.page = "login"
+# ✅ التطبيق الرئيسي
+def main():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-if st.session_state.page == "login":
-    show_login()
-elif st.session_state.page == "quiz":
-    orders_main()
+    if not st.session_state.logged_in:
+        show_login()
+    else:
+        orders_main()
+
+# ✅ تشغيل التطبيق
+if __name__ == "__main__":
+    main()
