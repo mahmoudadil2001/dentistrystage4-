@@ -30,7 +30,7 @@ def check_login(username, password):
         "password": password
     }
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         # لا تعرض رد السيرفر بشكل واضح
         return res.text.strip() == "TRUE"
     except Exception as e:
