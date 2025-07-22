@@ -245,12 +245,11 @@ def main():
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
-                st.experimental_rerun()  # استخدم هذا بدلاً من st.rerun()
+                st.rerun()()  # استخدم هذا بدلاً من st.rerun()
 
         st.stop()
 
-    # بعد تسجيل الدخول، نعرض الترحيب
-    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+  
 
 if __name__ == "__main__":
     main()
