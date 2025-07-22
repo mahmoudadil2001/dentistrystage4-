@@ -205,12 +205,6 @@ def orders_o():
             st.session_state.quiz_completed = False
             st.rerun()
 
-import streamlit as st
-
-def send_to_telegram(name, group):
-    # ضع هنا كود إرسال الرسالة للبوت أو API
-    pass
-
 def main():
     if "user_logged" not in st.session_state:
         # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
@@ -246,6 +240,11 @@ def main():
                 st.session_state.visitor_group = group
                 st.rerun()
         st.stop()
+    
+    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+
+    orders_o()
+
     st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
         <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
