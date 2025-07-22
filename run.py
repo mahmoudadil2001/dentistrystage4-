@@ -100,7 +100,7 @@ def login_page():
             if user_data:
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = user_data['username']
-                st.experimental_rerun()
+                st.rerun()
 
     if not st.session_state['show_signup']:
         username = st.text_input("اسم المستخدم", key="login_username")
@@ -131,7 +131,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -153,7 +153,7 @@ def login_page():
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.experimental_rerun()
+                st.rerun()
 
     else:
         st.title("إنشاء حساب جديد")
@@ -170,13 +170,13 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()
+            st.rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -208,7 +208,7 @@ def forgot_password_page():
                 st.session_state['password_updated'] = False
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
@@ -232,7 +232,7 @@ def main():
             cookies.delete("username")
             cookies.delete("password")
             cookies.save()
-            st.experimental_rerun()
+            st.rerun()
 
         orders_main()
 
