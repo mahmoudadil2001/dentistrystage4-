@@ -1,0 +1,51 @@
+button {
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
+}
+
+button:hover {
+    background-color: #005a9e;
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 90, 158, 0.5);
+}
+
+
+/* 🔵 خلفية متدرجة جميلة */
+body {
+  background: linear-gradient(to bottom right, #d4f1f9, #eafaf1);
+  font-family: 'Tajawal', sans-serif;
+  color: #003049;
+}
+
+/* 🔹 أزرار جميلة */
+.button {
+  display: inline-block;
+  padding: 12px 24px;
+  margin: 10px;
+  background-color: #0096c7;
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  transition: background-color 0.3s ease-in-out;
+  font-size: 16px;
+}
+
+.button:hover {
+  background-color: #0077b6;
+}
+
+/* 🔸 الفوتر */
+.footer {
+  margin-top: 50px;
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+}
