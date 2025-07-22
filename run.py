@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from orders import main as orders_main  # دالة العرض من ملف orders.py
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJbXGCdU8MfdOuAAzQA1ubfsQu1655AQ53X8O2I-242BZG8Jiscybpd58l40LBkXS8/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
