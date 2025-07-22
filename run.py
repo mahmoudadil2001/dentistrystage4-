@@ -115,6 +115,11 @@ def login_page():
                 else:
                     st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
+        # ✅ عرض رسالة نجاح بعد تغيير كلمة المرور
+        if st.session_state.get('password_reset_message'):
+            st.success(st.session_state['password_reset_message'])
+            st.session_state['password_reset_message'] = None
+
         if st.session_state['signup_success']:
             st.success("✅ تم إنشاء الحساب بنجاح، سجل دخولك الآن")
             st.session_state['signup_success'] = False
@@ -178,17 +183,13 @@ def forgot_password_page():
             if new_password != confirm_password:
                 st.warning("كلمة المرور غير متطابقة")
             elif update_password(username, full_name, new_password):
-                st.session_state['password_updated'] = True
+                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
+                st.session_state['password_updated'] = False
+                st.session_state['allow_reset'] = False
+                st.session_state['show_forgot'] = False
+                st.rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
-
-    if st.session_state['password_updated']:
-        st.success("✅ تم تحديث كلمة المرور بنجاح")
-        if st.button("العودة لتسجيل الدخول"):
-            st.session_state['show_forgot'] = False
-            st.session_state['password_updated'] = False
-            st.session_state['allow_reset'] = False
-            st.rerun()
 
 def main():
     load_css("styles.css")
