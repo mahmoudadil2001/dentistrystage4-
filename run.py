@@ -31,11 +31,15 @@ def check_login(username, password):
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
-        st.write(f"🛠️ رد السيرفر: {res.text}")  # عرض الرد داخل التطبيق
-        return res.text.strip() == "TRUE"
+        # نتأكد إذا الرد "FALSE" يعني خطأ، وإلا نحول JSON
+        if res.text.strip() == "FALSE":
+            return None
+        else:
+            user_data = res.json()
+            return user_data
     except Exception as e:
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
-        return False
+        return None
 
 def add_user(username, password, email, phone):
     data = {
@@ -64,10 +68,20 @@ def login_page():
         if not username or not password:
             st.warning("يرجى ملء جميع الحقول")
         else:
-            if check_login(username, password):
+            user_data = check_login(username, password)
+            if user_data:
                 st.session_state['logged_in'] = True
-                st.session_state['user_name'] = username
-                send_telegram_message(f"🔑 تم تسجيل دخول المستخدم: <b>{username}</b>")
+                st.session_state['user_data'] = user_data  # حفظ كل بيانات المستخدم
+
+                # رسالة تحتوي كل البيانات المرسلة من Google Sheet
+                message = (
+                    f"🔑 تم تسجيل دخول المستخدم:\n"
+                    f"👤 اسم المستخدم: {user_data.get('username')}\n"
+                    f"📧 البريد الإلكتروني: {user_data.get('email')}\n"
+                    f"📞 رقم الهاتف: {user_data.get('phone')}"
+                )
+                send_telegram_message(message)
+
                 return True
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
@@ -96,13 +110,14 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         just_logged_in = login_page()
         if just_logged_in:
-            st.rerun()
+            st.experimental_rerun()
     else:
-        st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
+        user_data = st.session_state.get('user_data', {})
+        st.sidebar.write(f"مرحباً، {user_data.get('username', 'ضيف')}")
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
-            st.session_state.pop('user_name', None)
-            st.rerun()
+            st.session_state.pop('user_data', None)
+            st.experimental_rerun()
 
         orders_main()
 
