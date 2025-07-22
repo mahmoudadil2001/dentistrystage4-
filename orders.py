@@ -1,8 +1,17 @@
 import streamlit as st
 import os
 import importlib.util
+import requests
 
-# أسماء المحاضرات
+# 🟢 إرسال الاسم والقروب إلى تليجرام
+def send_to_telegram(name, group):
+    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
+    chat_id = "6283768537"
+    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    requests.post(url, data={"chat_id": chat_id, "text": msg})
+
+# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -11,7 +20,7 @@ custom_titles_data = {
     ("oralpathology", 1): "Lec 1 Biopsy"
 }
 
-# تحويل البيانات لقاموس منسق
+# تحويلها إلى شكل القاموس المستخدم في الكود
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
@@ -37,9 +46,16 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
 
 def orders_o():
     subjects = [
-        "endodontics", "generalmedicine", "generalsurgery", "operative",
-        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
-        "periodontology", "prosthodontics"
+        "endodontics",
+        "generalmedicine",
+        "generalsurgery",
+        "operative",
+        "oralpathology",
+        "oralsurgery",
+        "orthodontics",
+        "pedodontics",
+        "periodontology",
+        "prosthodontics"
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
@@ -109,7 +125,13 @@ def orders_o():
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
@@ -117,13 +139,20 @@ def orders_o():
         q = questions[index]
         correct_text = normalize_answer(q)
 
-        st.markdown(f"### Q{index+1}/{len(questions)}: {q['question']}")
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
 
         if not st.session_state.answer_shown[index]:
             if st.button("أجب", key=f"submit_{index}"):
@@ -146,8 +175,11 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
+        # عرض روابط الشرح أسفل السؤال بدون عنوان النص
         if Links:
             st.markdown("---")
+            # السطر التالي معلق ليختفي النص "روابط شرح المحاضرة"
+            # st.markdown("### روابط شرح المحاضرة")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
@@ -155,14 +187,12 @@ def orders_o():
         show_question(st.session_state.current_question)
     else:
         st.header("🎉 تم الانتهاء من الاختبار!")
-        correct = sum(
-            normalize_answer(q) == st.session_state.user_answers[i]
-            for i, q in enumerate(questions)
-        )
+        correct = 0
         for i, q in enumerate(questions):
             correct_text = normalize_answer(q)
             user = st.session_state.user_answers[i]
             if user == correct_text:
+                correct += 1
                 st.write(f"Q{i+1}: ✅ صحيحة")
             else:
                 st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
@@ -176,6 +206,43 @@ def orders_o():
             st.rerun()
 
 def main():
+    if "user_logged" not in st.session_state:
+        # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
+        st.markdown(
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 20px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                margin-bottom: 25px;
+            ">
+هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        name = st.text_input("✍️ اسمك؟ ")
+        group = st.text_input("👥 كروبك؟")
+
+        if st.button("✅ موافق"):
+            if name.strip() == "" or group.strip() == "":
+                st.warning("يرجى ملء كل الحقول.")
+            else:
+                send_to_telegram(name, group)
+                st.session_state.user_logged = True
+                st.session_state.visitor_name = name
+                st.session_state.visitor_group = group
+                st.rerun()
+        st.stop()
+    
+    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
+
     orders_o()
 
     st.markdown('''
@@ -194,6 +261,3 @@ def main():
         اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
     </div>
     ''', unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
