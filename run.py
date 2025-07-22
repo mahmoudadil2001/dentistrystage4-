@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from orders import main as orders_main  # دالة العرض من ملف orders.py
+from orders import main as orders_main  # ملف عرض الأسئلة والمحاضرات
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
@@ -158,32 +158,43 @@ def forgot_password_page():
     username = st.text_input("اسم المستخدم", key="forgot_username")
     full_name = st.text_input("الاسم الكامل", key="forgot_full_name")
 
+    if 'password_updated' not in st.session_state:
+        st.session_state['password_updated'] = False
+
     if st.button("تحقق"):
         user_data = get_user_data(username)
         if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
             st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
-
-            new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
-            confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
-
-            if st.button("تحديث كلمة المرور"):
-                if new_password != confirm_password:
-                    st.warning("كلمة المرور غير متطابقة")
-                elif update_password(username, full_name, new_password):
-                    st.success("✅ تم تحديث كلمة المرور بنجاح، عد لتسجيل الدخول")
-                    if st.button("العودة لتسجيل الدخول"):
-                        st.session_state['show_forgot'] = False
-                        st.rerun()
-                else:
-                    st.error("فشل في تحديث كلمة المرور")
+            st.session_state['allow_reset'] = True
         else:
             st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
+            st.session_state['allow_reset'] = False
+
+    if st.session_state.get('allow_reset', False) and not st.session_state['password_updated']:
+        new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
+        confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
+
+        if st.button("تحديث كلمة المرور"):
+            if new_password != confirm_password:
+                st.warning("كلمة المرور غير متطابقة")
+            elif update_password(username, full_name, new_password):
+                st.session_state['password_updated'] = True
+            else:
+                st.error("فشل في تحديث كلمة المرور")
+
+    if st.session_state['password_updated']:
+        st.success("✅ تم تحديث كلمة المرور بنجاح")
+        if st.button("العودة لتسجيل الدخول"):
+            st.session_state['show_forgot'] = False
+            st.session_state['password_updated'] = False
+            st.session_state['allow_reset'] = False
+            st.rerun()
 
 def main():
     load_css("styles.css")
 
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        if 'show_forgot' in st.session_state and st.session_state['show_forgot']:
+        if st.session_state.get('show_forgot', False):
             forgot_password_page()
         else:
             login_page()
