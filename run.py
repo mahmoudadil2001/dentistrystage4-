@@ -139,7 +139,7 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول مع الرسالة
+                    st.rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول مع الرسالة
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
