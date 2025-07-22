@@ -222,19 +222,7 @@ def main():
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
                 margin-bottom: 25px;
             ">
-هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق name = st.text_input("✍️ اسمك؟ ")
-        group = st.text_input("👥 كروبك؟")
-
-        if st.button("✅ موافق"):
-            if name.strip() == "" or group.strip() == "":
-                st.warning("يرجى ملء كل الحقول.")
-            else:
-                send_to_telegram(name, group)
-                st.session_state.user_logged = True
-                st.session_state.visitor_name = name
-                st.session_state.visitor_group = group
-                st.rerun()
-        st.stop()            </div>
+هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق            </div>
             """,
             unsafe_allow_html=True,
         )
@@ -254,7 +242,6 @@ def main():
         st.stop()
 
 st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
-    orders_o()
 
     st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
