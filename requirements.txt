@@ -1,7 +1,4 @@
 streamlit
 streamlit-cookies-manager
 gspread 
-google-auth
-pillow
-streamlit-autorefresh
-sqlalchemy
+
