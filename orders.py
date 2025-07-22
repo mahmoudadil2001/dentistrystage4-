@@ -205,9 +205,15 @@ def orders_o():
             st.session_state.quiz_completed = False
             st.rerun()
 
+import streamlit as st
+
+def send_to_telegram(name, group):
+    # ضع هنا كود إرسال الرسالة للبوت أو API
+    pass
+
 def main():
     if "user_logged" not in st.session_state:
-        # عرض رسالة ترحيبية ...
+        # رسالة ترحيبية
         st.markdown(
             """
             <div style="
@@ -239,15 +245,15 @@ def main():
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
-                st.experimental_rerun()
+                st.experimental_rerun()  # استخدم هذا بدلاً من st.rerun()
 
         st.stop()
 
-    # هنا بعد تسجيل الدخول نعرض الترحيب
+    # بعد تسجيل الدخول، نعرض الترحيب
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
-# ثم تستدعي الدالة
-main()
+if __name__ == "__main__":
+    main()
 
     st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
