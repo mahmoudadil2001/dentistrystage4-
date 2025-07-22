@@ -48,24 +48,26 @@ def get_user_data(username):
         if text == "NOT_FOUND":
             return None
         parts = text.split(",")
-        if len(parts) == 4:
+        if len(parts) == 5:
             return {
                 "username": parts[0],
                 "password": parts[1],
-                "email": parts[2],
-                "phone": parts[3]
+                "full_name": parts[2],
+                "group": parts[3],
+                "phone": parts[4]
             }
         return None
     except Exception as e:
         st.error(f"خطأ في جلب بيانات المستخدم: {e}")
         return None
 
-def add_user(username, password, email, phone):
+def add_user(username, password, full_name, group, phone):
     data = {
         "action": "add",
         "username": username,
         "password": password,
-        "email": email,
+        "full_name": full_name,
+        "group": group,
         "phone": phone
     }
     try:
@@ -96,7 +98,8 @@ def login_page():
                         f"🔑 تم تسجيل دخول المستخدم:\n"
                         f"اسم المستخدم: <b>{user_data['username']}</b>\n"
                         f"كلمة المرور: <b>{user_data['password']}</b>\n"
-                        f"البريد الإلكتروني: <b>{user_data['email']}</b>\n"
+                        f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
+                        f"الجروب: <b>{user_data['group']}</b>\n"
                         f"رقم الهاتف: <b>{user_data['phone']}</b>"
                     )
                     send_telegram_message(message)
@@ -111,14 +114,15 @@ def login_page():
 
     signup_username = st.text_input("اسم المستخدم للتسجيل الجديد", key="signup_username")
     signup_password = st.text_input("كلمة المرور للتسجيل الجديد", type="password", key="signup_password")
-    signup_email = st.text_input("البريد الإلكتروني", key="signup_email")
+    signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
+    signup_group = st.text_input("الجروب", key="signup_group")
     signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
 
     if st.button("إنشاء حساب جديد"):
-        if not signup_username or not signup_password or not signup_email or not signup_phone:
+        if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
             st.warning("يرجى ملء جميع حقول التسجيل")
         else:
-            if add_user(signup_username, signup_password, signup_email, signup_phone):
+            if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                 st.success("تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول")
             else:
                 st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
@@ -130,13 +134,13 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         just_logged_in = login_page()
         if just_logged_in:
-            st.rerun()
+            st.experimental_rerun()
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.rerun()
+            st.experimental_rerun()
 
         orders_main()
 
