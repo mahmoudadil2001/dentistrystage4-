@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import importlib.util
 
-# أسماء المحاضرات (سهل التعديل لاحقًا)
+# أسماء المحاضرات
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -11,7 +11,7 @@ custom_titles_data = {
     ("oralpathology", 1): "Lec 1 Biopsy"
 }
 
-# تحويلها إلى شكل القاموس المستخدم في الكود
+# تحويل البيانات لقاموس منسق
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
@@ -37,16 +37,9 @@ def import_module_from_folder(subject_name, lecture_num, base_path="."):
 
 def orders_o():
     subjects = [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
+        "endodontics", "generalmedicine", "generalsurgery", "operative",
+        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
+        "periodontology", "prosthodontics"
     ]
 
     subject = st.selectbox("اختر المادة", subjects)
@@ -116,13 +109,7 @@ def orders_o():
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
+            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
@@ -130,26 +117,19 @@ def orders_o():
         q = questions[index]
         correct_text = normalize_answer(q)
 
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Q{index+1}/{len(questions)}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
+        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
 
         if not st.session_state.answer_shown[index]:
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -164,7 +144,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
         if Links:
             st.markdown("---")
@@ -175,12 +155,14 @@ def orders_o():
         show_question(st.session_state.current_question)
     else:
         st.header("🎉 تم الانتهاء من الاختبار!")
-        correct = 0
+        correct = sum(
+            normalize_answer(q) == st.session_state.user_answers[i]
+            for i, q in enumerate(questions)
+        )
         for i, q in enumerate(questions):
             correct_text = normalize_answer(q)
             user = st.session_state.user_answers[i]
             if user == correct_text:
-                correct += 1
                 st.write(f"Q{i+1}: ✅ صحيحة")
             else:
                 st.write(f"Q{i+1}: ❌ خاطئة (إجابتك: {user}, الصحيحة: {correct_text})")
@@ -191,7 +173,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
 
 def main():
     orders_o()
@@ -213,3 +195,5 @@ def main():
     </div>
     ''', unsafe_allow_html=True)
 
+if __name__ == "__main__":
+    main()
