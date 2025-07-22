@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ✅ رابط Google Sheets بصيغة CSV
-CSV_URL = "https://docs.google.com/spreadsheets/d/1g1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ/export?format=csv"
+CSV_URL = "https://docs.google.com/spreadsheets/d/1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ/export?format=csv"
 
 # ✅ تحميل بيانات المستخدمين من Google Sheets
 @st.cache_data
