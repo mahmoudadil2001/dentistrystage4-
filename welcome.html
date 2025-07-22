@@ -74,21 +74,22 @@
   </form>
 
   <script>
-    const form = document.getElementById('welcomeForm');
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const name = encodeURIComponent(document.getElementById('name').value);
-      const group = encodeURIComponent(document.getElementById('group').value);
+const form = document.getElementById('welcomeForm');
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = encodeURIComponent(document.getElementById('name').value);
+  const group = encodeURIComponent(document.getElementById('group').value);
 
-      if (name && group) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('name', name);
-        url.searchParams.set('group', group);
-        window.location.href = url.toString();
-      } else {
-        alert('يرجى ملء الاسم والقروب');
-      }
-    });
+  if (name && group) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('name', name);
+    url.searchParams.set('group', group);
+    window.location.href = url.toString();
+  } else {
+    alert('يرجى ملء الاسم والقروب');
+  }
+});
+
   </script>
 </body>
 </html>
