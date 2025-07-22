@@ -198,11 +198,12 @@ def orders_o():
             st.rerun()
 
     # عرض روابط الشرح أسفل الأسئلة لو موجودة
-    if Links:
+if Links:
     st.markdown("---")
     # st.markdown("### روابط شرح المحاضرة")
     for link in Links:
         st.markdown(f"- [{link['title']}]({link['url']})")
+
 
 def main():
     if "user_logged" not in st.session_state:
