@@ -86,6 +86,7 @@ def orders_o():
         return
 
     questions = questions_module.questions
+    Links = getattr(questions_module, "Links", [])  # روابط الشرح أو قائمة فارغة
 
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
@@ -196,6 +197,13 @@ def orders_o():
             st.session_state.quiz_completed = False
             st.rerun()
 
+    # عرض روابط الشرح أسفل الأسئلة لو موجودة
+    if Links:
+        st.markdown("---")
+        st.markdown("### روابط شرح المحاضرة")
+        for link in Links:
+            st.markdown(f"- [{link['title']}]({link['url']})")
+
 def main():
     if "user_logged" not in st.session_state:
         # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
@@ -232,9 +240,6 @@ def main():
                 st.rerun()
         st.stop()
     
-    # ... (بقية كود main() بدون تعديل)
-
-
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
 
     orders_o()
