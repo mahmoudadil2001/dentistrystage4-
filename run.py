@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from orders import main as orders_main  # تأكد أن ملف orders.py موجود
 
 GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ/export?format=csv&id=1ZUrFMmDcHMsDdVvyJ4Yxi2oE0drG2434OBsGD5jY9fQ&gid=0"
 
@@ -26,7 +27,8 @@ def main():
     if login_button:
         if check_login(username, password):
             st.success(f"مرحبًا {username}، تم تسجيل الدخول بنجاح!")
-            st.write("هنا محتوى الموقع بعد الدخول")
+            # هنا نعرض المحتوى الفعلي بعد الدخول
+            orders_main()
         else:
             st.error("اسم المستخدم أو كلمة المرور خاطئ.")
 
