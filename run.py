@@ -22,7 +22,7 @@ def send_telegram_message(message):
 def check_login(username, password):
     data = {"action": "check", "username": username, "password": password}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=10)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         return res.text.strip() == "TRUE"
     except Exception as e:
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
@@ -31,7 +31,7 @@ def check_login(username, password):
 def get_user_data(username):
     data = {"action": "get_user_data", "username": username}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         text = res.text.strip()
         if text == "NOT_FOUND":
             return None
@@ -59,7 +59,7 @@ def add_user(username, password, full_name, group, phone):
         "phone": phone
     }
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         return res.text.strip() == "Added"
     except Exception as e:
         st.error(f"خطأ في تسجيل المستخدم الجديد: {e}")
@@ -73,7 +73,7 @@ def update_password(username, full_name, new_password):
         "new_password": new_password
     }
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         return res.text.strip() == "UPDATED"
     except Exception as e:
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
