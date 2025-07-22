@@ -13,8 +13,8 @@ def main():
         st.session_state.user_group = group
         st.session_state.page = "orders"
 
-        bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
-        chat_id = "YOUR_CHAT_ID"
+        bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
+        chat_id = "6283768537"
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         msg = f"👤 {name}\n👥 {group}\n🕓 {timestamp}"
         try:
