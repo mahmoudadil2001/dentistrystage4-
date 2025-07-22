@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Welcome to Dense3CH4</title>
 <style>
+  /* Your existing CSS here, same as before */
   @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
 
   body {
@@ -77,12 +78,15 @@
     const form = document.getElementById('welcomeForm');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const group = document.getElementById('group').value;
+      const name = encodeURIComponent(document.getElementById('name').value);
+      const group = encodeURIComponent(document.getElementById('group').value);
 
       if (name && group) {
-        // Send data back to Streamlit (later handled in welcome.py)
-        window.parent.postMessage({ type: 'WELCOME_SUBMIT', name, group }, '*');
+        // Redirect whole page with query params
+        const url = new URL(window.location.href);
+        url.searchParams.set('name', name);
+        url.searchParams.set('group', group);
+        window.location.href = url.toString();
       } else {
         alert('يرجى ملء الاسم والقروب');
       }
