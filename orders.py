@@ -157,7 +157,7 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -172,7 +172,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -194,11 +194,30 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 def main():
     if "user_logged" not in st.session_state:
-        st.header("👤 أدخل معلوماتك للبدء")
+        st.markdown(
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 20px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                margin-bottom: 25px;
+            ">
+            هلا طلاب شونكم؟ هاي الموقع إن شاء الله سويتها لكم بأسئلة حلوة لكل المواد خص طلاب مرحلة رابعة طب الأسنان جامعة الأسرار طبعاً كل اللي تحتاجوا فقط دخلوا اسمكم وغروبكم وتخلون وتختبروا نفسكم بالتوفيق إن شاء الله
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         name = st.text_input("✍️ اسمك؟ ")
         group = st.text_input("👥 كروبك؟")
 
@@ -210,7 +229,7 @@ def main():
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
-                st.rerun()
+                st.experimental_rerun()
         st.stop()
 
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
