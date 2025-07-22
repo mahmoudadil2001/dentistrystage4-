@@ -1,13 +1,14 @@
 import streamlit as st
 import requests
-import asyncio
 from streamlit_cookies_manager import EncryptedCookieManager
 from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# تهيئة الكوكيز بدون انتظار هنا (الانتظار في الدالة)
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
+if not cookies.ready():
+    cookies.load()  # تحميل الكوكيز بشكل متزامن
+    st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -84,15 +85,13 @@ def update_password(username, full_name, new_password):
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
         return False
 
-async def login_page():
+def login_page():
     st.title("تسجيل الدخول")
 
     if 'show_signup' not in st.session_state:
         st.session_state['show_signup'] = False
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
-
-    await cookies.async_load()
 
     username_cookie = cookies.get("username")
     password_cookie = cookies.get("password")
@@ -121,9 +120,9 @@ async def login_page():
                         st.session_state['user_name'] = user_data['username']
 
                         if keep_logged:
-                            cookies.set("username", username)
-                            cookies.set("password", password)
-                            await cookies.async_save()
+                            cookies["username"] = username
+                            cookies["password"] = password
+                            cookies.save()
 
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
@@ -181,7 +180,7 @@ async def login_page():
             st.session_state['show_signup'] = False
             st.experimental_rerun()
 
-async def forgot_password_page():
+def forgot_password_page():
     st.title("استعادة كلمة المرور")
 
     username = st.text_input("اسم المستخدم", key="forgot_username")
@@ -215,25 +214,5 @@ async def forgot_password_page():
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
-async def main():
-    load_css("styles.css")
-
-    if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        if st.session_state.get('show_forgot', False):
-            await forgot_password_page()
-        else:
-            await login_page()
-    else:
-        st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
-        if st.sidebar.button("تسجيل خروج"):
-            st.session_state['logged_in'] = False
-            st.session_state.pop('user_name', None)
-            cookies.delete("username")
-            cookies.delete("password")
-            await cookies.async_save()
-            st.experimental_rerun()
-
-        orders_main()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+def main():
+    load
