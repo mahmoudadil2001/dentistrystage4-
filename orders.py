@@ -200,7 +200,7 @@ def orders_o():
     # عرض روابط الشرح أسفل الأسئلة لو موجودة
     if Links:
         st.markdown("---")
-        st.markdown("### رابط شرح المحاضرة")
+        st.markdown("### رابط  شرح المحاضرة")
         for link in Links:
             st.markdown(f"- [{link['title']}]({link['url']})")
 
