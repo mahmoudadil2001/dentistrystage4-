@@ -8,6 +8,7 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQk
 # 🔐 الكوكيز - لإبقاء المستخدم مسجلاً
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
 if not cookies.ready():
+    cookies.initialize()  # <-- تأكد من تهيئة الكوكيز
     st.stop()
 
 def load_css(file_path):
@@ -93,7 +94,7 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # 🟢 التحقق من الكوكيز لتسجيل الدخول التلقائي
+    # محاولة تسجيل الدخول تلقائياً من الكوكيز
     if not st.session_state.get("logged_in") and cookies.get("username") and cookies.get("password"):
         if check_login(cookies.get("username"), cookies.get("password")):
             user_data = get_user_data(cookies.get("username"))
@@ -117,7 +118,7 @@ def login_page():
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
 
-                        # 🟢 حفظ الكوكيز إذا تم اختيار "أبقني مسجلاً"
+                        # حفظ الكوكيز لو اختار المستخدم "أبقني مسجلاً"
                         if keep_logged:
                             cookies.set("username", username)
                             cookies.set("password", password)
@@ -226,6 +227,7 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
+            # حذف الكوكيز عند تسجيل الخروج
             cookies.delete("username")
             cookies.delete("password")
             cookies.save()
