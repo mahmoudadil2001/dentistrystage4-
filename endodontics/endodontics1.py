@@ -150,3 +150,7 @@ questions = [
         "explanation": "Single-visit endodontics is becoming more popular due to its speed and efficiency."
     }
 ]
+
+Links = [
+    {"title": "شرح المحاضرة 1", "https://www.youtube.com/watch?v=nejioJYztgc"},
+]
