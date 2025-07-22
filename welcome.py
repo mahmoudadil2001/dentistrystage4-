@@ -27,16 +27,13 @@ def show_welcome():
             margin-right: auto;
         }
         </style>
-        """, unsafe_allow_html=True)
 
-    st.markdown('<div class="welcome-container">', unsafe_allow_html=True)
-    st.markdown('<h1 class="welcome-title">🦷 Welcome to Dentistry Stage 4! 🦷</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="welcome-subtitle">Your journey to becoming a dental expert starts here. Let’s learn, practice, and succeed together! 💪✨</p>', unsafe_allow_html=True)
-
-    st.image(
-        "https://images.unsplash.com/photo-1588776814546-44ff6a7e8d3b?auto=format&fit=crop&w=900&q=80",
-        caption="Your Journey Starts Here",
-        use_container_width=True,
+        <div class="welcome-container">
+            <h1 class="welcome-title">🦷 Welcome to Dentistry Stage 4! 🦷</h1>
+            <p class="welcome-subtitle">Your journey to becoming a dental expert starts here. Let’s learn, practice, and succeed together! 💪✨</p>
+            <img src="https://images.unsplash.com/photo-1588776814546-44ff6a7e8d3b?auto=format&fit=crop&w=900&q=80" style="width: 100%; border-radius: 10px; margin-top: 20px;" />
+            <p style="text-align: center; font-style: italic; margin-top: 10px;">Your Journey Starts Here</p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
-
-    st.markdown("</div>", unsafe_allow_html=True)
