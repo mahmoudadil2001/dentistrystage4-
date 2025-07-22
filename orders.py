@@ -10,9 +10,6 @@ def send_to_telegram(name, group):
     msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     requests.post(url, data={"chat_id": chat_id, "text": msg})
-if st.button("💬 فتح الدردشة"):
-    st.session_state.page = "chat"
-    st.experimental_rerun()
 
 # ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
@@ -217,10 +214,6 @@ def main():
         st.stop()
 
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
-
-    if st.button("💬 فتح الدردشة"):
-        st.session_state.page = "chat"
-        st.rerun()
 
     orders_o()
 
