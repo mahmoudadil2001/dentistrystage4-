@@ -108,7 +108,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()  # إعادة تحميل الصفحة فورًا بعد الدخول
+                        st.rerun()  # إعادة تحميل الصفحة فورًا بعد الدخول
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -120,7 +120,7 @@ def login_page():
 
         if st.button("إنشاء حساب جديد"):
             st.session_state['show_signup'] = True
-            st.experimental_rerun()  # إعادة تحميل فورًا لعرض نموذج التسجيل
+            st.rerun()  # إعادة تحميل فورًا لعرض نموذج التسجيل
 
     else:
         # نموذج إنشاء حساب جديد
@@ -145,7 +145,7 @@ def login_page():
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول
+            st.rerun()  # إعادة تحميل فورًا للعودة لنموذج الدخول
 
     return False
 
