@@ -213,7 +213,7 @@ def send_to_telegram(name, group):
 
 def main():
     if "user_logged" not in st.session_state:
-        # رسالة ترحيبية
+        # عرض رسالة ترحيبية منسقة مع خلفية لونية جميلة
         st.markdown(
             """
             <div style="
@@ -228,8 +228,7 @@ def main():
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
                 margin-bottom: 25px;
             ">
-            هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق
-            </div>
+هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق            </div>
             """,
             unsafe_allow_html=True,
         )
@@ -245,15 +244,8 @@ def main():
                 st.session_state.user_logged = True
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
-                st.rerun()()  # استخدم هذا بدلاً من st.rerun()
-
+                st.rerun()
         st.stop()
-
-  
-
-if __name__ == "__main__":
-    main()
-
     st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
         <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
