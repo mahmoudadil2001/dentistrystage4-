@@ -1,8 +1,14 @@
 import streamlit as st
 import requests
-from orders import main as orders_main  # ملف عرض الأسئلة والمحاضرات
+from streamlit_cookies_manager import EncryptedCookieManager
+from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
+
+# 🔐 الكوكيز - لإبقاء المستخدم مسجلاً
+cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
+if not cookies.ready():
+    st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -87,9 +93,19 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
+    # 🟢 التحقق من الكوكيز لتسجيل الدخول التلقائي
+    if not st.session_state.get("logged_in") and cookies.get("username") and cookies.get("password"):
+        if check_login(cookies.get("username"), cookies.get("password")):
+            user_data = get_user_data(cookies.get("username"))
+            if user_data:
+                st.session_state['logged_in'] = True
+                st.session_state['user_name'] = user_data['username']
+                st.rerun()
+
     if not st.session_state['show_signup']:
         username = st.text_input("اسم المستخدم", key="login_username")
         password = st.text_input("كلمة المرور", type="password", key="login_password")
+        keep_logged = st.checkbox("أبقني مسجلاً", key="keep_me_logged")
 
         if st.button("دخول"):
             if not username or not password:
@@ -100,6 +116,13 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
+
+                        # 🟢 حفظ الكوكيز إذا تم اختيار "أبقني مسجلاً"
+                        if keep_logged:
+                            cookies.set("username", username)
+                            cookies.set("password", password)
+                            cookies.save()
+
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -115,7 +138,6 @@ def login_page():
                 else:
                     st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-        # ✅ عرض رسالة نجاح بعد تغيير كلمة المرور
         if st.session_state.get('password_reset_message'):
             st.success(st.session_state['password_reset_message'])
             st.session_state['password_reset_message'] = None
@@ -204,6 +226,9 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
+            cookies.delete("username")
+            cookies.delete("password")
+            cookies.save()
             st.rerun()
 
         orders_main()
