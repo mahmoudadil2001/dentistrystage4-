@@ -1,7 +1,7 @@
 import streamlit as st
+import requests
 import os
 import importlib.util
-import requests
 
 # 🟢 إرسال الاسم والقروب إلى تليجرام
 def send_to_telegram(name, group):
@@ -199,29 +199,32 @@ def orders_o():
 def main():
     if "user_logged" not in st.session_state:
         st.markdown(
-    """
-    <div style="
-        background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-        border-radius: 15px;
-        padding: 40px 30px;  /* bigger padding */
-        color: #003049;
-        font-family: 'Tajawal', sans-serif;
-        font-size: 20px;     /* bigger font */
-        font-weight: 600;
-        text-align: center;
-        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
-        margin-bottom: 40px;
-        width: 90%;          /* wider box */
-        min-height: 250px;   /* taller box */
-        margin-left: auto;
-        margin-right: auto;
-        line-height: 1.6;
-    ">
-هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق ❤️    </div>
-    """,
-    unsafe_allow_html=True,
-)
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 40px 30px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 20px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+                margin-bottom: 40px;
+                width: 90%;
+                min-height: 300px;
+                margin-left: auto;
+                margin-right: auto;
+                line-height: 1.6;
+            ">
+            """
+        , unsafe_allow_html=True)
 
+        st.markdown(
+            """
+            هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة بالتوفيق إن شاء الله
+            """
+        )
 
         name = st.text_input("✍️ اسمك؟ ")
         group = st.text_input("👥 كروبك؟")
@@ -235,6 +238,9 @@ def main():
                 st.session_state.visitor_name = name
                 st.session_state.visitor_group = group
                 st.experimental_rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
         st.stop()
 
     st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
