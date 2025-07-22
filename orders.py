@@ -1,31 +1,6 @@
 import streamlit as st
 import os
 import importlib.util
-import requests
-
-# 🟢 إرسال الاسم والقروب إلى تليجرام
-def send_to_telegram(name, group):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    msg = f"📥 شخص جديد دخل الموقع:\n👤 الاسم: {name}\n👥 القروب: {group}"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    try:
-        requests.post(url, data={"chat_id": chat_id, "text": msg})
-    except Exception as e:
-        st.warning("تعذر إرسال بيانات التليجرام.")
-
-# 🟢 إرسال البيانات إلى Google Apps Script
-def send_to_google_script(name, group):
-    url = "https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec"
-    try:
-        data = {'name': name, 'group': group}
-        response = requests.post(url, data=data)
-        if response.status_code == 200:
-            return True
-        else:
-            return False
-    except Exception as e:
-        return False
 
 # أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
@@ -191,7 +166,6 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.experimental_rerun()
 
-        # عرض روابط الشرح أسفل السؤال بدون عنوان النص
         if Links:
             st.markdown("---")
             for link in Links:
@@ -220,50 +194,6 @@ def orders_o():
             st.experimental_rerun()
 
 def main():
-    if "user_logged" not in st.session_state:
-        st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-                border-radius: 15px;
-                padding: 20px;
-                color: #003049;
-                font-family: 'Tajawal', sans-serif;
-                font-size: 18px;
-                font-weight: 600;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 25px;
-            ">
-            هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        name = st.text_input("✍️ اسمك؟ ")
-        group = st.text_input("👥 كروبك؟")
-
-        if st.button("✅ موافق"):
-            if name.strip() == "" or group.strip() == "":
-                st.warning("يرجى ملء كل الحقول.")
-            else:
-                sent_gs = send_to_google_script(name, group)
-                send_to_telegram(name, group)
-                if sent_gs:
-                    st.success("تم تسجيل بياناتك بنجاح.")
-                else:
-                    st.warning("تعذر إرسال بياناتك لجوجل شيت.")
-
-                st.session_state.user_logged = True
-                st.session_state.visitor_name = name
-                st.session_state.visitor_group = group
-                st.experimental_rerun()
-
-        st.stop()
-
-    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
-
     orders_o()
 
     st.markdown('''
@@ -282,3 +212,4 @@ def main():
         اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
     </div>
     ''', unsafe_allow_html=True)
+
