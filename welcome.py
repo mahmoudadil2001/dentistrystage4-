@@ -1,4 +1,43 @@
 import streamlit as st
+from datetime import datetime
+import requests
+
+def send_to_telegram(name, group):
+    telegram_token = "77e4dab0d9568f41dadd61befe71d71405ba0c4d"
+    chat_id = "5993975957"
+    message = f"🟢 مستخدم جديد:\n👤 الاسم: {name}\n👥 القروب: {group}\n🕒 الوقت: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message}
+    try:
+        requests.post(url, data=payload)
+    except:
+        pass
+
+def show_welcome():
+    with st.container():
+        st.markdown(
+            """
+            <div style="background-color:#f0f2f6; padding:30px; border-radius:15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <h1 style="text-align:center; color:#3E64FF;">🌟 مرحباً بك في Dentistry Stage 4 🌟</h1>
+                <p style="text-align:center; font-size:18px;">🚀 منصة تجمع طلاب المرحلة الرابعة في طب الأسنان — مرحباً بك في رحلتك العلمية!</p>
+                <hr>
+            """,
+            unsafe_allow_html=True
+        )
+
+        with st.form("welcome_form"):
+            st.markdown("### ✍️ أدخل معلوماتك للبدء")
+            name = st.text_input("👤 اسمك")
+            group = st.text_input("👥 قروبك")
+            submitted = st.form_submit_button("✅ موافق")
+            if submitted and name and group:
+                send_to_telegram(name, group)
+                st.success(f"مرحباً {name}! تم تسجيلك بنجاح ✅")
+                st.session_state["page"] = "chat"
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+import streamlit as st
 import requests  # For sending message to Telegram
 
 # Replace these with your actual bot token and chat ID
