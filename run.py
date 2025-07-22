@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from orders import main as orders_main
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAbMUZosZP2-IYLagqCutoa4hdXHszQhLL13fW_fyhYaEpAVrG5f0lokyDS1EWoDqq/exec"
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -17,6 +17,7 @@ def check_login(username, password):
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=5)
+        st.write(f"🛠️ رد السيرفر: {res.text}")  # عرض الرد داخل التطبيق
         return res.text.strip() == "TRUE"
     except Exception as e:
         st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
@@ -52,7 +53,7 @@ def login_page():
             if check_login(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = username
-                return True  # بدلًا من إعادة تشغيل هنا
+                return True
             else:
                 st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
