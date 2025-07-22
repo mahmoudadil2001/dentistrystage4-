@@ -199,26 +199,29 @@ def orders_o():
 def main():
     if "user_logged" not in st.session_state:
         st.markdown(
-            """
-            <div style="
-                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-                border-radius: 15px;
-                padding: 20px;
-                color: #003049;
-                font-family: 'Tajawal', sans-serif;
-                font-size: 18px;
-                font-weight: 600;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 25px;
-            ">
-         هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة
+    """
+    <div style="
+        background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+        border-radius: 15px;
+        padding: 40px 30px;  /* bigger padding */
+        color: #003049;
+        font-family: 'Tajawal', sans-serif;
+        font-size: 20px;     /* bigger font */
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+        margin-bottom: 40px;
+        width: 90%;          /* wider box */
+        min-height: 250px;   /* taller box */
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    ">
+هلا طلاب شونكم؟ المواد تخص طلاب مرحلة رابعة طب الأسنان جامعة الأسراء طبعاً كل اللي تحتاجوا فقط تدخلون اسمكم وكروبكم وتختبرون نفسكم بالاسئلة, بالتوفيق ❤️    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-                                       Good Luck 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
 
         name = st.text_input("✍️ اسمك؟ ")
         group = st.text_input("👥 كروبك؟")
