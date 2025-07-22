@@ -94,10 +94,17 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # محاولة تسجيل الدخول التلقائي من الكوكيز
-    if not st.session_state.get("logged_in") and cookies.cookies.get("username") and cookies.cookies.get("password"):
-        if check_login(cookies.cookies.get("username"), cookies.cookies.get("password")):
-            user_data = get_user_data(cookies.cookies.get("username"))
+    # حماية من None
+    if cookies.cookies is not None:
+        username_cookie = cookies.cookies.get("username")
+        password_cookie = cookies.cookies.get("password")
+    else:
+        username_cookie = None
+        password_cookie = None
+
+    if not st.session_state.get("logged_in") and username_cookie and password_cookie:
+        if check_login(username_cookie, password_cookie):
+            user_data = get_user_data(username_cookie)
             if user_data:
                 st.session_state['logged_in'] = True
                 st.session_state['user_name'] = user_data['username']
@@ -233,5 +240,4 @@ def main():
 
         orders_main()
 
-if __name__ == "__main__":
-    main()
+if __name__ ==
