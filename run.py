@@ -16,7 +16,7 @@ def main():
     if not st.session_state.logged_in:
         st.markdown("## 👋 مرحبًا بك في موقع Dentistrystage4")
         st.markdown("### 📝 لتسجيل الدخول:")
-        st.markdown("[اضغط هنا لفتح صفحة تسجيل الدخول](https://script.google.com/macros/s/AKfycYOURURL/exec)")
+        st.markdown("[اضغط هنا لفتح صفحة تسجيل الدخول](https://script.google.com/macros/s/AKfycbxQbmSs3mr6otjCKay3O7chAP8pyyZA6DgWmPkyK5ecae6QCuYQass2YaaZK9dBhffP/exec)")
 
         st.warning("🔒 بعد تسجيل الدخول، ارجع إلى هذه الصفحة واضغط الزر بالأسفل لتأكيد الدخول.")
         if st.button("✅ تم تسجيل الدخول"):
