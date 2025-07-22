@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Welcome to Dense3CH4</title>
 <style>
-  /* Your existing CSS here, same as before */
   @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
 
   body {
@@ -82,7 +81,6 @@
       const group = encodeURIComponent(document.getElementById('group').value);
 
       if (name && group) {
-        // Redirect whole page with query params
         const url = new URL(window.location.href);
         url.searchParams.set('name', name);
         url.searchParams.set('group', group);
