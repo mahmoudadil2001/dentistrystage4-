@@ -237,22 +237,4 @@ def main():
                 st.warning("يرجى ملء كل الحقول.")
             else:
                 send_to_telegram(name, group)
-                st.session_state.user_logged = True
-                st.session_state.visitor_name = name
-                st.session_state.visitor_group = group
-                st.experimental_rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.stop()
-
-    st.markdown(f"### 👋 أهلاً {st.session_state.visitor_name}")
-
-    orders_o()
-
-    st.markdown('''
-    <div style="display:flex; justify-content:center; margin-top:50px;">
-        <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
-            قناة التلي
-            <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
-                <svg viewBox="0 0 240 240" xmlns="http://www
+               
