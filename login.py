@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from auth_utils import hash_password  # دالة هاش كلمة السر
 
-GOOGLE_SCRIPT_URL = "AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
