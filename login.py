@@ -3,7 +3,7 @@ import requests
 import bcrypt
 from auth_utils import hash_password  # دالة هاش كلمة السر
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvSZJqbq1jPlsTUFuuvv7EWKgZnS9K_lsQrjHhS8mfU1h71tm2suI4-ZAGWe_SBmax/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
