@@ -211,7 +211,7 @@ def forgot_password_page():
                 st.session_state['password_updated'] = False
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.experimental_rerun()
+                st._rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
@@ -242,7 +242,7 @@ def main():
                 del cookies["password"]
             cookies.save()
 
-            st.experimental_rerun()
+            st._rerun()
 
         orders_main()
 
