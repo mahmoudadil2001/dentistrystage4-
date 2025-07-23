@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
-from auth_utils import hash_password
+import bcrypt
+from auth_utils import hash_password  # دالة هاش كلمة السر
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9jmb6QMZ0vBtSKbbuMuoSyoKaNLpZyT-gQ4Qja8pUuL-rU-gP58zl6CYiZcZJNS72/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -15,19 +16,18 @@ def send_telegram_message(message):
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
 
 def check_login(username, password):
-    # جلب بيانات المستخدم أولاً
     user_data = get_user_data(username)
     if not user_data:
         return False
 
-    # تحقق كلمة السر مع الهاش
-    import streamlit_authenticator as stauth
-    authenticator = stauth.Authenticate(
-        {"usernames": {username: {"name": user_data['full_name'], "password": user_data['password']}}},
-        "some_cookie_name", "some_signature_key", cookie_expiry_days=1
-    )
+    stored_hash = user_data['password'].encode('utf-8')
+    password_bytes = password.encode('utf-8')
 
-    return authenticator.login(username, password)
+    try:
+        return bcrypt.checkpw(password_bytes, stored_hash)
+    except Exception as e:
+        st.error(f"خطأ في التحقق من كلمة المرور: {e}")
+        return False
 
 def get_user_data(username):
     data = {"action": "get_user_data", "username": username}
@@ -40,7 +40,7 @@ def get_user_data(username):
         if len(parts) == 5:
             return {
                 "username": parts[0],
-                "password": parts[1],  # هذا يجب أن يكون هاش
+                "password": parts[1],  # مخزن كهاش bcrypt
                 "full_name": parts[2],
                 "group": parts[3],
                 "phone": parts[4]
