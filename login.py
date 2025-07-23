@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import streamlit_authenticator as stauth
+from auth_utils import hash_password
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9jmb6QMZ0vBtSKbbuMuoSyoKaNLpZyT-gQ4Qja8pUuL-rU-gP58zl6CYiZcZJNS72/exec"
 
@@ -14,21 +14,25 @@ def send_telegram_message(message):
     except Exception as e:
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
 
-def get_all_users():
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}, timeout=120)
-        if res.status_code == 200:
-            return res.json()
-        else:
-            st.error(f"فشل في جلب المستخدمين: {res.status_code}")
-            return []
-    except Exception as e:
-        st.error(f"خطأ في جلب المستخدمين: {e}")
-        return []
+def check_login(username, password):
+    # جلب بيانات المستخدم أولاً
+    user_data = get_user_data(username)
+    if not user_data:
+        return False
+
+    # تحقق كلمة السر مع الهاش
+    import streamlit_authenticator as stauth
+    authenticator = stauth.Authenticate(
+        {"usernames": {username: {"name": user_data['full_name'], "password": user_data['password']}}},
+        "some_cookie_name", "some_signature_key", cookie_expiry_days=1
+    )
+
+    return authenticator.login(username, password)
 
 def get_user_data(username):
+    data = {"action": "get_user_data", "username": username}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_user_data", "username": username}, timeout=120)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
         text = res.text.strip()
         if text == "NOT_FOUND":
             return None
@@ -36,7 +40,7 @@ def get_user_data(username):
         if len(parts) == 5:
             return {
                 "username": parts[0],
-                "password": parts[1],
+                "password": parts[1],  # هذا يجب أن يكون هاش
                 "full_name": parts[2],
                 "group": parts[3],
                 "phone": parts[4]
@@ -46,41 +50,8 @@ def get_user_data(username):
         st.error(f"خطأ في جلب بيانات المستخدم: {e}")
         return None
 
-def prepare_authenticator():
-    users = get_all_users()
-    if not users:
-        st.error("لا توجد بيانات مستخدمين")
-        return None
-
-    credentials = {"usernames": {}}
-    for user in users:
-        username = user.get("username")
-        full_name = user.get("full_name")
-        password = user.get("password")  # كلمة السر المشفرة من Google Sheets
-        if username and full_name and password:
-            credentials["usernames"][username] = {
-                "name": full_name,
-                "password": password
-            }
-
-    cookie_name = "my_app_cookie"
-    key = "my_signature_key"
-
-    authenticator = stauth.Authenticate(
-        credentials,
-        cookie_name,
-        key,
-        cookie_expiry_days=30,
-        preauthorized=[]
-    )
-    return authenticator
-
-def hash_password(password_plain):
-    hasher = stauth.Hasher([password_plain])
-    return hasher.generate()[0]
-
-def add_user(username, password_plain, full_name, group, phone):
-    password_hashed = hash_password(password_plain)
+def add_user(username, password, full_name, group, phone):
+    password_hashed = hash_password(password)
     data = {
         "action": "add",
         "username": username,
@@ -96,13 +67,13 @@ def add_user(username, password_plain, full_name, group, phone):
         st.error(f"خطأ في تسجيل المستخدم الجديد: {e}")
         return False
 
-def update_password(username, full_name, new_password_plain):
-    new_password_hashed = hash_password(new_password_plain)
+def update_password(username, full_name, new_password):
+    password_hashed = hash_password(new_password)
     data = {
         "action": "update_password",
         "username": username,
         "full_name": full_name,
-        "new_password": new_password_hashed
+        "new_password": password_hashed
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
@@ -114,39 +85,78 @@ def update_password(username, full_name, new_password_plain):
 def login_page():
     st.title("تسجيل الدخول")
 
-    authenticator = prepare_authenticator()
-    if authenticator is None:
-        st.error("حدث خطأ في إعداد نظام التحقق")
-        return
+    if 'show_signup' not in st.session_state:
+        st.session_state['show_signup'] = False
+    if 'signup_success' not in st.session_state:
+        st.session_state['signup_success'] = False
 
-    name, authentication_status, username = authenticator.login("Login", "main")
+    if not st.session_state['show_signup']:
+        username = st.text_input("اسم المستخدم", key="login_username")
+        password = st.text_input("كلمة المرور", type="password", key="login_password")
 
-    if authentication_status:
-        st.session_state['logged_in'] = True
-        st.session_state['user_name'] = username
+        if st.button("دخول"):
+            if not username or not password:
+                st.warning("يرجى ملء جميع الحقول")
+            else:
+                if check_login(username, password):
+                    user_data = get_user_data(username)
+                    if user_data:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_name'] = user_data['username']
+                        message = (
+                            f"🔑 تم تسجيل دخول المستخدم:\n"
+                            f"اسم المستخدم: <b>{user_data['username']}</b>\n"
+                            f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
+                            f"الجروب: <b>{user_data['group']}</b>\n"
+                            f"رقم الهاتف: <b>{user_data['phone']}</b>"
+                        )
+                        send_telegram_message(message)
+                        st.experimental_rerun()
+                    else:
+                        st.error("تعذر جلب بيانات المستخدم")
+                else:
+                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-        authenticator.logout("تسجيل خروج", "sidebar")
+        if st.session_state.get('password_reset_message'):
+            st.success(st.session_state['password_reset_message'])
+            st.session_state['password_reset_message'] = None
 
-        user_data = get_user_data(username)
-        if user_data:
-            message = (
-                f"🔑 تم تسجيل دخول المستخدم:\n"
-                f"اسم المستخدم: <b>{user_data['username']}</b>\n"
-                f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                f"الجروب: <b>{user_data['group']}</b>\n"
-                f"رقم الهاتف: <b>{user_data['phone']}</b>"
-            )
-            send_telegram_message(message)
+        if st.session_state['signup_success']:
+            st.success("✅ تم إنشاء الحساب بنجاح، سجل دخولك الآن")
+            st.session_state['signup_success'] = False
 
-        st.write(f"مرحباً {name}!")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("إنشاء حساب جديد"):
+                st.session_state['show_signup'] = True
+                st.experimental_rerun()
+        with col2:
+            if st.button("هل نسيت كلمة المرور؟"):
+                st.session_state['show_forgot'] = True
+                st.experimental_rerun()
 
-        from orders import main as orders_main
-        orders_main()
+    else:
+        st.title("إنشاء حساب جديد")
+        signup_username = st.text_input("اسم المستخدم", key="signup_username")
+        signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
+        signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
+        signup_group = st.text_input("الجروب", key="signup_group")
+        signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
 
-    elif authentication_status is False:
-        st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
-    elif authentication_status is None:
-        st.warning("يرجى إدخال بيانات تسجيل الدخول")
+        if st.button("تسجيل"):
+            if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
+                st.warning("يرجى ملء جميع الحقول")
+            else:
+                if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
+                    st.session_state['show_signup'] = False
+                    st.session_state['signup_success'] = True
+                    st.experimental_rerun()
+                else:
+                    st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
+
+        if st.button("العودة لتسجيل الدخول"):
+            st.session_state['show_signup'] = False
+            st.experimental_rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -158,9 +168,9 @@ def forgot_password_page():
         st.session_state['password_updated'] = False
 
     if st.button("عودة"):
-        st.session_state['password_updated'] = False
-        st.session_state['allow_reset'] = False
         st.session_state['show_forgot'] = False
+        st.session_state['allow_reset'] = False
+        st.session_state['password_updated'] = False
         st.experimental_rerun()
 
     if st.button("تحقق"):
@@ -184,9 +194,10 @@ def forgot_password_page():
             if new_password != confirm_password:
                 st.warning("كلمة المرور غير متطابقة")
             elif update_password(username, full_name, new_password):
-                st.success("✅ تم تحديث كلمة المرور، سجل دخولك الآن")
+                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
                 st.session_state['password_updated'] = True
                 st.session_state['allow_reset'] = False
+                st.session_state['show_forgot'] = False
                 st.experimental_rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
