@@ -2,3 +2,4 @@ streamlit
 streamlit-cookies-manager
 gspread 
 streamlit-authenticator
+bcrypt
