@@ -30,9 +30,7 @@ def set_cookie(key, value):
     st.experimental_set_query_params(**{key: value})
 
 def clear_cookies():
-    st.query_params.
-
-st.experimental_get_query_params()
+    st.query_params.st.experimental_get_query_params()
 
 def get_cookie(key):
     return st.experimental_get_query_params().get(key, [None])[0]
