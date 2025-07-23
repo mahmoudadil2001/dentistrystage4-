@@ -134,7 +134,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -173,7 +173,7 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
@@ -211,7 +211,7 @@ def forgot_password_page():
                 st.session_state['password_updated'] = False
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
@@ -226,8 +226,14 @@ def main():
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
+            # حذف حالة تسجيل الدخول والبيانات من الجلسة
             st.session_state['logged_in'] = False
-            st.session_state.pop('user_name', None)
+            if 'user_name' in st.session_state:
+                del st.session_state['user_name']
+            if 'show_forgot' in st.session_state:
+                del st.session_state['show_forgot']
+            if 'show_signup' in st.session_state:
+                del st.session_state['show_signup']
 
             # حذف الكوكيز
             if "username" in cookies:
@@ -236,7 +242,7 @@ def main():
                 del cookies["password"]
             cookies.save()
 
-            st.rerun()
+            st.experimental_rerun()
 
         orders_main()
 
