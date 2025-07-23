@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import streamlit_authenticator as stauth
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyACfl5clPnmkE455h8pg23Qydz57e-v-femYecO396CboFkG2LczVbABCyIY2K3AA/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
