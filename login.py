@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import bcrypt
-from auth_utils import hash_password
+from auth_utils import hash_password  # دالة هاش كلمة السر
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw/exec"
 
@@ -14,6 +14,20 @@ def send_telegram_message(message):
         requests.post(url, data=data)
     except Exception as e:
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
+
+def check_password(plain_password, hashed_password):
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        return False
+
+def check_login(username, password):
+    user_data = get_user_data(username)
+    if not user_data:
+        return False
+
+    stored_hash = user_data['password']
+    return check_password(password, stored_hash)
 
 def get_user_data(username):
     data = {"action": "get_user_data", "username": username}
@@ -35,20 +49,6 @@ def get_user_data(username):
     except Exception as e:
         st.error(f"خطأ في جلب بيانات المستخدم: {e}")
         return None
-
-def check_login(username, password):
-    user_data = get_user_data(username)
-    if not user_data:
-        return False
-
-    stored_hash = user_data['password'].encode('utf-8')
-    password_bytes = password.encode('utf-8')
-
-    try:
-        return bcrypt.checkpw(password_bytes, stored_hash)
-    except Exception as e:
-        st.error(f"خطأ في التحقق من كلمة المرور: {e}")
-        return False
 
 def add_user(username, password, full_name, group, phone):
     password_hashed = hash_password(password)
