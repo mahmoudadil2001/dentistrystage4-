@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import streamlit_authenticator as stauth
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -71,7 +71,6 @@ def prepare_authenticator():
     names = [user["full_name"] for user in users]
     passwords_plain = [user["password"] for user in users]
 
-    # تشفير كلمات المرور
     hashed_passwords = stauth.Hasher(passwords_plain).generate()
 
     credentials = {
@@ -85,8 +84,8 @@ def prepare_authenticator():
 
     authenticator = stauth.Authenticate(
         credentials,
-        "my_cookie_name",       # غيّر هذا الاسم لو تحب
-        "my_signature_key",     # اجعله سلسلة طويلة وعشوائية
+        "my_cookie_name",
+        "my_signature_key",
         cookie_expiry_days=30,
         preauthorized=[],
     )
