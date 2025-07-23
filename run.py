@@ -134,7 +134,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -211,7 +211,7 @@ def forgot_password_page():
                 st.session_state['password_updated'] = False
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st._rerun()
+                st.rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
@@ -226,14 +226,11 @@ def main():
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
-            # حذف حالة تسجيل الدخول والبيانات من الجلسة
             st.session_state['logged_in'] = False
-            if 'user_name' in st.session_state:
-                del st.session_state['user_name']
-            if 'show_forgot' in st.session_state:
-                del st.session_state['show_forgot']
-            if 'show_signup' in st.session_state:
-                del st.session_state['show_signup']
+            # حذف باقي مفاتيح الجلسة المتعلقة
+            for key in ['user_name', 'show_forgot', 'show_signup', 'signup_success', 'password_reset_message', 'allow_reset']:
+                if key in st.session_state:
+                    del st.session_state[key]
 
             # حذف الكوكيز
             if "username" in cookies:
@@ -242,7 +239,7 @@ def main():
                 del cookies["password"]
             cookies.save()
 
-            st._rerun()
+            st.rerun()
 
         orders_main()
 
