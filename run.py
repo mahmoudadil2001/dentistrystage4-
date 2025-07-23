@@ -11,7 +11,6 @@ def main():
     load_css("styles.css")
 
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        # صفحة استعادة كلمة المرور تظهر حسب الحالة
         if st.session_state.get('show_forgot', False):
             forgot_password_page()
         else:
@@ -19,10 +18,9 @@ def main():
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
-            # تسجيل خروج عن طريق استدعاء reset للجلسة
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.experimental_rerun()  # يفضل experimental_rerun مع streamlit_authenticator
+            st.experimental_rerun()
 
         orders_main()
 
