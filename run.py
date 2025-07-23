@@ -5,7 +5,7 @@ from orders import main as orders_main
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# 🔐 إعداد الكوكيز
+# إعداد الكوكيز
 cookies = EncryptedCookieManager(prefix="dentistry_", password="secret-key-123")
 if not cookies.ready():
     cookies.initialize()
@@ -204,44 +204,4 @@ def forgot_password_page():
         confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
 
         if st.button("تحديث كلمة المرور"):
-            if new_password != confirm_password:
-                st.warning("كلمة المرور غير متطابقة")
-            elif update_password(username, full_name, new_password):
-                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
-                st.session_state['password_updated'] = False
-                st.session_state['allow_reset'] = False
-                st.session_state['show_forgot'] = False
-                st.rerun()
-            else:
-                st.error("فشل في تحديث كلمة المرور")
-
-def main():
-    load_css("styles.css")
-
-    if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-        if st.session_state.get('show_forgot', False):
-            forgot_password_page()
-        else:
-            login_page()
-    else:
-        st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
-        if st.sidebar.button("تسجيل خروج"):
-            st.session_state['logged_in'] = False
-            # حذف باقي مفاتيح الجلسة المتعلقة
-            for key in ['user_name', 'show_forgot', 'show_signup', 'signup_success', 'password_reset_message', 'allow_reset']:
-                if key in st.session_state:
-                    del st.session_state[key]
-
-            # حذف الكوكيز
-            if "username" in cookies:
-                del cookies["username"]
-            if "password" in cookies:
-                del cookies["password"]
-            cookies.save()
-
-            st.rerun()
-
-        orders_main()
-
-if __name__ == "__main__":
-    main()
+            if new
