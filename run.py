@@ -1,18 +1,19 @@
 import streamlit as st
 import requests
-from orders import main as orders_main  # ملف عرض الأسئلة والمحاضرات
+from orders import main as orders_main
 from streamlit_cookies_manager import EncryptedCookieManager
 
+# رابط Google Script الخاص بك
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# تهيئة مدير الكوكيز المشفر
+# تهيئة مدير الكوكيز المشفر (غيّر كلمة السر إلى كلمة سر قوية خاصة بك)
 cookies = EncryptedCookieManager(
-    prefix="myapp_",  # يمكنك تغييره
-    password="a-very-secure-password-123!",  # غيره لكلمة سر آمنة وطويلة
+    prefix="app_",  
+    password="very_secure_and_long_password_123456789!"
 )
 
 if not cookies.ready():
-    st.stop()  # نوقف تنفيذ التطبيق حتى يتم تحميل الكوكيز
+    st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -97,11 +98,11 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # نقرأ اسم المستخدم وكلمة المرور من الكوكيز إذا موجودة
+    # استرجاع الكوكيز
     saved_username = cookies.get("username")
     saved_password = cookies.get("password")
 
-    # إذا لم يكن المستخدم مسجل دخول، ونجد الكوكيز مخزنة، نسجل الدخول تلقائياً
+    # تسجيل دخول تلقائي إذا الكوكيز موجودة وصالحة
     if saved_username and saved_password and not st.session_state.get('logged_in', False):
         if check_login(saved_username, saved_password):
             user_data = get_user_data(saved_username)
@@ -110,9 +111,8 @@ def login_page():
                 st.session_state['user_name'] = user_data['username']
 
     if not st.session_state['show_signup'] and not st.session_state.get('logged_in', False):
-        # نعرض الحقول مع تعبئة الاسم وكلمة المرور من الكوكيز إذا موجودة
-        username = st.text_input("اسم المستخدم", value=saved_username if saved_username else "", key="login_username")
-        password = st.text_input("كلمة المرور", type="password", value=saved_password if saved_password else "", key="login_password")
+        username = st.text_input("اسم المستخدم", value=saved_username or "", key="login_username")
+        password = st.text_input("كلمة المرور", type="password", value=saved_password or "", key="login_password")
 
         if st.button("دخول"):
             if not username or not password:
@@ -123,7 +123,7 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-                        # نحفظ الكوكيز
+                        # حفظ الكوكيز بشكل صحيح
                         cookies["username"] = username
                         cookies["password"] = password
                         cookies.save()
@@ -142,7 +142,6 @@ def login_page():
                 else:
                     st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-        # عرض رسالة نجاح بعد تغيير كلمة المرور
         if st.session_state.get('password_reset_message'):
             st.success(st.session_state['password_reset_message'])
             st.session_state['password_reset_message'] = None
