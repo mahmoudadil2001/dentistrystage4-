@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import streamlit_authenticator as stauth
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9jmb6QMZ0vBtSKbbuMuoSyoKaNLpZyT-gQ4Qja8pUuL-rU-gP58zl6CYiZcZJNS72/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -53,15 +53,14 @@ def prepare_authenticator():
         return None
 
     credentials = {"usernames": {}}
-
     for user in users:
         username = user.get("username")
         full_name = user.get("full_name")
-        password = user.get("password")
+        password = user.get("password")  # كلمة السر المشفرة من Google Sheets
         if username and full_name and password:
             credentials["usernames"][username] = {
                 "name": full_name,
-                "password": password  # كلمة المرور عادية بدون هاش
+                "password": password
             }
 
     cookie_name = "my_app_cookie"
@@ -75,6 +74,42 @@ def prepare_authenticator():
         preauthorized=[]
     )
     return authenticator
+
+def hash_password(password_plain):
+    hasher = stauth.Hasher([password_plain])
+    return hasher.generate()[0]
+
+def add_user(username, password_plain, full_name, group, phone):
+    password_hashed = hash_password(password_plain)
+    data = {
+        "action": "add",
+        "username": username,
+        "password": password_hashed,
+        "full_name": full_name,
+        "group": group,
+        "phone": phone
+    }
+    try:
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        return res.text.strip() == "Added"
+    except Exception as e:
+        st.error(f"خطأ في تسجيل المستخدم الجديد: {e}")
+        return False
+
+def update_password(username, full_name, new_password_plain):
+    new_password_hashed = hash_password(new_password_plain)
+    data = {
+        "action": "update_password",
+        "username": username,
+        "full_name": full_name,
+        "new_password": new_password_hashed
+    }
+    try:
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        return res.text.strip() == "UPDATED"
+    except Exception as e:
+        st.error(f"خطأ في تحديث كلمة المرور: {e}")
+        return False
 
 def login_page():
     st.title("تسجيل الدخول")
@@ -148,21 +183,10 @@ def forgot_password_page():
         if st.button("تحديث كلمة المرور"):
             if new_password != confirm_password:
                 st.warning("كلمة المرور غير متطابقة")
+            elif update_password(username, full_name, new_password):
+                st.success("✅ تم تحديث كلمة المرور، سجل دخولك الآن")
+                st.session_state['password_updated'] = True
+                st.session_state['allow_reset'] = False
+                st.experimental_rerun()
             else:
-                data = {
-                    "action": "update_password",
-                    "username": username,
-                    "full_name": full_name,
-                    "new_password": new_password
-                }
-                try:
-                    res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-                    if res.text.strip() == "UPDATED":
-                        st.success("✅ تم تحديث كلمة المرور، سجل دخولك الآن")
-                        st.session_state['password_updated'] = True
-                        st.session_state['allow_reset'] = False
-                        st.experimental_rerun()
-                    else:
-                        st.error("فشل في تحديث كلمة المرور")
-                except Exception as e:
-                    st.error(f"خطأ في تحديث كلمة المرور: {e}")
+                st.error("فشل في تحديث كلمة المرور")
