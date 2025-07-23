@@ -25,22 +25,19 @@ def send_telegram_message(message):
     except Exception as e:
         st.error(f"Telegram error: {e}")
 
-# ✅ Cookie management using query params
-def set_cookie(key, value):
-    # st.query_params is immutable, so to update params we merge them
-    params = dict(st.query_params)
-    params[key] = value
-    st.experimental_set_query_params(**params)
+# ===========================
+# Session state as cookie replacement
+def set_user_session(key, value):
+    st.session_state[key] = value
 
-def clear_cookies():
-    st.experimental_set_query_params()  # Clear all query params
+def get_user_session(key):
+    return st.session_state.get(key, None)
 
-def get_cookie(key):
-    # st.query_params returns dict with list values: e.g. {'username': ['value']}
-    values = st.query_params.get(key)
-    if values and len(values) > 0:
-        return values[0]
-    return None
+def clear_user_session():
+    keys = list(st.session_state.keys())
+    for key in keys:
+        del st.session_state[key]
+# ===========================
 
 # ✅ Google Sheet API functions
 def check_login(username, password):
@@ -90,7 +87,7 @@ def login_page():
             if check_login(username, password):
                 user_data = get_user_data(username)
                 if user_data:
-                    set_cookie("username", user_data["full_name"])
+                    set_user_session("username", user_data["full_name"])
                     message = (
                         f"🔑 تم تسجيل دخول المستخدم:\n"
                         f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -131,12 +128,12 @@ def signup_page():
 def main():
     load_css("styles.css")
 
-    username_cookie = get_cookie("username")
+    username_cookie = get_user_session("username")
 
     if username_cookie:
         st.sidebar.success(f"مرحبًا، {username_cookie}")
         if st.sidebar.button("🚪 تسجيل خروج"):
-            clear_cookies()
+            clear_user_session()
             st.experimental_rerun()
         else:
             orders_main()
