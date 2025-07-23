@@ -1,17 +1,8 @@
 import streamlit as st
 import requests
-from orders import main as orders_main
-from streamlit_cookies_manager import EncryptedCookieManager
+from orders import main as orders_main  # ملف عرض الأسئلة والمحاضرات
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
-
-# تهيئة مدير الكوكيز بكلمة سر بسيطة
-cookies = EncryptedCookieManager(prefix="app_", password="streamlitcookies12345")
-
-# تأكد من تحميل الكوكيز أولاً
-if not cookies.ready():
-    st.warning("جارِ تحميل الكوكيز... الرجاء الانتظار وإعادة تحميل الصفحة إذا استمر الانتظار.")
-    st.stop()
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -96,20 +87,9 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    saved_username = cookies.get("username")
-    saved_password = cookies.get("password")
-
-    # تسجيل دخول تلقائي إذا الكوكيز موجودة وصحيحة
-    if saved_username and saved_password and not st.session_state.get('logged_in', False):
-        if check_login(saved_username, saved_password):
-            user_data = get_user_data(saved_username)
-            if user_data:
-                st.session_state['logged_in'] = True
-                st.session_state['user_name'] = user_data['username']
-
-    if not st.session_state['show_signup'] and not st.session_state.get('logged_in', False):
-        username = st.text_input("اسم المستخدم", value=saved_username or "", key="login_username")
-        password = st.text_input("كلمة المرور", type="password", value=saved_password or "", key="login_password")
+    if not st.session_state['show_signup']:
+        username = st.text_input("اسم المستخدم", key="login_username")
+        password = st.text_input("كلمة المرور", type="password", key="login_password")
 
         if st.button("دخول"):
             if not username or not password:
@@ -120,12 +100,6 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-
-                        # حفظ الكوكيز
-                        cookies["username"] = username
-                        cookies["password"] = password
-                        cookies.save()
-
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -135,12 +109,13 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
                     st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
+        # ✅ عرض رسالة نجاح بعد تغيير كلمة المرور
         if st.session_state.get('password_reset_message'):
             st.success(st.session_state['password_reset_message'])
             st.session_state['password_reset_message'] = None
@@ -153,13 +128,13 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.experimental_rerun()
+                st.rerun()
 
-    elif st.session_state['show_signup']:
+    else:
         st.title("إنشاء حساب جديد")
         signup_username = st.text_input("اسم المستخدم", key="signup_username")
         signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
@@ -174,13 +149,13 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()
+            st.rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -212,14 +187,13 @@ def forgot_password_page():
                 st.session_state['password_updated'] = False
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
 def main():
     load_css("styles.css")
 
-    # حالة تسجيل الدخول حسب الكوكيز
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         if st.session_state.get('show_forgot', False):
             forgot_password_page()
@@ -228,15 +202,10 @@ def main():
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
-            # مسح الحالة ومسح الكوكيز
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            cookies["username"] = ""
-            cookies["password"] = ""
-            cookies.save()
-            st.experimental_rerun()
+            st.rerun()
 
-        # استدعاء شاشة الأسئلة والمحاضرات من orders.py
         orders_main()
 
 if __name__ == "__main__":
