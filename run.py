@@ -97,7 +97,7 @@ def login_page():
                         f"رقم الهاتف: <b>{user_data['phone']}</b>"
                     )
                     send_telegram_message(message)
-                    st.experimental_rerun()
+                    st._rerun()
                 else:
                     st.error("فشل في جلب بيانات المستخدم")
             else:
@@ -107,11 +107,11 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.experimental_rerun()
+                st._rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.experimental_rerun()
+                st._rerun()
 
     else:
         signup_page()
@@ -121,7 +121,7 @@ def signup_page():
     st.info("💡 هذه الوظيفة تحتاج إلى دمج مع Google Sheets لإضافة مستخدم.")
     if st.button("🔙 العودة لتسجيل الدخول"):
         st.session_state['show_signup'] = False
-        st.experimental_rerun()
+        st._rerun()
 
 # ✅ Main app
 
@@ -134,7 +134,7 @@ def main():
         st.sidebar.success(f"مرحبًا، {username_cookie}")
         if st.sidebar.button("🚪 تسجيل خروج"):
             clear_user_session()
-            st.experimental_rerun()
+            st._rerun()
         else:
             orders_main()
     else:
@@ -143,7 +143,7 @@ def main():
             st.info("هذه الصفحة تحتاج تطويرًا للتعامل مع الاستعادة.")
             if st.button("🔙 العودة"):
                 st.session_state['show_forgot'] = False
-                st.experimental_rerun()
+                st._rerun()
         else:
             login_page()
 
