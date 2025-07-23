@@ -1,6 +1,7 @@
-import streamlit_authenticator as stauth
+import bcrypt
 
 def hash_password(password_plain):
-    # يحمّل قائمة كلمة سر واحدة فقط ويُرجع الهاش كقيمة نصية
-    hashed = stauth.Hasher([password_plain]).generate()[0]
-    return hashed
+    password_bytes = password_plain.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
