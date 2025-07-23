@@ -109,7 +109,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -128,11 +128,11 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.rerun()
+                st.experimental_rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.rerun()
+                st.experimental_rerun()
 
     else:
         st.title("إنشاء حساب جديد")
@@ -149,13 +149,13 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.rerun()
+            st.experimental_rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -166,14 +166,26 @@ def forgot_password_page():
     if 'password_updated' not in st.session_state:
         st.session_state['password_updated'] = False
 
+    # زر العودة
+    if st.button("عودة"):
+        st.session_state['show_forgot'] = False
+        st.session_state['allow_reset'] = False
+        st.session_state['password_updated'] = False
+        st.experimental_rerun()
+
     if st.button("تحقق"):
-        user_data = get_user_data(username)
-        if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
-            st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
-            st.session_state['allow_reset'] = True
-        else:
-            st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
+        # تحقق من تعبئة الحقول
+        if not username.strip() or not full_name.strip():
+            st.warning("يرجى ملء اسم المستخدم والاسم الكامل")
             st.session_state['allow_reset'] = False
+        else:
+            user_data = get_user_data(username)
+            if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
+                st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
+                st.session_state['allow_reset'] = True
+            else:
+                st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
+                st.session_state['allow_reset'] = False
 
     if st.session_state.get('allow_reset', False) and not st.session_state['password_updated']:
         new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
@@ -184,10 +196,10 @@ def forgot_password_page():
                 st.warning("كلمة المرور غير متطابقة")
             elif update_password(username, full_name, new_password):
                 st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
-                st.session_state['password_updated'] = False
+                st.session_state['password_updated'] = True
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
 
@@ -204,7 +216,7 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.rerun()
+            st.experimental_rerun()
 
         orders_main()
 
