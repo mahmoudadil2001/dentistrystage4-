@@ -3,16 +3,13 @@ import requests
 from orders import main as orders_main
 from streamlit_cookies_manager import EncryptedCookieManager
 
-# رابط Google Script الخاص بك
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# تهيئة مدير الكوكيز المشفر (غيّر كلمة السر إلى كلمة سر قوية خاصة بك)
-cookies = EncryptedCookieManager(
-    prefix="app_",  
-    password="very_secure_and_long_password_123456789!"
-)
+# كلمة سر بسيطة وآمنة قليلاً، لا تستخدم رموز غريبة
+cookies = EncryptedCookieManager(prefix="app_", password="securepassword123456")
 
 if not cookies.ready():
+    st.warning("جارٍ تحميل الكوكيز... يرجى الانتظار قليلاً.")
     st.stop()
 
 def load_css(file_path):
@@ -98,11 +95,10 @@ def login_page():
     if 'signup_success' not in st.session_state:
         st.session_state['signup_success'] = False
 
-    # استرجاع الكوكيز
     saved_username = cookies.get("username")
     saved_password = cookies.get("password")
 
-    # تسجيل دخول تلقائي إذا الكوكيز موجودة وصالحة
+    # تسجيل دخول تلقائي عند وجود كوكيز صالحة
     if saved_username and saved_password and not st.session_state.get('logged_in', False):
         if check_login(saved_username, saved_password):
             user_data = get_user_data(saved_username)
@@ -123,10 +119,11 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-                        # حفظ الكوكيز بشكل صحيح
+
                         cookies["username"] = username
                         cookies["password"] = password
                         cookies.save()
+
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -230,7 +227,6 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            # حذف الكوكيز عند تسجيل الخروج
             cookies["username"] = ""
             cookies["password"] = ""
             cookies.save()
