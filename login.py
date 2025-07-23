@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import streamlit_authenticator as stauth
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -67,11 +67,27 @@ def prepare_authenticator():
         st.error("لا توجد بيانات مستخدمين")
         return None
 
-    usernames = [user["username"] for user in users]
-    names = [user["full_name"] for user in users]
-    passwords_plain = [user["password"] for user in users]
+    usernames = []
+    names = []
+    passwords_plain = []
 
-    hashed_passwords = stauth.Hasher(passwords_plain).generate()
+    for user in users:
+        # تأكد من وجود كلمة مرور غير فارغة لتجنب الخطأ
+        if user.get("password") and user.get("username") and user.get("full_name"):
+            usernames.append(user["username"])
+            names.append(user["full_name"])
+            passwords_plain.append(user["password"])
+
+    if not passwords_plain:
+        st.error("لا توجد كلمات مرور صحيحة في البيانات")
+        return None
+
+    # توليد كلمات مرور مشفرة
+    try:
+        hashed_passwords = stauth.Hasher(passwords_plain).generate()
+    except Exception as e:
+        st.error(f"خطأ في تشفير كلمات المرور: {e}")
+        return None
 
     credentials = {
         "usernames": {}
@@ -84,8 +100,8 @@ def prepare_authenticator():
 
     authenticator = stauth.Authenticate(
         credentials,
-        "my_cookie_name",
-        "my_signature_key",
+        "my_cookie_name",       
+        "my_signature_key",     
         cookie_expiry_days=30,
         preauthorized=[],
     )
