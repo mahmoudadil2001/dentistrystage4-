@@ -27,13 +27,20 @@ def send_telegram_message(message):
 
 # ✅ Cookie management using query params
 def set_cookie(key, value):
-    st.experimental_set_query_params(**{key: value})
+    # st.query_params is immutable, so to update params we merge them
+    params = dict(st.query_params)
+    params[key] = value
+    st.experimental_set_query_params(**params)
 
 def clear_cookies():
-    st.experimental_get_query_params()
+    st.experimental_set_query_params()  # Clear all query params
 
 def get_cookie(key):
-    return st.experimental_get_query_params().get(key, [None])[0]
+    # st.query_params returns dict with list values: e.g. {'username': ['value']}
+    values = st.query_params.get(key)
+    if values and len(values) > 0:
+        return values[0]
+    return None
 
 # ✅ Google Sheet API functions
 def check_login(username, password):
@@ -93,7 +100,7 @@ def login_page():
                         f"رقم الهاتف: <b>{user_data['phone']}</b>"
                     )
                     send_telegram_message(message)
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("فشل في جلب بيانات المستخدم")
             else:
@@ -103,11 +110,11 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.rerun()
+                st.experimental_rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.rerun()
+                st.experimental_rerun()
 
     else:
         signup_page()
@@ -117,7 +124,7 @@ def signup_page():
     st.info("💡 هذه الوظيفة تحتاج إلى دمج مع Google Sheets لإضافة مستخدم.")
     if st.button("🔙 العودة لتسجيل الدخول"):
         st.session_state['show_signup'] = False
-        st.rerun()
+        st.experimental_rerun()
 
 # ✅ Main app
 
@@ -130,7 +137,7 @@ def main():
         st.sidebar.success(f"مرحبًا، {username_cookie}")
         if st.sidebar.button("🚪 تسجيل خروج"):
             clear_cookies()
-            st.rerun()
+            st.experimental_rerun()
         else:
             orders_main()
     else:
@@ -139,7 +146,7 @@ def main():
             st.info("هذه الصفحة تحتاج تطويرًا للتعامل مع الاستعادة.")
             if st.button("🔙 العودة"):
                 st.session_state['show_forgot'] = False
-                st.rerun()
+                st.experimental_rerun()
         else:
             login_page()
 
