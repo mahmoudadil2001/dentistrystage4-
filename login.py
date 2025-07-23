@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoP3aFvQbRFP-RHZfZFe7L0_avSJVIxC0CthQ2ZC1LXLcWsDC1wm74haFuzLpEGCHU/exec"  # استبدل بالرابط الخاص بك
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw/exec"  # استبدل بالرابط الخاص بك
 
 def send_telegram_message(message):
     bot_token = "YOUR_BOT_TOKEN"  # ضع التوكن الصحيح للبوت
@@ -141,4 +141,71 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st
+                    st.experimental_rerun()
+                else:
+                    st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
+
+        if st.button("العودة لتسجيل الدخول"):
+            st.session_state['show_signup'] = False
+            st.experimental_rerun()
+
+def forgot_password_page():
+    st.title("استعادة كلمة المرور")
+
+    username = st.text_input("اسم المستخدم", key="forgot_username")
+    full_name = st.text_input("الاسم الكامل", key="forgot_full_name")
+
+    if 'password_updated' not in st.session_state:
+        st.session_state['password_updated'] = False
+
+    if st.button("عودة"):
+        st.session_state['show_forgot'] = False
+        st.session_state['allow_reset'] = False
+        st.session_state['password_updated'] = False
+        st.experimental_rerun()
+
+    if st.button("تحقق"):
+        if not username.strip() or not full_name.strip():
+            st.warning("يرجى ملء اسم المستخدم والاسم الكامل")
+            st.session_state['allow_reset'] = False
+        else:
+            user_data = get_user_data(username)
+            if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
+                st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
+                st.session_state['allow_reset'] = True
+            else:
+                st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
+                st.session_state['allow_reset'] = False
+
+    if st.session_state.get('allow_reset', False) and not st.session_state['password_updated']:
+        new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
+        confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
+
+        if st.button("تحديث كلمة المرور"):
+            if new_password != confirm_password:
+                st.warning("كلمة المرور غير متطابقة")
+            elif update_password(username, full_name, new_password):
+                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
+                st.session_state['password_updated'] = True
+                st.session_state['allow_reset'] = False
+                st.session_state['show_forgot'] = False
+                st.experimental_rerun()
+            else:
+                st.error("فشل في تحديث كلمة المرور")
+
+def main():
+    if st.session_state.get('logged_in', False):
+        st.write(f"مرحبًا {st.session_state['user_name']}! تم تسجيل الدخول بنجاح.")
+        if st.button("تسجيل خروج"):
+            for key in ['logged_in', 'user_name']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.experimental_rerun()
+    else:
+        if st.session_state.get('show_forgot', False):
+            forgot_password_page()
+        else:
+            login_page()
+
+if __name__ == "__main__":
+    main()
