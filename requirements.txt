@@ -3,3 +3,6 @@ streamlit-cookies-manager
 gspread 
 streamlit-authenticator
 bcrypt
+requests
+pandas
+numpy
