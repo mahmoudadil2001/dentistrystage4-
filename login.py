@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import streamlit_authenticator as stauth
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyf9rMq1dh71Ib3nWNO7yyhrNCLmHDaYcjElk6E2k_nAEQ3x2KXo-w7q8jZIZgVOZoI/exec"
 
@@ -13,19 +14,21 @@ def send_telegram_message(message):
     except Exception as e:
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
 
-def check_login(username, password):
-    data = {"action": "check", "username": username, "password": password}
+def get_all_users():
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "TRUE"
+        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}, timeout=120)
+        if res.status_code == 200:
+            return res.json()
+        else:
+            st.error(f"فشل في جلب المستخدمين: {res.status_code}")
+            return []
     except Exception as e:
-        st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
-        return False
+        st.error(f"خطأ في جلب المستخدمين: {e}")
+        return []
 
 def get_user_data(username):
-    data = {"action": "get_user_data", "username": username}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_user_data", "username": username}, timeout=120)
         text = res.text.strip()
         if text == "NOT_FOUND":
             return None
@@ -43,35 +46,72 @@ def get_user_data(username):
         st.error(f"خطأ في جلب بيانات المستخدم: {e}")
         return None
 
+def prepare_authenticator():
+    users = get_all_users()
+    if not users:
+        st.error("لا توجد بيانات مستخدمين")
+        return None
+
+    credentials = {"usernames": {}}
+
+    for user in users:
+        username = user.get("username")
+        full_name = user.get("full_name")
+        password = user.get("password")
+        if username and full_name and password:
+            credentials["usernames"][username] = {
+                "name": full_name,
+                "password": password  # كلمة المرور عادية بدون هاش
+            }
+
+    cookie_name = "my_app_cookie"
+    key = "my_signature_key"
+
+    authenticator = stauth.Authenticate(
+        credentials,
+        cookie_name,
+        key,
+        cookie_expiry_days=30,
+        preauthorized=[]
+    )
+    return authenticator
+
 def login_page():
     st.title("تسجيل الدخول")
 
-    username = st.text_input("اسم المستخدم")
-    password = st.text_input("كلمة المرور", type="password")
+    authenticator = prepare_authenticator()
+    if authenticator is None:
+        st.error("حدث خطأ في إعداد نظام التحقق")
+        return
 
-    if st.button("دخول"):
-        if not username or not password:
-            st.warning("يرجى ملء جميع الحقول")
-        else:
-            if check_login(username, password):
-                st.session_state['logged_in'] = True
-                st.session_state['user_name'] = username
+    name, authentication_status, username = authenticator.login("Login", "main")
 
-                user_data = get_user_data(username)
-                if user_data:
-                    message = (
-                        f"🔑 تم تسجيل دخول المستخدم:\n"
-                        f"اسم المستخدم: <b>{user_data['username']}</b>\n"
-                        f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                        f"الجروب: <b>{user_data['group']}</b>\n"
-                        f"رقم الهاتف: <b>{user_data['phone']}</b>"
-                    )
-                    send_telegram_message(message)
+    if authentication_status:
+        st.session_state['logged_in'] = True
+        st.session_state['user_name'] = username
 
-                st.success(f"مرحباً {user_data['full_name']}!")
-                st.experimental_rerun()
-            else:
-                st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+        authenticator.logout("تسجيل خروج", "sidebar")
+
+        user_data = get_user_data(username)
+        if user_data:
+            message = (
+                f"🔑 تم تسجيل دخول المستخدم:\n"
+                f"اسم المستخدم: <b>{user_data['username']}</b>\n"
+                f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
+                f"الجروب: <b>{user_data['group']}</b>\n"
+                f"رقم الهاتف: <b>{user_data['phone']}</b>"
+            )
+            send_telegram_message(message)
+
+        st.write(f"مرحباً {name}!")
+
+        from orders import main as orders_main
+        orders_main()
+
+    elif authentication_status is False:
+        st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+    elif authentication_status is None:
+        st.warning("يرجى إدخال بيانات تسجيل الدخول")
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
