@@ -15,19 +15,19 @@ def send_telegram_message(message):
     except Exception as e:
         st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
 
-def check_password(plain_password, hashed_password):
-    try:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-    except Exception:
-        return False
-
 def check_login(username, password):
     user_data = get_user_data(username)
     if not user_data:
         return False
 
-    stored_hash = user_data['password']
-    return check_password(password, stored_hash)
+    stored_hash = user_data['password'].encode('utf-8')
+    password_bytes = password.encode('utf-8')
+
+    try:
+        return bcrypt.checkpw(password_bytes, stored_hash)
+    except Exception as e:
+        st.error(f"خطأ في التحقق من كلمة المرور: {e}")
+        return False
 
 def get_user_data(username):
     data = {"action": "get_user_data", "username": username}
