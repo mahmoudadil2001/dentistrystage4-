@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import bcrypt
-from auth_utils import hash_password  # دالة هاش كلمة السر
+from auth_utils import hash_password  # دالة هاش كلمة السر (مع bcrypt)
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw/exec"
 
@@ -55,7 +55,7 @@ def add_user(username, password, full_name, group, phone):
     data = {
         "action": "add",
         "username": username,
-        "password": password_hashed,
+        "password": password_hashed.decode('utf-8') if isinstance(password_hashed, bytes) else password_hashed,
         "full_name": full_name,
         "group": group,
         "phone": phone
@@ -73,7 +73,7 @@ def update_password(username, full_name, new_password):
         "action": "update_password",
         "username": username,
         "full_name": full_name,
-        "new_password": password_hashed
+        "new_password": password_hashed.decode('utf-8') if isinstance(password_hashed, bytes) else password_hashed
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
