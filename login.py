@@ -1,9 +1,8 @@
 import streamlit as st
 import requests
-import bcrypt
-from auth_utils import hash_password  # دالة هاش كلمة السر (مع bcrypt)
+from auth_utils import hash_password  # دالة هاش كلمة السر
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw/exec"
+GOOGLE_SCRIPT_URL = "AKfycbzHrnwfeZce9MZNGftGG3XxVL3HFCzG52hgXMatGnYhMG34Bs926HqoPw5yf3pru3rw"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -20,11 +19,15 @@ def check_login(username, password):
     if not user_data:
         return False
 
-    stored_hash = user_data['password'].encode('utf-8')
-    password_bytes = password.encode('utf-8')
-
+    stored_hash = user_data['password']
     try:
-        return bcrypt.checkpw(password_bytes, stored_hash)
+        # stauth.Authenticate يستخدم هنا للتحقق من كلمة السر
+        import streamlit_authenticator as stauth
+        authenticator = stauth.Authenticate(
+            {"usernames": {username: {"name": user_data["full_name"], "password": stored_hash}}},
+            "some_cookie_name", "some_signature_key", cookie_expiry_days=1
+        )
+        return authenticator.login(username, password, location="unrendered")  # تحقق من كلمة السر
     except Exception as e:
         st.error(f"خطأ في التحقق من كلمة المرور: {e}")
         return False
@@ -40,7 +43,7 @@ def get_user_data(username):
         if len(parts) == 5:
             return {
                 "username": parts[0],
-                "password": parts[1],  # مخزن كهاش bcrypt
+                "password": parts[1],  # مخزن كهاش من Google Sheets
                 "full_name": parts[2],
                 "group": parts[3],
                 "phone": parts[4]
@@ -55,7 +58,7 @@ def add_user(username, password, full_name, group, phone):
     data = {
         "action": "add",
         "username": username,
-        "password": password_hashed.decode('utf-8') if isinstance(password_hashed, bytes) else password_hashed,
+        "password": password_hashed,
         "full_name": full_name,
         "group": group,
         "phone": phone
@@ -73,7 +76,7 @@ def update_password(username, full_name, new_password):
         "action": "update_password",
         "username": username,
         "full_name": full_name,
-        "new_password": password_hashed.decode('utf-8') if isinstance(password_hashed, bytes) else password_hashed
+        "new_password": password_hashed
     }
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
