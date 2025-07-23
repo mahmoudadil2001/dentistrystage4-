@@ -4,15 +4,10 @@ from orders import main as orders_main  # ملف عرض الأسئلة والم�
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# ----------- وظائف مساعدة ------------
-
 def load_css(file_path):
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            css = f.read()
-        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
-    except FileNotFoundError:
-        pass
+    with open(file_path, "r", encoding="utf-8") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -84,8 +79,6 @@ def update_password(username, full_name, new_password):
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
         return False
 
-# ----------- صفحات التطبيق ------------
-
 def login_page():
     st.title("تسجيل الدخول")
 
@@ -107,11 +100,6 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-                        st.session_state['full_name'] = user_data['full_name']
-                        st.session_state['group'] = user_data['group']
-                        st.session_state['phone'] = user_data['phone']
-
-                        # إرسال رسالة تليجرام
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -127,7 +115,7 @@ def login_page():
                 else:
                     st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-        # عرض رسالة نجاح إنشاء حساب
+        # ✅ عرض رسالة نجاح بعد تغيير كلمة المرور
         if st.session_state.get('password_reset_message'):
             st.success(st.session_state['password_reset_message'])
             st.session_state['password_reset_message'] = None
@@ -147,30 +135,27 @@ def login_page():
                 st.rerun()
 
     else:
-        signup_page()
+        st.title("إنشاء حساب جديد")
+        signup_username = st.text_input("اسم المستخدم", key="signup_username")
+        signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
+        signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
+        signup_group = st.text_input("الجروب", key="signup_group")
+        signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
 
-def signup_page():
-    st.title("إنشاء حساب جديد")
-    signup_username = st.text_input("اسم المستخدم", key="signup_username")
-    signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
-    signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
-    signup_group = st.text_input("الجروب", key="signup_group")
-    signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
-
-    if st.button("تسجيل"):
-        if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
-            st.warning("يرجى ملء جميع الحقول")
-        else:
-            if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
-                st.session_state['show_signup'] = False
-                st.session_state['signup_success'] = True
-                st.rerun()
+        if st.button("تسجيل"):
+            if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
+                st.warning("يرجى ملء جميع الحقول")
             else:
-                st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
+                if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
+                    st.session_state['show_signup'] = False
+                    st.session_state['signup_success'] = True
+                    st.rerun()
+                else:
+                    st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
-    if st.button("العودة لتسجيل الدخول"):
-        st.session_state['show_signup'] = False
-        st.rerun()
+        if st.button("العودة لتسجيل الدخول"):
+            st.session_state['show_signup'] = False
+            st.rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -212,18 +197,13 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         if st.session_state.get('show_forgot', False):
             forgot_password_page()
-        elif st.session_state.get('show_signup', False):
-            signup_page()
         else:
             login_page()
     else:
-        st.sidebar.write(f"مرحباً، {st.session_state.get('full_name', st.session_state.get('user_name', ''))}")
+        st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
-            # تنظيف الجلسة
-            keys_to_remove = ['logged_in', 'user_name', 'full_name', 'group', 'phone', 'show_signup', 'signup_success', 'show_forgot', 'password_reset_message', 'allow_reset', 'password_updated']
-            for key in keys_to_remove:
-                if key in st.session_state:
-                    del st.session_state[key]
+            st.session_state['logged_in'] = False
+            st.session_state.pop('user_name', None)
             st.rerun()
 
         orders_main()
