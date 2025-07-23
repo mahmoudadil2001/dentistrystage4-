@@ -5,11 +5,12 @@ from streamlit_cookies_manager import EncryptedCookieManager
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycx6K2dBkAytd7QQQkrGkVnGkQUc0Aqs2No55dUDVeUmx8ERwaLqClhF9zhofyzPmY/exec"
 
-# كلمة سر واضحة وبسيطة للكوكيز
+# تهيئة مدير الكوكيز بكلمة سر بسيطة
 cookies = EncryptedCookieManager(prefix="app_", password="streamlitcookies12345")
 
+# تأكد من تحميل الكوكيز أولاً
 if not cookies.ready():
-    st.warning("جارِ تحميل الكوكيز... الرجاء الانتظار وإعادة تحميل الصفحة في حال استمر الوضع.")
+    st.warning("جارِ تحميل الكوكيز... الرجاء الانتظار وإعادة تحميل الصفحة إذا استمر الانتظار.")
     st.stop()
 
 def load_css(file_path):
@@ -98,7 +99,7 @@ def login_page():
     saved_username = cookies.get("username")
     saved_password = cookies.get("password")
 
-    # تسجيل دخول تلقائي عند وجود كوكيز صالحة
+    # تسجيل دخول تلقائي إذا الكوكيز موجودة وصحيحة
     if saved_username and saved_password and not st.session_state.get('logged_in', False):
         if check_login(saved_username, saved_password):
             user_data = get_user_data(saved_username)
@@ -120,6 +121,7 @@ def login_page():
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
 
+                        # حفظ الكوكيز
                         cookies["username"] = username
                         cookies["password"] = password
                         cookies.save()
@@ -217,6 +219,7 @@ def forgot_password_page():
 def main():
     load_css("styles.css")
 
+    # حالة تسجيل الدخول حسب الكوكيز
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         if st.session_state.get('show_forgot', False):
             forgot_password_page()
@@ -225,6 +228,7 @@ def main():
     else:
         st.sidebar.write(f"مرحباً، {st.session_state['user_name']}")
         if st.sidebar.button("تسجيل خروج"):
+            # مسح الحالة ومسح الكوكيز
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
             cookies["username"] = ""
@@ -232,6 +236,7 @@ def main():
             cookies.save()
             st.experimental_rerun()
 
+        # استدعاء شاشة الأسئلة والمحاضرات من orders.py
         orders_main()
 
 if __name__ == "__main__":
