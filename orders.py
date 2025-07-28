@@ -6,7 +6,7 @@ import sys
 import importlib
 
 def load_lecture_titles(subject_name):
-    titles_file = os.path.join(subject_name, "Edit", "lecture_titles.py")
+    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")  # ملاحظة: 'edit' بحروف صغيرة
     if not os.path.exists(titles_file):
         return {}
 
@@ -76,14 +76,14 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد Edit
+    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
         if title:
-            display_name = f"Lec {lec_num} {title}"
+            display_name = f"Lec {lec_num}  {title}"  # رقم المحاضرة + مسافة + الاسم
         else:
             display_name = f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
