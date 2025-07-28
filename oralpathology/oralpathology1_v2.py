@@ -1,4 +1,4 @@
-biopsy_mcqs = [
+questions = [
     {
         "question": "Which of the following is the gold standard for definitive diagnosis of oral lesions?",
         "options": [
