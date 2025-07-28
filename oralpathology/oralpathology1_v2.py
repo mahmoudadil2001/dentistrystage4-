@@ -109,5 +109,214 @@ questions = [
         "answer": "A",
         "explanation": "FNA may cause hemorrhage in vascular tumors; core biopsy is safer."
     },
+    {
+        "question": "Which biopsy technique is specifically used for cervical cancer diagnosis?",
+        "options": [
+            "Punch biopsy",
+            "Cone biopsy",
+            "Fine-needle aspiration",
+            "Shave biopsy"
+        ],
+        "answer": "B",
+        "explanation": "Cone biopsy removes a cylindrical tissue sample from the cervix, essential for evaluating cervical dysplasia/cancer."
+    },
+    {
+        "question": "What does 'erythroplasia' clinically suggest?",
+        "options": [
+            "Benign inflammatory lesion",
+            "High-risk epithelial dysplasia or carcinoma",
+            "Traumatic ulcer",
+            "Normal mucosal variation"
+        ],
+        "answer": "B",
+        "explanation": "Erythroplasia (totally red lesions) has a high malignant transformation risk and requires biopsy."
+    },
+    {
+        "question": "Which step immediately follows fixation in tissue processing?",
+        "options": [
+            "Embedding in paraffin",
+            "Dehydration with alcohol",
+            "Staining with H&E",
+            "Clearing with xylene"
+        ],
+        "answer": "B",
+        "explanation": "Dehydration removes water from the tissue using graded alcohols before clearing."
+    },
+    {
+        "question": "What artifact results from crushing tissue with forceps during biopsy?",
+        "options": [
+            "Enhanced staining quality",
+            "Uninterpretable cellular distortion",
+            "Improved nuclear detail",
+            "Accurate mitotic count"
+        ],
+        "answer": "B",
+        "explanation": "Crushing artifacts distort cellular morphology, complicating histopathologic diagnosis."
+    },
+    {
+        "question": "Which immunohistochemical marker is specific for melanocytic tumors?",
+        "options": [
+            "Desmin",
+            "S-100 protein",
+            "CD34",
+            "EGFR"
+        ],
+        "answer": "B",
+        "explanation": "S-100 is highly sensitive for melanocytes and nerve sheath tumors."
+    },
+    {
+        "question": "What is the first field in a standard surgical pathology report?",
+        "options": [
+            "Microscopic description",
+            "Gross description",
+            "Clinical history",
+            "Diagnosis"
+        ],
+        "answer": "C",
+        "explanation": "The report begins with the patient's clinical history to contextualize findings."
+    },
+    {
+        "question": "Which stain is used to visualize reticulin fibers in connective tissue?",
+        "options": [
+            "Congo red",
+            "Silver stain",
+            "PAS",
+            "Trichrome"
+        ],
+        "answer": "B",
+        "explanation": "Silver stains (e.g., Gomori’s) highlight reticulin fibers and basement membranes."
+    },
+    {
+        "question": "Why is 70% alcohol occasionally used as a fixative?",
+        "options": [
+            "It cross-links DNA for PCR",
+            "It preserves nucleic acids better than formalin",
+            "It is cheaper than formalin",
+            "It eliminates the need for dehydration"
+        ],
+        "answer": "B",
+        "explanation": "70% alcohol minimizes DNA/RNA degradation for molecular studies."
+    },
+    {
+        "question": "Which combination of lesion features strongly suggests malignancy?",
+        "options": [
+            "Soft texture + mobility",
+            "Induration + fixation to adjacent structures",
+            "Pain + rapid healing",
+            "Bleeding + smooth borders"
+        ],
+        "answer": "B",
+        "explanation": "Induration (hardness) and fixation are classic signs of invasive carcinoma."
+    },
+    {
+        "question": "What is the primary purpose of telepathology?",
+        "options": [
+            "To replace all traditional biopsies",
+            "To enable remote pathology consultation via digital imaging",
+            "To reduce the need for tissue fixation",
+            "To automate staining processes"
+        ],
+        "answer": "B",
+        "explanation": "Telepathology allows pathologists to review digital slides remotely for consultations."
+    },
+    {
+        "question": "Which biopsy method is least suitable for diagnosing lymphoma?",
+        "options": [
+            "Core needle biopsy",
+            "Excisional lymph node biopsy",
+            "Fine-needle aspiration (FNA)",
+            "Punch biopsy"
+        ],
+        "answer": "C",
+        "explanation": "FNA often yields insufficient tissue for lymphoma subtyping; excisional biopsy is preferred."
+    },
+    {
+        "question": "What does 'loss of epithelial stratification' indicate in dysplasia?",
+        "options": [
+            "Normal maturation",
+            "Hyperkeratosis",
+            "Disordered cell maturation from basal to superficial layers",
+            "Increased collagen production"
+        ],
+        "answer": "C",
+        "explanation": "Dysplasia disrupts the normal maturation sequence of epithelial cells."
+    },
+    {
+        "question": "Which fixative is toxic due to mercury content?",
+        "options": [
+            "10% buffered formalin",
+            "Zenker fluid",
+            "Bouin solution",
+            "Carnoy fluid"
+        ],
+        "answer": "B",
+        "explanation": "Zenker fluid contains mercuric chloride, requiring careful disposal."
+    },
+    {
+        "question": "Which lesion would NOT typically require an immediate biopsy?",
+        "options": [
+            "A 4-week-old non-healing ulcer",
+            "A speckled leukoplakia",
+            "A 2-day-old traumatic fibroma",
+            "A nodule with indurated borders"
+        ],
+        "answer": "C",
+        "explanation": "Traumatic fibromas with clear etiology often resolve after removing the irritant."
+    },
+    {
+        "question": "What is the role of xylene in tissue processing?",
+        "options": [
+            "To dehydrate tissue",
+            "To clear alcohol before paraffin embedding",
+            "To fix nuclear chromatin",
+            "To stain lipids"
+        ],
+        "answer": "B",
+        "explanation": "Xylene removes alcohol, making tissue miscible with paraffin wax."
+    },
+    {
+        "question": "Which feature is seen in epithelial dysplasia but NOT hyperplasia?",
+        "options": [
+            "Increased cell layers",
+            "Nuclear hyperchromatism and pleomorphism",
+            "Uniform cell size",
+            "Intact basement membrane"
+        ],
+        "answer": "B",
+        "explanation": "Dysplasia shows abnormal nuclei (hyperchromatism, pleomorphism); hyperplasia does not."
+    },
+    {
+        "question": "Why is a scalpel preferred over scissors for mucosal biopsies?",
+        "options": [
+            "To minimize crushing artifacts",
+            "To reduce bleeding",
+            "To speed up the procedure",
+            "To avoid local anesthesia"
+        ],
+        "answer": "A",
+        "explanation": "Scalpels produce cleaner cuts with less artifact compared to scissors."
+    },
+    {
+        "question": "Which diagnostic technique complements but does not replace biopsy?",
+        "options": [
+            "Exfoliative cytology",
+            "Immunohistochemistry",
+            "Frozen section analysis",
+            "Gross examination"
+        ],
+        "answer": "A",
+        "explanation": "Cytology screens for malignancy but lacks architectural context provided by biopsy."
+    },
+    {
+        "question": "What is the final step before microscopic examination of tissue?",
+        "options": [
+            "Fixation",
+            "Sectioning with a microtome",
+            "Staining (e.g., H&E)",
+            "Clearing"
+        ],
+        "answer": "C",
+        "explanation": "Staining (e.g., hematoxylin and eosin) provides contrast for cellular details."
+    }
     # Continued for 19 more questions...
 ]
