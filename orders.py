@@ -69,12 +69,16 @@ def orders_o():
     versions_dict = lectures_versions.get(lec_num, {})
     version_keys = sorted(versions_dict.keys())
 
-    # تجهيز قائمة النسخ مع علامة الصح
-    version_labels = []
-    for v in version_keys:
-        key = f"{subject}_{lec_num}_{v}"
-        mark = "✅" if st.session_state.completed_versions.get(key, False) else ""
-        version_labels.append(f"Version {v} {mark}")
+    # تحديث نسخة + علامة صح
+    def build_labels():
+        labels = []
+        for v in version_keys:
+            key = f"{subject}_{lec_num}_{v}"
+            mark = "✅" if st.session_state.completed_versions.get(key, False) else ""
+            labels.append(f"Version {v} {mark}")
+        return labels
+
+    version_labels = build_labels()
 
     with st.sidebar:
         st.markdown("### اختر النسخة")
@@ -90,8 +94,9 @@ def orders_o():
         if clicked != st.session_state[key]:
             st.session_state[key] = clicked
             st.session_state.completed_versions[key] = clicked
+            st.session_state.version_labels = build_labels()
+            st.rerun()
 
-    # تحميل ملف الأسئلة
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
