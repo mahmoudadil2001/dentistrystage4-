@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzHw6kXDxTx_hdJLGUDHON5DpKdoAd0azzvah-w5MggiDhV7XnFkyxPDvyPl6p60T3/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXjcW-I36ZZCqzPtijcNoE8pGE39xOv1EILSPlcVMyNvj3FSlQDT7otpyN_dlk9uRb/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
