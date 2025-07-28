@@ -11,7 +11,7 @@ custom_titles_data = {
     ("oralpathology", 1): "Lec 1 Biopsy"
 }
 
-# تحويلها إلى شكل القاموس المستخدم في الكود
+# تحويلها إلى قاموس حسب الموضوع ورقم المحاضرة
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
@@ -76,9 +76,10 @@ def orders_o():
         st.error(f"⚠️ الملف {subject}{lecture_num}.py غير موجود في المجلد {subject}.")
         return
 
-    questions = questions_module.questions
+    questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # إعادة تهيئة جلسة الأسئلة عند التغيير
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lecture) or \
@@ -149,13 +150,13 @@ def orders_o():
             if st.button("أجب", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
                 st.success("✅ إجابة صحيحة")
             else:
-                st.error(f"❌ الإجابة : {correct_text}")
+                st.error(f"❌ الإجابة الصحيحة: {correct_text}")
                 if "explanation" in q:
                     st.info(f"💡 الشرح: {q['explanation']}")
 
@@ -164,9 +165,8 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
-        # عرض روابط الشرح أسفل السؤال بدون عنوان النص
         if Links:
             st.markdown("---")
             for link in Links:
@@ -192,10 +192,9 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 def main():
-    # حذف تسجيل الاسم والقروب، ونفتح الموقع مباشرة
     st.markdown(
         """
         <div style="
@@ -234,6 +233,7 @@ def main():
         اشتركوا بقناة التلي حتى توصلكم كل التحديثات أو المحاضرات اللي راح انزلها على الموقع إن شاء الله
     </div>
     ''', unsafe_allow_html=True)
+    
 
 if __name__ == "__main__":
     main()
