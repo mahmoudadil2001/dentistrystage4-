@@ -2,11 +2,13 @@ import streamlit as st
 import os
 import importlib.util
 import re
-from login import save_selected_versions  # لاستعمال الدالة التي تحفظ النسخ في Google Sheet
+from login import save_selected_version  # استيراد دالة حفظ النسخة
 
+# 1 titles (editable)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
+    ("endodontics", 3): "Lecture 3 name",
     ("generalmedicine", 1): "Lecture 1 name",
     ("oralpathology", 1): "Lec 1 Biopsy"
 }
@@ -60,6 +62,7 @@ def orders_o():
     ]
 
     subject = st.selectbox("Select Subject", subjects)
+
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
@@ -74,25 +77,35 @@ def orders_o():
 
     lecture_choice = st.selectbox("Select Lecture", lectures_list)
     lec_num = int(lecture_choice.split(" ")[0])
-    versions_dict = lectures_versions.get(lec_num, {})
 
-    selected_version = 1
-    if len(versions_dict) > 1:
+    versions_dict = lectures_versions.get(lec_num, {})
+    versions_count = len(versions_dict)
+
+    # جلب النسخة المحفوظة للمستخدم إذا موجودة
+    saved_versions = st.session_state.get('saved_versions', {})
+    saved_version_for_lecture = saved_versions.get((subject, lec_num), 1)
+
+    selected_version = saved_version_for_lecture if saved_version_for_lecture in versions_dict else 1
+
+    if versions_count > 1:
+        st.sidebar.markdown("### Select Question version")
         version_keys = sorted(versions_dict.keys())
-        selected_version = st.radio(
-            "اختر النسخة:",
+        selected_version = st.sidebar.radio(
+            "النسخ المتاحة:",
             options=version_keys,
-            index=0,
+            index=version_keys.index(selected_version) if selected_version in version_keys else 0,
             key="version_select"
         )
+    else:
+        selected_version = 1
 
-        # ✅ حفظ النسخة المختارة في حساب المستخدم
-        if st.session_state.get("logged_in"):
-            username = st.session_state.get("user_name")
-            if st.checkbox("حفظ هذه النسخة لهذا الحساب", key=f"save_{subject}_{lec_num}_{selected_version}"):
-                version_text = f"{subject}:{lec_num}:{selected_version}"
-                save_selected_versions(username, version_text)
-                st.success("✅ تم حفظ النسخة في حسابك")
+    # حفظ النسخة المختارة للمستخدم تلقائياً عند التغيير
+    if st.session_state.get('logged_in', False):
+        username = st.session_state['user_name']
+        # حفظ في جوجل شيت
+        save_selected_version(username, subject, lec_num, selected_version)
+        # تحديث نسخة الجلسة
+        st.session_state['saved_versions'][(subject, lec_num)] = selected_version
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -107,9 +120,9 @@ def orders_o():
 
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture") != lecture_choice) or \
-       (st.session_state.get("current_subject") != subject) or \
-       (st.session_state.get("current_version") != selected_version):
+       (st.session_state.get("current_lecture", None) != lecture_choice) or \
+       (st.session_state.get("current_subject", None) != subject) or \
+       (st.session_state.get("current_version", None) != selected_version):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -126,6 +139,7 @@ def orders_o():
 
         if isinstance(answer, int) and 0 <= answer < len(options):
             return options[answer]
+
         if isinstance(answer, str):
             answer_clean = answer.strip().upper()
             if answer_clean in ["A", "B", "C", "D"]:
@@ -134,35 +148,52 @@ def orders_o():
                     return options[idx]
             if answer in options:
                 return answer
+
         return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
+
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            status = "⬜" if user_ans is None else "✅" if user_ans == correct_text else "❌"
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-        st.markdown(f"### Question {index+1}/{len(questions)}: {q['question']}")
+
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
 
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
-            if st.session_state.user_answers[index] == correct_text:
+            user_ans = st.session_state.user_answers[index]
+            if user_ans == correct_text:
                 st.success("✅ Correct answer")
             else:
                 st.error(f"❌ Correct answer: {correct_text}")
@@ -174,7 +205,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -185,9 +216,15 @@ def orders_o():
         show_question(st.session_state.current_question)
     else:
         st.header("🎉 Quiz Completed!")
-        correct = sum(
-            st.session_state.user_answers[i] == normalize_answer(q) for i, q in enumerate(questions)
-        )
+        correct = 0
+        for i, q in enumerate(questions):
+            correct_text = normalize_answer(q)
+            user = st.session_state.user_answers[i]
+            if user == correct_text:
+                correct += 1
+                st.write(f"Question {i+1}: ✅ Correct")
+            else:
+                st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
         st.success(f"Score: {correct} out of {len(questions)}")
 
         if st.button("🔁 Restart Quiz"):
@@ -195,17 +232,41 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 def main():
     st.markdown(
         """
-        <div style="background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-        border-radius: 15px; padding: 20px; color: #003049; font-size: 18px; text-align: center;">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. 
-        Select a subject and lecture and start the quiz. Good luck!
+        <div style="
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: #003049;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        ">
+        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+        """
+    , unsafe_allow_html=True)
     orders_o()
+
+    st.markdown('''
+    <div style="display:flex; justify-content:center; margin-top:50px;">
+        <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
+            Telegram Channel
+            <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
+                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
+                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm57 83-16 75-34-31-22 21-9-6 22-21-37-29-29 31-14-11 74-43 51 31z"/>
+                </svg>
+            </span>
+        </a>
+    </div>
+    ''', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
