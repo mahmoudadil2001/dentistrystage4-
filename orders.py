@@ -17,11 +17,16 @@ for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
 
 def get_lectures_and_versions(subject_name, base_path="."):
+    """
+    Returns dict:
+    { lec_num: { version_num: filename, ... }, ... }
+    """
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
         return {}
 
     files = os.listdir(subject_path)
+    # filename pattern: subjectname + lec number + _v version number (optional) + .py
     pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
 
     lectures = {}
@@ -29,7 +34,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         m = pattern.match(f)
         if m:
             lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1
+            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
             if lec_num not in lectures:
                 lectures[lec_num] = {}
             lectures[lec_num][version_num] = f
@@ -81,34 +86,15 @@ def orders_o():
     versions_count = len(versions_dict)
 
     selected_version = 1
-
     if versions_count > 1:
-        st.sidebar.markdown("### اختر النسخة:")
-
+        st.sidebar.markdown("### Select Question version")
         version_keys = sorted(versions_dict.keys())
-
-        # نخزن في session_state نسخة واحدة مختارة فقط
-        # ممكن تبدأ بالنسخة الأولى
-        if "selected_versions" not in st.session_state:
-            st.session_state.selected_versions = {}
-
-        for v in version_keys:
-            cols = st.sidebar.columns([0.1, 0.9])
-            checked = (st.session_state.selected_versions.get(lec_num, 1) == v)
-            cb = cols[0].checkbox("", value=checked, key=f"version_chk_{lec_num}_{v}")
-
-            if cb:
-                # إذا ضغطت على هذا الـ checkbox، نحدث الاختيار بحيث يكون هذا النسخة المختارة فقط
-                st.session_state.selected_versions[lec_num] = v
-
-                # نزيل تحديد كل النسخ الأخرى لنسخة هذا المحاضرة
-                for other_v in version_keys:
-                    if other_v != v:
-                        st.session_state[f"version_chk_{lec_num}_{other_v}"] = False
-            cols[1].write(f"نسخة {v}")
-
-        selected_version = st.session_state.selected_versions.get(lec_num, 1)
-
+        selected_version = st.sidebar.radio(
+            "النسخ المتاحة:",
+            options=version_keys,
+            index=0,
+            key="version_select"
+        )
     else:
         selected_version = 1
 
