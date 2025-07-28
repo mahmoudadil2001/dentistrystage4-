@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-token = st.secrets["1"]
+token = st.secrets["12"]
 headers = {"Authorization": f"token {token}"} if token else {}
 
 def get_user_repos(username):
