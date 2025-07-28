@@ -26,7 +26,6 @@ def get_lectures_and_versions(subject_name, base_path="."):
         return {}
 
     files = os.listdir(subject_path)
-    # filename pattern: subjectname + lec number + _v version number (optional) + .py
     pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
 
     lectures = {}
@@ -34,7 +33,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         m = pattern.match(f)
         if m:
             lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
+            version_num = int(m.group(2)) if m.group(2) else 1
             if lec_num not in lectures:
                 lectures[lec_num] = {}
             lectures[lec_num][version_num] = f
@@ -87,22 +86,28 @@ def orders_o():
 
     selected_version = 1
     if versions_count > 1:
-        st.sidebar.markdown("### Select Question version")
+        st.sidebar.markdown("### اختر النسخة:")
         version_keys = sorted(versions_dict.keys())
 
-        selected_version = st.sidebar.radio(
-            "اختر النسخة:",
-            options=version_keys,
+        def version_label(v):
+            selected = st.session_state.get("version_label_select", version_keys[0])
+            # مربع صح إذا النسخة مختارة، فارغ إذا لا
+            if selected == v:
+                return f"✅ {v}"
+            else:
+                return f"⬜ {v}"
+
+        options = [version_label(v) for v in version_keys]
+
+        # عرض radio مع التسميات الجديدة (✅ أو ⬜ جنب الرقم)
+        selected_label = st.sidebar.radio(
+            "النسخ المتاحة:",
+            options=options,
             index=0,
-            key="version_select"
+            key="version_label_select"
         )
 
-        # عرض النسخ مع مربع صغير جنب رقم النسخة
-        for v in version_keys:
-            cols = st.sidebar.columns([0.1, 0.9])
-            checked = st.session_state.get(f"dummy_check_{lec_num}_{v}", False)
-            checked = cols[0].checkbox("", key=f"dummy_check_{lec_num}_{v}", value=checked)
-            cols[1].markdown(f"نسخة {v}")
+        selected_version = version_keys[options.index(selected_label)]
 
     else:
         selected_version = 1
