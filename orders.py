@@ -1,12 +1,9 @@
 import streamlit as st
 import os
 import importlib.util
-import requests
-import json
+from login import get_progress, update_progress  # ✅ استدعاء الدوال من login.py
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzHw6kXDxTx_hdJLGUDHON5DpKdoAd0azzvah-w5MggiDhV7XnFkyxPDvyPl6p60T3/exec"
-
-# ✅ عناوين المحاضرات المخصصة
+# ✅ أسماء المحاضرات (سهل التعديل لاحقًا)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -28,67 +25,31 @@ def count_lectures(subject_name, base_path="."):
     return len(files)
 
 
-def get_versions(subject_name, lecture_num, base_path="."):
-    """🔹 يجلب كل النسخ المتاحة للمحاضرة"""
+def import_module_from_folder(subject_name, lecture_num, base_path="."):
     subject_path = os.path.join(base_path, subject_name)
-    versions = []
-    if not os.path.exists(subject_path):
-        return versions
-
-    for f in os.listdir(subject_path):
-        if f.startswith(f"{subject_name}{lecture_num}") and f.endswith(".py"):
-            parts = f.replace(".py", "").split("_v")
-            if len(parts) == 2:
-                versions.append(int(parts[1]))
-            elif len(parts) == 1:
-                versions.append(1)
-
-    versions.sort()
-    return versions
-
-
-def import_module(subject_name, lecture_num, version=None, base_path="."):
-    """🔹 استيراد ملف المحاضرة بناءً على النسخة"""
-    subject_path = os.path.join(base_path, subject_name)
-    if version and version > 1:
-        module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}_v{version}.py")
-    else:
-        module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}.py")
+    module_file = os.path.join(subject_path, f"{subject_name}{lecture_num}.py")
 
     if not os.path.exists(module_file):
         return None
 
-    spec = importlib.util.spec_from_file_location(f"{subject_name}{lecture_num}_v{version}", module_file)
+    spec = importlib.util.spec_from_file_location(f"{subject_name}{lecture_num}", module_file)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-def get_progress(username, subject, lecture_num):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={
-            "action": "get_progress",
-            "username": username,
-            "subject": subject,
-            "lecture_num": lecture_num
-        }, timeout=30)
-        return json.loads(res.text)
-    except:
-        return []
-
-
-def set_progress(username, subject, lecture_num, version, completed):
-    try:
-        requests.post(GOOGLE_SCRIPT_URL, data={
-            "action": "set_progress",
-            "username": username,
-            "subject": subject,
-            "lecture_num": lecture_num,
-            "version": version,
-            "completed": str(completed)
-        }, timeout=30)
-    except:
-        pass
+def find_versions(subject, lecture_num, base_path="."):
+    subject_path = os.path.join(base_path, subject)
+    all_files = os.listdir(subject_path) if os.path.exists(subject_path) else []
+    versions = []
+    for f in all_files:
+        if f.startswith(f"{subject}{lecture_num}") and f.endswith(".py"):
+            if "_v" in f:
+                versions.append(f)
+            elif f == f"{subject}{lecture_num}.py":
+                versions.append(f)
+    versions.sort()
+    return versions
 
 
 def orders_o():
@@ -105,11 +66,11 @@ def orders_o():
         "prosthodontics"
     ]
 
-    subject = st.selectbox("Select Subject", subjects)
+    subject = st.selectbox("Choose Subject", subjects)
 
     total_lectures = count_lectures(subject)
     if total_lectures == 0:
-        st.error(f"No lectures found for {subject}")
+        st.error(f"⚠️ No lecture files found for {subject}!")
         return
 
     lectures = []
@@ -119,47 +80,48 @@ def orders_o():
         else:
             lectures.append(f"Lecture {i}")
 
-    lecture = st.selectbox("Select Lecture", lectures)
+    lecture = st.selectbox("Choose Lecture", lectures)
 
     try:
         lecture_num = int(lecture.split()[1])
     except:
-        st.error("Error reading lecture number")
+        st.error("⚠️ Error reading lecture number.")
         return
 
-    versions = get_versions(subject, lecture_num)
-
-    # ✅ تحميل تقدم المستخدم
-    username = st.session_state.get("user_name", "")
-    progress_data = get_progress(username, subject, lecture_num)
-    completed_versions = {int(d["version"]): d["completed"] == "True" for d in progress_data}
+    versions = find_versions(subject, lecture_num)
+    selected_version = versions[0] if versions else None
 
     if len(versions) > 1:
-        st.sidebar.markdown("### Available Versions")
-        for v in versions:
-            checked = completed_versions.get(v, False)
-            new_state = st.sidebar.checkbox(f"Version {v}", value=checked, key=f"chk_{v}")
-            if new_state != checked:
-                set_progress(username, subject, lecture_num, v, new_state)
-                completed_versions[v] = new_state
-    else:
-        # نسخة واحدة فقط
-        v = 1
-        checked = completed_versions.get(v, False)
-        new_state = st.sidebar.checkbox("Completed", value=checked, key=f"chk_{v}")
-        if new_state != checked:
-            set_progress(username, subject, lecture_num, v, new_state)
-            completed_versions[v] = new_state
+        st.markdown("---")
+        st.write("Available Versions:")
+        selected_version = st.radio(
+            "", versions, key=f"version_{subject}_{lecture_num}"
+        )
 
-    current_version = versions[0]
-    questions_module = import_module(subject, lecture_num, current_version)
-    if questions_module is None:
-        st.error("Lecture file not found")
+    if not selected_version:
+        st.error("⚠️ No version file found.")
         return
+
+    questions_module = import_module_from_folder(subject, lecture_num, base_path=".")
+    if questions_module is None:
+        st.error(f"⚠️ File {subject}{lecture_num}.py not found.")
+        return
+
+    username = st.session_state.get("user_name", None)
+    if username:
+        saved_progress = get_progress(username, subject, lecture_num, selected_version)
+    else:
+        saved_progress = False
+
+    completed = st.checkbox("✅ Mark as Completed", value=saved_progress)
+
+    if completed != saved_progress and username:
+        update_progress(username, subject, lecture_num, selected_version, completed)
 
     questions = questions_module.questions
     Links = getattr(questions_module, "Links", [])
 
+    # نفس الكود الأصلي لعرض الأسئلة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lecture) or \
@@ -176,8 +138,10 @@ def orders_o():
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
+
         if isinstance(answer, int) and 0 <= answer < len(options):
             return options[answer]
+
         if isinstance(answer, str):
             answer_clean = answer.strip().upper()
             if answer_clean in ["A", "B", "C", "D"]:
@@ -186,18 +150,43 @@ def orders_o():
                     return options[idx]
             if answer in options:
                 return answer
+
         return None
+
+    with st.sidebar:
+        st.markdown(f"### 🧪 {subject.upper()}")
+
+        for i in range(len(questions)):
+            correct_text = normalize_answer(questions[i])
+            user_ans = st.session_state.user_answers[i]
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
+            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+                st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-        st.markdown(f"### Q{index+1}/{len(questions)}: {q['question']}")
+
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
 
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
@@ -205,12 +194,13 @@ def orders_o():
                 st.session_state.answer_shown[index] = True
                 st.rerun()
         else:
-            if st.session_state.user_answers[index] == correct_text:
-                st.success("✅ Correct")
+            user_ans = st.session_state.user_answers[index]
+            if user_ans == correct_text:
+                st.success("✅ Correct Answer")
             else:
                 st.error(f"❌ Correct Answer: {correct_text}")
                 if "explanation" in q:
-                    st.info(f"💡 {q['explanation']}")
+                    st.info(f"💡 Explanation: {q['explanation']}")
 
             if st.button("Next Question", key=f"next_{index}"):
                 if index + 1 < len(questions):
@@ -227,15 +217,21 @@ def orders_o():
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
     else:
-        st.success(f"Quiz Completed! Score: {sum(st.session_state.user_answers[i] == normalize_answer(q) for i,q in enumerate(questions))}/{len(questions)}")
+        st.header("🎉 Quiz Completed!")
+        correct = 0
+        for i, q in enumerate(questions):
+            correct_text = normalize_answer(q)
+            user = st.session_state.user_answers[i]
+            if user == correct_text:
+                correct += 1
+                st.write(f"Q{i+1}: ✅ Correct")
+            else:
+                st.write(f"Q{i+1}: ❌ Wrong (Your Answer: {user}, Correct: {correct_text})")
+        st.success(f"Score: {correct} out of {len(questions)}")
+
         if st.button("🔁 Retry Quiz"):
             st.session_state.current_question = 0
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.rerun()
-
-
-def main():
-    st.title("Dental Quiz Platform")
-    orders_o()
