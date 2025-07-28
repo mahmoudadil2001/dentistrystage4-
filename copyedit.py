@@ -1,7 +1,10 @@
 import os
 import shutil
 
-SOURCE_FOLDER = "endodontics/edit"  # الفولدر الأساسي اللي فيه الملف الأصلي
+# المجلد المصدر الذي يحتوي على ملف lecture_titles.py
+SOURCE_EDIT_FOLDER = "endodontics/edit"
+
+# قائمة كل المواد التي تريد نسخ مجلد edit إليها
 SUBJECTS = [
     "endodontics",
     "generalmedicine",
@@ -15,13 +18,23 @@ SUBJECTS = [
     "prosthodontics"
 ]
 
-for subject in SUBJECTS:
-    target_edit = os.path.join(subject, "edit")
-    os.makedirs(target_edit, exist_ok=True)
+def copy_edit_folder_to_all_subjects():
+    for subject in SUBJECTS:
+        target_edit_folder = os.path.join(subject, "edit")
+        os.makedirs(target_edit_folder, exist_ok=True)  # إذا ما موجود ينشئ
 
-    # لو كان الفولدر نفسه هو endodontics، نتجاهله
-    if os.path.abspath(SOURCE_FOLDER) == os.path.abspath(target_edit):
-        continue
+        # نسخ كل ملفات مجلد edit من المصدر إلى المجلد الهدف
+        for filename in os.listdir(SOURCE_EDIT_FOLDER):
+            source_file = os.path.join(SOURCE_EDIT_FOLDER, filename)
+            target_file = os.path.join(target_edit_folder, filename)
 
-    shutil.copy(os.path.join(SOURCE_FOLDER, "lecture_titles.py"), target_edit)
-    print(f"✅ Copied to {target_edit}")
+            # إذا نفس الملف، تخطي (لتجنب خطأ النسخ على نفس المسار)
+            if os.path.abspath(source_file) == os.path.abspath(target_file):
+                continue
+
+            shutil.copy2(source_file, target_file)
+            print(f"Copied {source_file} to {target_file}")
+
+if __name__ == "__main__":
+    copy_edit_folder_to_all_subjects()
+    print("✅ Finished copying edit folders to all subjects.")
