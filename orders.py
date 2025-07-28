@@ -87,10 +87,10 @@ def orders_o():
 
     selected_version = 1
     if versions_count > 1:
-        st.sidebar.markdown("### Select Question نسخة")
+        st.sidebar.markdown("### Select Question version")
         version_keys = sorted(versions_dict.keys())
         selected_version = st.sidebar.radio(
-            "نسخ متاحة:",
+            "النسخ متاحة:",
             options=version_keys,
             index=0,
             key="version_select"
