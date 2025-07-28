@@ -97,9 +97,12 @@ def orders_o():
             key="version_select"
         )
 
-        # مربعات صغيرة (checkbox) لكل نسخة فقط للعرض
+        # عرض النسخ مع مربع صغير جنب رقم النسخة
         for v in version_keys:
-            st.sidebar.checkbox(f"✅", key=f"dummy_check_{lec_num}_{v}")
+            cols = st.sidebar.columns([0.1, 0.9])
+            checked = st.session_state.get(f"dummy_check_{lec_num}_{v}", False)
+            checked = cols[0].checkbox("", key=f"dummy_check_{lec_num}_{v}", value=checked)
+            cols[1].markdown(f"نسخة {v}")
 
     else:
         selected_version = 1
