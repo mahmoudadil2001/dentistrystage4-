@@ -89,12 +89,18 @@ def orders_o():
     if versions_count > 1:
         st.sidebar.markdown("### Select Question version")
         version_keys = sorted(versions_dict.keys())
+
         selected_version = st.sidebar.radio(
-            "النسخ المتاحة:",
+            "اختر النسخة:",
             options=version_keys,
             index=0,
             key="version_select"
         )
+
+        # مربعات صغيرة (checkbox) لكل نسخة فقط للعرض
+        for v in version_keys:
+            st.sidebar.checkbox(f"✅", key=f"dummy_check_{lec_num}_{v}")
+
     else:
         selected_version = 1
 
