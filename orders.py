@@ -81,11 +81,15 @@ def orders_o():
         selected_label = st.radio("", options=version_labels, index=0, key="version_radio")
         selected_version = version_keys[version_labels.index(selected_label)]
 
-        # مربع الصح يظهر تحت النسخة المختارة فقط
         key = f"{subject}_{lec_num}_{selected_version}"
-        checked = st.session_state.completed_versions.get(key, False)
-        new_state = st.checkbox("", value=checked, key=f"chk_{key}")
-        st.session_state.completed_versions[key] = new_state
+        if key not in st.session_state:
+            st.session_state[key] = False
+
+        clicked = st.checkbox("", value=st.session_state[key], key=f"chk_{key}_ui")
+
+        if clicked != st.session_state[key]:
+            st.session_state[key] = clicked
+            st.session_state.completed_versions[key] = clicked
 
     # تحميل ملف الأسئلة
     filename = versions_dict[selected_version]
