@@ -82,13 +82,22 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
     version_keys = sorted(versions_dict.keys())
+
+    st.sidebar.markdown("### النسخ المتاحة (ضع علامة على المكتملة):")
+    for v in version_keys:
+        key = f"{subject}_{lec_num}_{v}"
+        checked = st.session_state.completed_versions.get(key, False)
+        new_state = st.sidebar.checkbox(f"Version {v}", value=checked, key=f"chk_{key}")
+        st.session_state.completed_versions[key] = new_state
+
+    # إعداد نسخة مختارة لإظهار الأسئلة
     version_labels = []
     for v in version_keys:
         key = f"{subject}_{lec_num}_{v}"
         mark = "✅" if st.session_state.completed_versions.get(key, False) else ""
         version_labels.append(f"{v} {mark}")
 
-    selected_label = st.sidebar.radio("النسخ المتاحة:", options=version_labels, index=0, key="version_select")
+    selected_label = st.radio("اختر النسخة لبدء الاختبار:", options=version_labels, index=0)
     selected_version = version_keys[version_labels.index(selected_label)]
 
     filename = versions_dict[selected_version]
@@ -204,12 +213,6 @@ def orders_o():
             else:
                 st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
         st.success(f"Score: {correct} out of {len(questions)}")
-
-        # ✅ زر تعليم النسخة كمكتملة
-        subject_key = f"{subject}_{lec_num}_{selected_version}"
-        if st.button("✔️ Mark this version as Completed"):
-            st.session_state.completed_versions[subject_key] = True
-            st.success("✅ This version is now marked as completed!")
 
         if st.button("🔁 Restart Quiz"):
             st.session_state.current_question = 0
