@@ -6,30 +6,26 @@ import sys
 import importlib
 
 def load_lecture_titles(subject_name):
-    """
-    يحاول يقرأ ملف lecture_titles.py الموجود داخل مجلد Edit داخل كل مادة
-    لو الملف غير موجود يرجع قاموس فارغ {}
-    """
-    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
-    if not os.path.exists(titles_file):
+    edit_folder = os.path.join(subject_name, "Edit")
+    if not os.path.exists(edit_folder):
         return {}
 
-    spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    for fname in os.listdir(edit_folder):
+        if fname.lower() == "lecture_titles.py":
+            titles_file = os.path.join(edit_folder, fname)
+            spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
 
-    # تفادي الكاش عند إعادة التحميل
-    if f"{subject_name}_titles" in sys.modules:
-        importlib.reload(sys.modules[f"{subject_name}_titles"])
+            if f"{subject_name}_titles" in sys.modules:
+                importlib.reload(sys.modules[f"{subject_name}_titles"])
 
-    return getattr(module, "lecture_titles", {})
+            return getattr(module, "lecture_titles", {})
+    return {}
 
 def get_lectures_and_versions(subject_name, base_path="."):
     """
-    يبحث عن ملفات المحاضرات في مجلد المادة ويجمعهم حسب رقم المحاضرة والإصدار
-    ال pattern المتوقع: subjectname + رقم المحاضرة + (_v رقم الإصدار اختياري) + .py
-    مثال: endodontics1.py أو endodontics1_v2.py
-    يعيد dict بالشكل:
+    Returns dict:
     { lec_num: { version_num: filename, ... }, ... }
     """
     subject_path = os.path.join(base_path, subject_name)
@@ -37,6 +33,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         return {}
 
     files = os.listdir(subject_path)
+    # filename pattern: subjectname + lec number + _v version number (optional) + .py
     pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
 
     lectures = {}
@@ -44,7 +41,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         m = pattern.match(f)
         if m:
             lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1
+            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
             if lec_num not in lectures:
                 lectures[lec_num] = {}
             lectures[lec_num][version_num] = f
@@ -62,7 +59,6 @@ def import_module_from_file(filepath):
     return module
 
 def orders_o():
-    # قائمة المواد
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -78,33 +74,30 @@ def orders_o():
 
     subject = st.selectbox("Select Subject", subjects)
 
-    # جلب ملفات المحاضرات لكل مادة
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # تحميل أسماء المحاضرات من ملف lecture_titles داخل مجلد edit
+    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد Edit
     lecture_titles = load_lecture_titles(subject)
 
-    # بناء قائمة العرض للمحاضرات: إذا اسم المحاضرة موجود وغير فارغ يعرضه، وإلا يعرض "Lec {رقم}"
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, "")
-        if title.strip():
+        title = lecture_titles.get(lec_num, "").strip()
+        if title:
             display_name = title
         else:
-            # حرف L كبير فقط وec صغيرين + رقم المحاضرة
-            display_name = f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))
+            display_name = f"Lec {lec_num}"  # حرف L كبير وec صغيرة
+        lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
 
+    # عرض الاسم فقط، والقيمة المختارة هي رقم المحاضرة
     lec_num = st.selectbox(
         "Select Lecture",
         options=lectures_options,
         format_func=lambda x: x[1]
     )[0]
 
-    # اختيار الإصدار إذا أكثر من نسخة
     versions_dict = lectures_versions.get(lec_num, {})
     versions_count = len(versions_dict)
 
@@ -132,7 +125,6 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # تهيئة الحالة للجلسة عند تغيير المحاضرة أو المادة أو الإصدار أو عدد الأسئلة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
