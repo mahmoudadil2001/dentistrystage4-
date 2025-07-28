@@ -1,9 +1,7 @@
 import streamlit as st
 import os
-import importlib.util
-import re
+from login import get_lectures_and_versions, import_module_from_file
 
-# 1 titles (editable)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -15,41 +13,6 @@ custom_titles_data = {
 custom_titles = {}
 for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
-
-def get_lectures_and_versions(subject_name, base_path="."):
-    """
-    Returns dict:
-    { lec_num: { version_num: filename, ... }, ... }
-    """
-    subject_path = os.path.join(base_path, subject_name)
-    if not os.path.exists(subject_path):
-        return {}
-
-    files = os.listdir(subject_path)
-    # filename pattern: subjectname + lec number + _v version number (optional) + .py
-    pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
-
-    lectures = {}
-    for f in files:
-        m = pattern.match(f)
-        if m:
-            lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
-            if lec_num not in lectures:
-                lectures[lec_num] = {}
-            lectures[lec_num][version_num] = f
-
-    for lec in lectures:
-        lectures[lec] = dict(sorted(lectures[lec].items()))
-    return lectures
-
-def import_module_from_file(filepath):
-    if not os.path.exists(filepath):
-        return None
-    spec = importlib.util.spec_from_file_location(os.path.basename(filepath).replace(".py", ""), filepath)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 def orders_o():
     subjects = [
@@ -109,121 +72,46 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    if ("questions_count" not in st.session_state) or \
-       (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture", None) != lecture_choice) or \
-       (st.session_state.get("current_subject", None) != subject) or \
-       (st.session_state.get("current_version", None) != selected_version):
+    st.markdown(f"### {custom_titles.get(subject, {}).get(lec_num, f'Lecture {lec_num}')} (Version {selected_version})")
 
-        st.session_state.questions_count = len(questions)
-        st.session_state.current_question = 0
-        st.session_state.user_answers = [None] * len(questions)
-        st.session_state.answer_shown = [False] * len(questions)
-        st.session_state.quiz_completed = False
-        st.session_state.current_lecture = lecture_choice
-        st.session_state.current_subject = subject
-        st.session_state.current_version = selected_version
+    # عرض الأسئلة بالتنقل بينهم
+    if "question_index" not in st.session_state:
+        st.session_state["question_index"] = 0
 
-    def normalize_answer(q):
-        answer = q.get("answer") or q.get("correct_answer")
-        options = q["options"]
+    if len(questions) == 0:
+        st.warning("لا توجد أسئلة في هذا الملف.")
+        return
 
-        if isinstance(answer, int) and 0 <= answer < len(options):
-            return options[answer]
+    current_index = st.session_state["question_index"]
 
-        if isinstance(answer, str):
-            answer_clean = answer.strip().upper()
-            if answer_clean in ["A", "B", "C", "D"]:
-                idx = ord(answer_clean) - ord("A")
-                if 0 <= idx < len(options):
-                    return options[idx]
-            if answer in options:
-                return answer
+    question = questions[current_index]
 
-        return None
+    st.markdown(f"**السؤال {current_index+1}:** {question['question']}")
 
-    with st.sidebar:
-        st.markdown(f"### 🧪 {subject.upper()}")
+    # خيارات السؤال
+    options = question.get("options", [])
+    selected_option = st.radio("اختر إجابة:", options, key=f"question_{current_index}")
 
-        for i in range(len(questions)):
-            correct_text = normalize_answer(questions[i])
-            user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
-            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                st.session_state.current_question = i
-
-    def show_question(index):
-        q = questions[index]
-        correct_text = normalize_answer(q)
-
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-        default_idx = 0
-        if st.session_state.user_answers[index] in q["options"]:
-            default_idx = q["options"].index(st.session_state.user_answers[index])
-
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
-
-        if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
+    if st.button("السؤال التالي"):
+        if st.session_state["question_index"] < len(questions) - 1:
+            st.session_state["question_index"] += 1
         else:
-            user_ans = st.session_state.user_answers[index]
-            if user_ans == correct_text:
-                st.success("✅ Correct answer")
-            else:
-                st.error(f"❌ Correct answer: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 Explanation: {q['explanation']}")
+            st.success("لقد وصلت إلى آخر سؤال في هذا المحاضرة")
 
-            if st.button("Next Question", key=f"next_{index}"):
-                if index + 1 < len(questions):
-                    st.session_state.current_question += 1
-                else:
-                    st.session_state.quiz_completed = True
-                st.rerun()
+    if st.button("السؤال السابق"):
+        if st.session_state["question_index"] > 0:
+            st.session_state["question_index"] -= 1
 
-        if Links:
-            st.markdown("---")
-            for link in Links:
-                st.markdown(f"- [{link['title']}]({link['url']})")
-
-    if not st.session_state.quiz_completed:
-        show_question(st.session_state.current_question)
-    else:
-        st.header("🎉 Quiz Completed!")
-        correct = 0
-        for i, q in enumerate(questions):
-            correct_text = normalize_answer(q)
-            user = st.session_state.user_answers[i]
-            if user == correct_text:
-                correct += 1
-                st.write(f"Question {i+1}: ✅ Correct")
-            else:
-                st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
-        st.success(f"Score: {correct} out of {len(questions)}")
-
-        if st.button("🔁 Restart Quiz"):
-            st.session_state.current_question = 0
-            st.session_state.user_answers = [None] * len(questions)
-            st.session_state.answer_shown = [False] * len(questions)
-            st.session_state.quiz_completed = False
-            st.rerun()
+    # إظهار الشرح إذا كان متاح
+    if selected_option is not None:
+        answer_index = question.get("answer")
+        explanation = question.get("explanation", "")
+        if options.index(selected_option) == answer_index:
+            st.success("✅ إجابة صحيحة")
+        else:
+            st.error("❌ إجابة خاطئة")
+        if explanation:
+            st.info(f"شرح: {explanation}")
 
 def main():
     st.markdown(
