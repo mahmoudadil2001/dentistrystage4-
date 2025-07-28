@@ -3,6 +3,7 @@ import os
 import importlib.util
 import re
 
+# 1 titles (editable)
 custom_titles_data = {
     ("endodontics", 1): "Lecture 1 introduction",
     ("endodontics", 2): "Lecture 2 periapical disease classification",
@@ -16,11 +17,16 @@ for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
 
 def get_lectures_and_versions(subject_name, base_path="."):
+    """
+    Returns dict:
+    { lec_num: { version_num: filename, ... }, ... }
+    """
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
         return {}
 
     files = os.listdir(subject_path)
+    # filename pattern: subjectname + lec number + _v version number (optional) + .py
     pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
 
     lectures = {}
@@ -28,8 +34,10 @@ def get_lectures_and_versions(subject_name, base_path="."):
         m = pattern.match(f)
         if m:
             lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1
-            lectures.setdefault(lec_num, {})[version_num] = f
+            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
+            if lec_num not in lectures:
+                lectures[lec_num] = {}
+            lectures[lec_num][version_num] = f
 
     for lec in lectures:
         lectures[lec] = dict(sorted(lectures[lec].items()))
@@ -44,16 +52,21 @@ def import_module_from_file(filepath):
     return module
 
 def orders_o():
-    if "completed_versions" not in st.session_state:
-        st.session_state.completed_versions = {}
-
     subjects = [
-        "endodontics", "generalmedicine", "generalsurgery", "operative",
-        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
-        "periodontology", "prosthodontics"
+        "endodontics",
+        "generalmedicine",
+        "generalsurgery",
+        "operative",
+        "oralpathology",
+        "oralsurgery",
+        "orthodontics",
+        "pedodontics",
+        "periodontology",
+        "prosthodontics"
     ]
 
     subject = st.selectbox("Select Subject", subjects)
+
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
@@ -61,45 +74,34 @@ def orders_o():
 
     lectures_list = []
     for lec_num in sorted(lectures_versions.keys()):
-        title = custom_titles.get(subject, {}).get(lec_num, f"Lecture {lec_num}")
-        lectures_list.append(f"{lec_num} - {title}")
+        if subject in custom_titles and lec_num in custom_titles[subject]:
+            lectures_list.append(f"{lec_num} - {custom_titles[subject][lec_num]}")
+        else:
+            lectures_list.append(f"{lec_num} - Lecture {lec_num}")
 
     lecture_choice = st.selectbox("Select Lecture", lectures_list)
     lec_num = int(lecture_choice.split(" ")[0])
+
     versions_dict = lectures_versions.get(lec_num, {})
-    version_keys = sorted(versions_dict.keys())
+    versions_count = len(versions_dict)
 
-    # تحديث نسخة + علامة صح
-    def build_labels():
-        labels = []
-        for v in version_keys:
-            key = f"{subject}_{lec_num}_{v}"
-            mark = "✅" if st.session_state.completed_versions.get(key, False) else ""
-            labels.append(f"Version {v} {mark}")
-        return labels
-
-    version_labels = build_labels()
-
-    with st.sidebar:
-        st.markdown("### اختر النسخة")
-        selected_label = st.radio("", options=version_labels, index=0, key="version_radio")
-        selected_version = version_keys[version_labels.index(selected_label)]
-
-        key = f"{subject}_{lec_num}_{selected_version}"
-        if key not in st.session_state:
-            st.session_state[key] = False
-
-        clicked = st.checkbox("", value=st.session_state[key], key=f"chk_{key}_ui")
-
-        if clicked != st.session_state[key]:
-            st.session_state[key] = clicked
-            st.session_state.completed_versions[key] = clicked
-            st.session_state.version_labels = build_labels()
-            st.rerun()
+    selected_version = 1
+    if versions_count > 1:
+        st.sidebar.markdown("### Select Question version")
+        version_keys = sorted(versions_dict.keys())
+        selected_version = st.sidebar.radio(
+            "النسخ المتاحة:",
+            options=version_keys,
+            index=0,
+            key="version_select"
+        )
+    else:
+        selected_version = 1
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
+
     if questions_module is None:
         st.error(f"⚠️ File {filename} not found or cannot be imported.")
         return
@@ -109,9 +111,9 @@ def orders_o():
 
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture") != lecture_choice) or \
-       (st.session_state.get("current_subject") != subject) or \
-       (st.session_state.get("current_version") != selected_version):
+       (st.session_state.get("current_lecture", None) != lecture_choice) or \
+       (st.session_state.get("current_subject", None) != subject) or \
+       (st.session_state.get("current_version", None) != selected_version):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -125,8 +127,10 @@ def orders_o():
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
+
         if isinstance(answer, int) and 0 <= answer < len(options):
             return options[answer]
+
         if isinstance(answer, str):
             answer_clean = answer.strip().upper()
             if answer_clean in ["A", "B", "C", "D"]:
@@ -135,10 +139,12 @@ def orders_o():
                     return options[idx]
             if answer in options:
                 return answer
+
         return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
+
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
@@ -148,19 +154,29 @@ def orders_o():
                 status = "✅"
             else:
                 status = "❌"
+
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-        st.markdown(f"### Question {index+1}/{len(questions)}: {q['question']}")
+
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
+
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
@@ -226,8 +242,26 @@ def main():
         ">
         Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
         </div>
-        """, unsafe_allow_html=True)
+        """
+    , unsafe_allow_html=True)
     orders_o()
+
+    st.markdown('''
+    <div style="display:flex; justify-content:center; margin-top:50px;">
+        <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
+            Telegram Channel
+            <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
+                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
+                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58 84.6l-19.7 92.8c-1.5 6.7-5.5 8.4-11.1 5.2l-30.8-22.7-14.9 14.3c-1.7 1.7-3.1 3.1-6.4 3.1l2.3-32.5 59.1-53.3c2.6-2.3-.6-3.6-4-1.3l-72.8 45.7-31.4-9.8c-6.8-2.1-6.9-6.8 1.4-10.1l123.1-47.5c5.7-2.2 10.7 1.3 8.8 10z"/>
+                </svg>
+            </span>
+        </a>
+    </div>
+
+    <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
+        Subscribe to the Telegram channel to get all updates and new lectures I will upload here, God willing.
+    </div>
+    ''', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
