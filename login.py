@@ -1,10 +1,7 @@
 import streamlit as st
 import requests
-import os
-import re
-import importlib.util
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXjcW-I36ZZCqzPtijcNoE8pGE39xOv1EILSPlcVMyNvj3FSlQDT7otpyN_dlk9uRb/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxg78Qz8i7jg_3V9X2AWGmb9ouad6ZBO_g3czY2n8_GMo-ZpSZy-U4FI2GWJAajL3KW/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -33,13 +30,14 @@ def get_user_data(username):
         if text == "NOT_FOUND":
             return None
         parts = text.split(",")
-        if len(parts) == 5:
+        if len(parts) == 6:
             return {
                 "username": parts[0],
                 "password": parts[1],
                 "full_name": parts[2],
                 "group": parts[3],
-                "phone": parts[4]
+                "phone": parts[4],
+                "selected_versions": parts[5]
             }
         return None
     except Exception as e:
@@ -76,40 +74,16 @@ def update_password(username, full_name, new_password):
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
         return False
 
-def get_lectures_and_versions(subject_name, base_path="."):
-    """
-    Returns dict:
-    { lec_num: { version_num: filename, ... }, ... }
-    """
-    subject_path = os.path.join(base_path, subject_name)
-    if not os.path.exists(subject_path):
-        return {}
-
-    files = os.listdir(subject_path)
-    # filename pattern: subjectname + lec number + _v version number (optional) + .py
-    pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
-
-    lectures = {}
-    for f in files:
-        m = pattern.match(f)
-        if m:
-            lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
-            if lec_num not in lectures:
-                lectures[lec_num] = {}
-            lectures[lec_num][version_num] = f
-
-    for lec in lectures:
-        lectures[lec] = dict(sorted(lectures[lec].items()))
-    return lectures
-
-def import_module_from_file(filepath):
-    if not os.path.exists(filepath):
-        return None
-    spec = importlib.util.spec_from_file_location(os.path.basename(filepath).replace(".py", ""), filepath)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def save_selected_versions(username, versions_text):
+    data = {
+        "action": "save_version",
+        "username": username,
+        "versions": versions_text
+    }
+    try:
+        requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+    except Exception as e:
+        st.error(f"خطأ في حفظ النسخ: {e}")
 
 def login_page():
     st.title("تسجيل الدخول")
@@ -132,6 +106,7 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
+                        st.session_state['selected_versions'] = user_data.get("selected_versions", "")
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -141,7 +116,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -159,11 +134,11 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.experimental_rerun()
+                st.rerun()
 
     else:
         st.title("إنشاء حساب جديد")
@@ -180,13 +155,13 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()
+            st.rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -201,7 +176,7 @@ def forgot_password_page():
         st.session_state['show_forgot'] = False
         st.session_state['allow_reset'] = False
         st.session_state['password_updated'] = False
-        st.experimental_rerun()
+        st.rerun()
 
     if st.button("تحقق"):
         if not username.strip() or not full_name.strip():
@@ -222,14 +197,12 @@ def forgot_password_page():
 
         if st.button("تحديث كلمة المرور"):
             if new_password != confirm_password:
-                st.error("كلمتا المرور غير متطابقتين")
-            elif not new_password:
-                st.warning("يرجى إدخال كلمة المرور الجديدة")
+                st.warning("كلمة المرور غير متطابقة")
+            elif update_password(username, full_name, new_password):
+                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
+                st.session_state['password_updated'] = True
+                st.session_state['allow_reset'] = False
+                st.session_state['show_forgot'] = False
+                st.rerun()
             else:
-                if update_password(username, full_name, new_password):
-                    st.success("✅ تم تحديث كلمة المرور بنجاح، الرجاء تسجيل الدخول الآن")
-                    st.session_state['password_updated'] = True
-                    st.session_state['allow_reset'] = False
-                else:
-                    st.error("فشل في تحديث كلمة المرور")
-
+                st.error("فشل في تحديث كلمة المرور")
