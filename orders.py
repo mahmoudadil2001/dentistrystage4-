@@ -17,16 +17,11 @@ for (subject, num), title in custom_titles_data.items():
     custom_titles.setdefault(subject, {})[num] = title
 
 def get_lectures_and_versions(subject_name, base_path="."):
-    """
-    Returns dict:
-    { lec_num: { version_num: filename, ... }, ... }
-    """
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
         return {}
 
     files = os.listdir(subject_path)
-    # filename pattern: subjectname + lec number + _v version number (optional) + .py
     pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
 
     lectures = {}
@@ -34,7 +29,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         m = pattern.match(f)
         if m:
             lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
+            version_num = int(m.group(2)) if m.group(2) else 1
             if lec_num not in lectures:
                 lectures[lec_num] = {}
             lectures[lec_num][version_num] = f
@@ -52,6 +47,9 @@ def import_module_from_file(filepath):
     return module
 
 def orders_o():
+    if "completed_versions" not in st.session_state:
+        st.session_state.completed_versions = {}
+
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -83,20 +81,15 @@ def orders_o():
     lec_num = int(lecture_choice.split(" ")[0])
 
     versions_dict = lectures_versions.get(lec_num, {})
-    versions_count = len(versions_dict)
+    version_keys = sorted(versions_dict.keys())
+    version_labels = []
+    for v in version_keys:
+        key = f"{subject}_{lec_num}_{v}"
+        mark = "✅" if st.session_state.completed_versions.get(key, False) else ""
+        version_labels.append(f"{v} {mark}")
 
-    selected_version = 1
-    if versions_count > 1:
-        st.sidebar.markdown("### Select Question version")
-        version_keys = sorted(versions_dict.keys())
-        selected_version = st.sidebar.radio(
-            "النسخ المتاحة:",
-            options=version_keys,
-            index=0,
-            key="version_select"
-        )
-    else:
-        selected_version = 1
+    selected_label = st.sidebar.radio("النسخ المتاحة:", options=version_labels, index=0, key="version_select")
+    selected_version = version_keys[version_labels.index(selected_label)]
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -144,7 +137,6 @@ def orders_o():
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
-
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
@@ -170,12 +162,7 @@ def orders_o():
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
+        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
 
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
@@ -218,6 +205,12 @@ def orders_o():
                 st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
         st.success(f"Score: {correct} out of {len(questions)}")
 
+        # ✅ زر تعليم النسخة كمكتملة
+        subject_key = f"{subject}_{lec_num}_{selected_version}"
+        if st.button("✔️ Mark this version as Completed"):
+            st.session_state.completed_versions[subject_key] = True
+            st.success("✅ This version is now marked as completed!")
+
         if st.button("🔁 Restart Quiz"):
             st.session_state.current_question = 0
             st.session_state.user_answers = [None] * len(questions)
@@ -242,8 +235,7 @@ def main():
         ">
         Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
         </div>
-        """
-    , unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
     orders_o()
 
     st.markdown('''
