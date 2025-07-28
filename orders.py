@@ -6,22 +6,19 @@ import sys
 import importlib
 
 def load_lecture_titles(subject_name):
-    edit_folder = os.path.join(subject_name, "Edit")
-    if not os.path.exists(edit_folder):
+    titles_file = os.path.join(subject_name, "Edit", "lecture_titles.py")
+    if not os.path.exists(titles_file):
         return {}
 
-    for fname in os.listdir(edit_folder):
-        if fname.lower() == "lecture_titles.py":
-            titles_file = os.path.join(edit_folder, fname)
-            spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+    spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
-            if f"{subject_name}_titles" in sys.modules:
-                importlib.reload(sys.modules[f"{subject_name}_titles"])
+    # تفادي الكاش
+    if f"{subject_name}_titles" in sys.modules:
+        importlib.reload(sys.modules[f"{subject_name}_titles"])
 
-            return getattr(module, "lecture_titles", {})
-    return {}
+    return getattr(module, "lecture_titles", {})
 
 def get_lectures_and_versions(subject_name, base_path="."):
     """
@@ -86,9 +83,9 @@ def orders_o():
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
         if title:
-            display_name = title
+            display_name = f"Lec {lec_num}  {title}"  # مسافة بعد رقم المحاضرة ثم الاسم
         else:
-            display_name = f"Lec {lec_num}"  # حرف L كبير وec صغيرة
+            display_name = f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
 
     # عرض الاسم فقط، والقيمة المختارة هي رقم المحاضرة
