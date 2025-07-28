@@ -83,7 +83,7 @@ def orders_o():
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
         if title:
-            display_name = f"Lec {lec_num}  {title}"  # مسافة بعد رقم المحاضرة ثم الاسم
+            display_name = f"Lec {lec_num} {title}"
         else:
             display_name = f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
