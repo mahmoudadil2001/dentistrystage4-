@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/XXX/exec"  # استبدل بالرابط الجديد
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqxpnQT2nWkD6v4oW65cGsTwHPHxWsHShzVBWhTqQFYc9N2oufdk3Bbxtl1ngrc7z8/exec"  # استبدل بالرابط الجديد
 
 TELEGRAM_BOT_TOKEN = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
 TELEGRAM_CHAT_ID = "6283768537"
