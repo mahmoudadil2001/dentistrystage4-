@@ -79,10 +79,25 @@ def orders_o():
             display_name = title
         else:
             display_name = f"Lec {lec_num}"
-        lectures_list.append(f"{lec_num} - {display_name}")
+        lectures_list.append(display_name)  # فقط الاسم بدون رقم المحاضرة قبله
 
     lecture_choice = st.selectbox("Select Lecture", lectures_list)
-    lec_num = int(lecture_choice.split(" ")[0])
+
+    # استخراج رقم المحاضرة من الاسم المختار (لأننا حذفنا الرقم قبله)
+    # نبحث في القاموس keys ليطابق الاسم
+    lec_num = None
+    for num in lecture_titles:
+        if lecture_titles[num] == lecture_choice:
+            lec_num = num
+            break
+    if lec_num is None:
+        # لم نجد الاسم في العناوين => نحاول نقرأ رقم من "Lec X"
+        m = re.match(r"Lec (\d+)", lecture_choice)
+        if m:
+            lec_num = int(m.group(1))
+        else:
+            st.error("خطأ: لم يتمكن من تحديد رقم المحاضرة!")
+            return
 
     versions_dict = lectures_versions.get(lec_num, {})
     versions_count = len(versions_dict)
