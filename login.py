@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxg78Qz8i7jg_3V9X2AWGmb9ouad6ZBO_g3czY2n8_GMo-ZpSZy-U4FI2GWJAajL3KW/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8yPGiOFxyGm8jRG0IpW_7kVjEyYb5QlAEy6bNRN0v3b26ZdyU36lf59vIxofWeaP_/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -37,7 +37,7 @@ def get_user_data(username):
                 "full_name": parts[2],
                 "group": parts[3],
                 "phone": parts[4],
-                "selected_versions": parts[5]
+                "saved_versions": parts[5]  # هذا لحفظ نسخ الفيرجينز
             }
         return None
     except Exception as e:
@@ -74,16 +74,44 @@ def update_password(username, full_name, new_password):
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
         return False
 
-def save_selected_versions(username, versions_text):
+# دالة لحفظ نسخة المحاضرة المختارة للمستخدم في الشيت
+def save_selected_version(username, subject, lecture, version):
     data = {
         "action": "save_version",
         "username": username,
-        "versions": versions_text
+        "subject": subject,
+        "lecture": str(lecture),
+        "version": str(version)
     }
     try:
-        requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        return res.text.strip() == "SAVED"
     except Exception as e:
-        st.error(f"خطأ في حفظ النسخ: {e}")
+        st.error(f"خطأ في حفظ النسخة: {e}")
+        return False
+
+# دالة لاسترجاع النسخ المحفوظة للمستخدم من الشيت
+def get_saved_versions(username):
+    data = {
+        "action": "get_saved_versions",
+        "username": username
+    }
+    try:
+        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        text = res.text.strip()
+        # النص عبارة عن صيغة: subject|lecture|version;subject|lecture|version;...
+        saved_versions = {}
+        if text:
+            entries = text.split(";")
+            for entry in entries:
+                parts = entry.split("|")
+                if len(parts) == 3:
+                    subject, lecture, version = parts
+                    saved_versions[(subject, int(lecture))] = int(version)
+        return saved_versions
+    except Exception as e:
+        st.error(f"خطأ في جلب النسخ المحفوظة: {e}")
+        return {}
 
 def login_page():
     st.title("تسجيل الدخول")
@@ -106,7 +134,7 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-                        st.session_state['selected_versions'] = user_data.get("selected_versions", "")
+                        st.session_state['saved_versions'] = get_saved_versions(user_data['username'])
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
@@ -116,7 +144,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -134,11 +162,11 @@ def login_page():
         with col1:
             if st.button("إنشاء حساب جديد"):
                 st.session_state['show_signup'] = True
-                st.rerun()
+                st.experimental_rerun()
         with col2:
             if st.button("هل نسيت كلمة المرور؟"):
                 st.session_state['show_forgot'] = True
-                st.rerun()
+                st.experimental_rerun()
 
     else:
         st.title("إنشاء حساب جديد")
@@ -155,13 +183,13 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.rerun()
+            st.experimental_rerun()
 
 def forgot_password_page():
     st.title("استعادة كلمة المرور")
@@ -176,7 +204,7 @@ def forgot_password_page():
         st.session_state['show_forgot'] = False
         st.session_state['allow_reset'] = False
         st.session_state['password_updated'] = False
-        st.rerun()
+        st.experimental_rerun()
 
     if st.button("تحقق"):
         if not username.strip() or not full_name.strip():
@@ -203,6 +231,6 @@ def forgot_password_page():
                 st.session_state['password_updated'] = True
                 st.session_state['allow_reset'] = False
                 st.session_state['show_forgot'] = False
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("فشل في تحديث كلمة المرور")
