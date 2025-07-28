@@ -1,5 +1,5 @@
 lecture_titles = {
-    1: "",
+    1: "Introduction",
     2: "",
     3: "",
     4: "",
