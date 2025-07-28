@@ -1,6 +1,6 @@
 import streamlit as st
 from login import login_page, forgot_password_page
-from orders import main as orders_main  # ملف عرض الأسئلة والمحاضرات
+import orders  # استيراد ملف orders كاملًا
 
 def load_css(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -22,7 +22,7 @@ def main():
             st.session_state.pop('user_name', None)
             st.rerun()
 
-        orders_main()
+        orders.main()  # استدعاء دالة main من ملف orders.py
 
 if __name__ == "__main__":
     main()
