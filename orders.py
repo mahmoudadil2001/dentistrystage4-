@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import importlib.util
 import re
+import sys
+import importlib
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "Edit", "lecture_titles.py")
@@ -11,6 +13,11 @@ def load_lecture_titles(subject_name):
     spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+
+    # تفادي الكاش
+    if f"{subject_name}_titles" in sys.modules:
+        importlib.reload(sys.modules[f"{subject_name}_titles"])
+
     return getattr(module, "lecture_titles", {})
 
 def get_lectures_and_versions(subject_name, base_path="."):
@@ -72,32 +79,21 @@ def orders_o():
     # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد Edit
     lecture_titles = load_lecture_titles(subject)
 
-    lectures_list = []
+    lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "")
         if title.strip():
             display_name = title
         else:
             display_name = f"Lec {lec_num}"
-        lectures_list.append(display_name)  # فقط الاسم بدون رقم المحاضرة قبله
+        lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
 
-    lecture_choice = st.selectbox("Select Lecture", lectures_list)
-
-    # استخراج رقم المحاضرة من الاسم المختار (لأننا حذفنا الرقم قبله)
-    # نبحث في القاموس keys ليطابق الاسم
-    lec_num = None
-    for num in lecture_titles:
-        if lecture_titles[num] == lecture_choice:
-            lec_num = num
-            break
-    if lec_num is None:
-        # لم نجد الاسم في العناوين => نحاول نقرأ رقم من "Lec X"
-        m = re.match(r"Lec (\d+)", lecture_choice)
-        if m:
-            lec_num = int(m.group(1))
-        else:
-            st.error("خطأ: لم يتمكن من تحديد رقم المحاضرة!")
-            return
+    # عرض الاسم فقط، والقيمة المختارة هي رقم المحاضرة
+    lec_num = st.selectbox(
+        "Select Lecture",
+        options=lectures_options,
+        format_func=lambda x: x[1]
+    )[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
     versions_count = len(versions_dict)
@@ -128,7 +124,7 @@ def orders_o():
 
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture", None) != lecture_choice) or \
+       (st.session_state.get("current_lecture", None) != lec_num) or \
        (st.session_state.get("current_subject", None) != subject) or \
        (st.session_state.get("current_version", None) != selected_version):
 
@@ -137,7 +133,7 @@ def orders_o():
         st.session_state.user_answers = [None] * len(questions)
         st.session_state.answer_shown = [False] * len(questions)
         st.session_state.quiz_completed = False
-        st.session_state.current_lecture = lecture_choice
+        st.session_state.current_lecture = lec_num
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
 
@@ -257,11 +253,4 @@ def main():
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 25px;
         ">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
-        </div>
-        """
-    , unsafe_allow_html=True)
-    orders_o()
-
-if __name__ == "__main__":
-    main()
+        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and
