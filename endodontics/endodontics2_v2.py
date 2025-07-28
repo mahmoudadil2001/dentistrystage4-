@@ -1,121 +1,162 @@
 questions = [
     {
-        "question": "What is the most common cause of Acute Apical Abscess?",
-        "options": ["Trauma", "Invasion of bacteria from necrotic pulp tissue", "Periodontal disease", "Chemical irritation"],
-        "answer": 1
+        "question": "What is the primary histological feature distinguishing irreversible pulpitis from reversible pulpitis?",
+        "options": ["Presence of liquefaction necrosis", "Increased vascularity", "Odontoblast proliferation", "Dentin calcification"],
+        "answer": "Presence of liquefaction necrosis",
+        "explanation": "Irreversible pulpitis is characterized by liquefaction necrosis, unlike reversible pulpitis."
     },
     {
-        "question": "Which condition is also known as 'Phoenix abscess'?",
-        "options": ["Acute apical abscess", "Chronic apical abscess", "Acute exacerbation of asymptomatic apical periodontitis", "Condensing osteitis"],
-        "answer": 2
+        "question": "Which of the following is NOT a function of the pulp-dentine complex?",
+        "options": ["Dentin formation", "Tooth eruption", "Sensory innervation", "Defense response"],
+        "answer": "Tooth eruption",
+        "explanation": "Tooth eruption is controlled by periodontal ligaments and bone remodeling, not the pulp-dentine complex."
     },
     {
-        "question": "What radiographic feature is characteristic of condensing osteitis?",
-        "options": ["Radiolucent area", "Concentric radioopaque area", "Widened PDL space", "Pulp stones"],
-        "answer": 1
+        "question": "What is the primary cause of hyperplastic pulpitis (pulp polyp)?",
+        "options": ["Chronic low-grade irritation in young pulp", "Acute trauma", "Chemical irritation", "Radiation exposure"],
+        "answer": "Chronic low-grade irritation in young pulp",
+        "explanation": "Hyperplastic pulpitis occurs due to chronic irritation in a young, resilient pulp."
     },
     {
-        "question": "Which of the following is NOT a symptom of symptomatic apical periodontitis?",
-        "options": ["Tooth tender on percussion", "Dull, throbbing pain", "Spontaneous pain relief", "Pain on mastication"],
-        "answer": 2
+        "question": "Which zone of the pulp contains the plexus of capillaries and nerve fibers?",
+        "options": ["Odontoblastic layer", "Cell-free zone of Weil", "Cell-rich zone", "Pulp core"],
+        "answer": "Cell-free zone of Weil",
+        "explanation": "The cell-free zone of Weil houses capillary and nerve plexuses beneath the odontoblasts."
     },
     {
-        "question": "What is the primary treatment for chronic apical abscess?",
-        "options": ["Antibiotics only", "Root canal therapy", "Tooth extraction", "Pulp capping"],
-        "answer": 1
+        "question": "What is the key radiographic feature of internal resorption?",
+        "options": ["Radiolucency continuous with the pulp cavity", "Periapical radiolucency", "Root fracture", "Pulp stones"],
+        "answer": "Radiolucency continuous with the pulp cavity",
+        "explanation": "Internal resorption appears as a radiolucent area expanding the pulp space."
     },
     {
-        "question": "Which tooth typically has the longest average length according to the lecture?",
-        "options": ["Maxillary central incisor", "Maxillary canine", "Mandibular first premolar", "Maxillary first molar"],
-        "answer": 1
+        "question": "Which of the following is a contraindication for apexification?",
+        "options": ["Immature root apex", "Pulp necrosis", "Root fracture", "Reversible pulpitis"],
+        "answer": "Root fracture",
+        "explanation": "Apexification is contraindicated in teeth with root fractures due to poor prognosis."
     },
     {
-        "question": "What percentage of maxillary first premolars have two canals?",
-        "options": ["20%", "40%", "60%", "80%"],
-        "answer": 3
+        "question": "What is the primary goal of regenerative endodontics?",
+        "options": ["To replace pulp with gutta-percha", "To promote pulp tissue regeneration", "To extract the tooth", "To bleach discolored dentin"],
+        "answer": "To promote pulp tissue regeneration",
+        "explanation": "Regenerative endodontics aims to regenerate vital pulp-like tissue."
     },
     {
-        "question": "Which tooth has the highest likelihood of having two distal canals?",
-        "options": ["Mandibular first molar", "Maxillary first molar", "Mandibular second premolar", "Maxillary second premolar"],
-        "answer": 0
+        "question": "Which type of pulp calcification forms concentric layers around degenerated tissue?",
+        "options": ["True denticle", "False denticle", "Diffuse calcification", "Dystrophic calcification"],
+        "answer": "False denticle",
+        "explanation": "False denticles are concentric calcifications around degenerated tissue."
     },
     {
-        "question": "What shape is the access opening for maxillary central incisors?",
-        "options": ["Oval", "Triangular", "Rectangular", "Circular"],
-        "answer": 1
+        "question": "What is the main clinical challenge in treating Type 4 root canal configurations?",
+        "options": ["Locating the single orifice", "Managing the apical bifurcation", "Avoiding over-instrumentation", "Preparing the coronal third"],
+        "answer": "Managing the apical bifurcation",
+        "explanation": "Type 4 canals bifurcate apically, making complete cleaning and sealing difficult."
     },
     {
-        "question": "Which condition features a draining sinus tract?",
-        "options": ["Acute apical abscess", "Chronic apical abscess", "Condensing osteitis", "Reversible pulpitis"],
-        "answer": 1
+        "question": "Which irrigant is most likely to cause chemical irritation to periapical tissues?",
+        "options": ["Saline", "Sodium hypochlorite", "EDTA", "Chlorhexidine"],
+        "answer": "Sodium hypochlorite",
+        "explanation": "Sodium hypochlorite can irritate periapical tissues if extruded beyond the apex."
     },
     {
-        "question": "What is the main objective of access opening preparation?",
-        "options": ["To remove all tooth structure", "To provide straight-line access to apical foramen", "To prepare for crown placement", "To bleach the tooth"],
-        "answer": 1
+        "question": "What is the primary reason for post-endodontic coronal restoration?",
+        "options": ["Aesthetics", "Preventing coronal leakage", "Reducing tooth mobility", "Enhancing pulp vitality"],
+        "answer": "Preventing coronal leakage",
+        "explanation": "Coronal restoration seals the tooth to prevent bacterial recontamination."
     },
     {
-        "question": "Which tooth has the highest percentage of Type I canal configuration?",
-        "options": ["Mandibular first premolar", "Maxillary first molar", "Mandibular canine", "Maxillary central incisor"],
-        "answer": 0
+        "question": "Which of the following is a symptom of symptomatic irreversible pulpitis?",
+        "options": ["Pain relieved by cold", "Pain exacerbated by heat", "No response to stimuli", "Pain localized to one tooth only"],
+        "answer": "Pain exacerbated by heat",
+        "explanation": "Heat expands gases/fluids in the pulp, increasing pressure and pain."
     },
     {
-        "question": "What is the average length of a maxillary first molar?",
-        "options": ["20mm", "21mm", "22.5mm", "26.5mm"],
-        "answer": 1
+        "question": "What is the histological hallmark of the cell-rich zone in pulp?",
+        "options": ["High fibroblast density", "Odontoblast processes", "Large blood vessels", "Nerve trunks"],
+        "answer": "High fibroblast density",
+        "explanation": "The cell-rich zone contains fibroblasts and undifferentiated mesenchymal cells."
     },
     {
-        "question": "Which condition represents a diffuse increase in trabecular bone?",
-        "options": ["Acute apical abscess", "Chronic apical abscess", "Condensing osteitis", "Internal resorption"],
-        "answer": 2
+        "question": "Which condition may develop after radiation therapy to the jaw?",
+        "options": ["Pulp necrosis", "Hypercementosis", "Enamel hypoplasia", "Dentinogenesis imperfecta"],
+        "answer": "Pulp necrosis",
+        "explanation": "Radiation can damage pulp vasculature and cells, leading to necrosis."
     },
     {
-        "question": "What is the most common canal configuration in mandibular second premolars?",
-        "options": ["Two separate canals", "One main canal", "Three canals", "C-shaped canal"],
-        "answer": 1
+        "question": "What is the primary mode of bacterial entry in apical periodontitis?",
+        "options": ["Through enamel cracks", "Via dentinal tubules", "Through the apical foramen", "From periodontal pockets"],
+        "answer": "Through the apical foramen",
+        "explanation": "Bacteria from necrotic pulp spread through the apical foramen to infect periapical tissues."
     },
     {
-        "question": "Which tooth requires special care to avoid lingual perforation during instrumentation?",
-        "options": ["Maxillary canine", "Mandibular incisor", "Maxillary first premolar", "Mandibular second molar"],
-        "answer": 1
+        "question": "Which of the following is NOT a phase of endodontic treatment?",
+        "options": ["Diagnostic phase", "Preparatory phase", "Obliteration phase", "Orthodontic phase"],
+        "answer": "Orthodontic phase",
+        "explanation": "Orthodontics is unrelated to endodontic treatment phases."
     },
     {
-        "question": "What percentage of mandibular first premolars have Type III canal configuration?",
-        "options": ["6.5%", "19.5%", "40%", "73.5%"],
-        "answer": 1
+        "question": "What is the primary disadvantage of single-visit endodontics?",
+        "options": ["Higher cost", "Inability to assess healing", "Longer chair time", "Need for general anesthesia"],
+        "answer": "Inability to assess healing",
+        "explanation": "Single-visit treatments lack interim evaluation of symptom resolution."
     },
     {
-        "question": "Which tooth has the most variable number of canals?",
-        "options": ["Maxillary first premolar", "Mandibular canine", "Maxillary central incisor", "Mandibular second premolar"],
-        "answer": 0
+        "question": "Which pulp condition is most likely to present with a 'pink spot'?",
+        "options": ["Internal resorption", "Pulp calcification", "Reversible pulpitis", "Pulp polyp"],
+        "answer": "Internal resorption",
+        "explanation": "Internal resorption in the crown may show a pink hue due to vascular tissue."
     },
     {
-        "question": "What is the first step in treating an acute apical abscess?",
-        "options": ["Prescribing antibiotics", "Establishing drainage", "Performing root canal therapy", "Extracting the tooth"],
-        "answer": 1
+        "question": "What is the main purpose of apexification?",
+        "options": ["To induce root-end closure", "To remove pulp stones", "To treat periodontal pockets", "To whiten discolored teeth"],
+        "answer": "To induce root-end closure",
+        "explanation": "Apexification promotes apical closure in immature teeth with necrotic pulp."
     },
     {
-        "question": "Which tooth has a disto-palatal curvature at the apex?",
-        "options": ["Maxillary central incisor", "Maxillary lateral incisor", "Mandibular canine", "Maxillary first premolar"],
-        "answer": 1
+        "question": "Which of the following is a mechanical irritant to the pulp?",
+        "options": ["Over-instrumentation", "Bacterial toxins", "Phenol-based medicaments", "Sodium hypochlorite"],
+        "answer": "Over-instrumentation",
+        "explanation": "Excessive instrumentation can mechanically damage pulp or periradicular tissues."
     },
     {
-        "question": "What is the shape of the access opening for maxillary first molars?",
-        "options": ["Oval", "Triangular", "Rectangular", "Circular"],
-        "answer": 1
+        "question": "What is the primary diagnostic tool for pulp vitality?",
+        "options": ["Percussion test", "Cold test", "Radiography", "Mobility test"],
+        "answer": "Cold test",
+        "explanation": "Cold tests assess pulp nerve response, indicating vitality."
     },
     {
-        "question": "Which condition may show widening of the apical periodontal ligament space radiographically?",
-        "options": ["Reversible pulpitis", "Symptomatic apical periodontitis", "Condensing osteitis", "Hyperplastic pulpitis"],
-        "answer": 1
+        "question": "Which material is used for root-end fillings in surgical endodontics?",
+        "options": ["Gutta-percha", "Composite resin", "Mineral trioxide aggregate (MTA)", "Zinc oxide eugenol"],
+        "answer": "Mineral trioxide aggregate (MTA)",
+        "explanation": "MTA is biocompatible and promotes healing in root-end fillings."
     },
     {
-        "question": "What is the most common number of canals in maxillary second molars?",
-        "options": ["1", "2", "3", "4"],
-        "answer": 2
+        "question": "What is the primary cause of pain in irreversible pulpitis?",
+        "options": ["Pulp necrosis", "Increased intrapulpal pressure", "Dentin hypersensitivity", "Cracked tooth syndrome"],
+        "answer": "Increased intrapulpal pressure",
+        "explanation": "Inflammation increases pressure in the rigid pulp chamber, compressing nerves."
     },
     {
-        "question": "Which tooth has a prominent mesiobuccal 2 (MB2) canal?",
-        "options": ["Maxillary first molar", "Mandibular first molar", "Maxillary canine", "Mandibular second premolar"],
-        "answer": 0
+        "question": "Which of the following is a limitation of endodontic implants?",
+        "options": ["Cannot be used in molars", "Require healthy periradicular bone", "Only for anterior teeth", "Contraindicated in elderly patients"],
+        "answer": "Require healthy periradicular bone",
+        "explanation": "Endodontic implants need adequate bone support for stability."
+    },
+    {
+        "question": "What is the primary role of odontoblasts in the pulp?",
+        "options": ["Phagocytosis", "Dentin formation", "Collagen synthesis", "Immune response"],
+        "answer": "Dentin formation",
+        "explanation": "Odontoblasts secrete dentin matrix and maintain the pulp-dentine complex."
+    },
+    {
+        "question": "Which condition would NOT typically require root canal retreatment?",
+        "options": ["Persistent infection", "Coronal leakage", "Root fracture", "Inadequate obturation"],
+        "answer": "Root fracture",
+        "explanation": "Root fractures usually necessitate extraction, not retreatment."
+    }
+]
+
+Links = [
+    {"title": "شرح المحاضرة", "url": "https://www.youtube.com/watch?v=E6eYa-5eeJE"},
 ]
