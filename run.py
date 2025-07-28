@@ -20,7 +20,7 @@ def main():
         if st.sidebar.button("تسجيل خروج"):
             st.session_state['logged_in'] = False
             st.session_state.pop('user_name', None)
-            st.experimental_rerun()
+            st.rerun()
 
         orders_main()
 
