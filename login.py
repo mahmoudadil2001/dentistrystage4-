@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
+import json
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8yPGiOFxyGm8jRG0IpW_7kVjEyYb5QlAEy6bNRN0v3b26ZdyU36lf59vIxofWeaP_/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTTVcEUd_Y4YStkRWZGYOHafut22yK8xQapFQUX7MoRMT27FZ9Cn8xb9eO8Xnc8Fhv/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -29,15 +30,16 @@ def get_user_data(username):
         text = res.text.strip()
         if text == "NOT_FOUND":
             return None
-        parts = text.split(",")
+        parts = text.split(",", 5)  # 5 أجزاء + الجزء السادس هو JSON النسخ المحفوظة
         if len(parts) == 6:
+            saved_versions = json.loads(parts[5]) if parts[5] else {}
             return {
                 "username": parts[0],
                 "password": parts[1],
                 "full_name": parts[2],
                 "group": parts[3],
                 "phone": parts[4],
-                "saved_versions": parts[5]  # هذا لحفظ نسخ الفيرجينز
+                "saved_versions": saved_versions
             }
         return None
     except Exception as e:
@@ -74,13 +76,12 @@ def update_password(username, full_name, new_password):
         st.error(f"خطأ في تحديث كلمة المرور: {e}")
         return False
 
-# دالة لحفظ نسخة المحاضرة المختارة للمستخدم في الشيت
-def save_selected_version(username, subject, lecture, version):
+def save_selected_version(username, subject, lec_num, version):
+    key = f"{subject}_{lec_num}"
     data = {
         "action": "save_version",
         "username": username,
-        "subject": subject,
-        "lecture": str(lecture),
+        "key": key,
         "version": str(version)
     }
     try:
@@ -89,29 +90,6 @@ def save_selected_version(username, subject, lecture, version):
     except Exception as e:
         st.error(f"خطأ في حفظ النسخة: {e}")
         return False
-
-# دالة لاسترجاع النسخ المحفوظة للمستخدم من الشيت
-def get_saved_versions(username):
-    data = {
-        "action": "get_saved_versions",
-        "username": username
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        text = res.text.strip()
-        # النص عبارة عن صيغة: subject|lecture|version;subject|lecture|version;...
-        saved_versions = {}
-        if text:
-            entries = text.split(";")
-            for entry in entries:
-                parts = entry.split("|")
-                if len(parts) == 3:
-                    subject, lecture, version = parts
-                    saved_versions[(subject, int(lecture))] = int(version)
-        return saved_versions
-    except Exception as e:
-        st.error(f"خطأ في جلب النسخ المحفوظة: {e}")
-        return {}
 
 def login_page():
     st.title("تسجيل الدخول")
@@ -134,7 +112,7 @@ def login_page():
                     if user_data:
                         st.session_state['logged_in'] = True
                         st.session_state['user_name'] = user_data['username']
-                        st.session_state['saved_versions'] = get_saved_versions(user_data['username'])
+                        st.session_state['saved_versions'] = user_data.get('saved_versions', {})
                         message = (
                             f"🔑 تم تسجيل دخول المستخدم:\n"
                             f"اسم المستخدم: <b>{user_data['username']}</b>\n"
