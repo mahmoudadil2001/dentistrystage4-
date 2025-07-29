@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import re
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJyx-6Izo4fuxeOq-QEtjHt6OYxbBnZ77PXR6v6LeXvCyV-e0YU1EInXbi16C-Zc8t/exec"
 
@@ -66,6 +67,20 @@ def update_password(username, new_password):
     })
     return res.text.strip() == "UPDATED"
 
+def validate_iraqi_phone(phone):
+    pattern = re.compile(
+        r"^(?:"
+        r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"       # محلي 10 أرقام
+        r"|"
+        r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"   # مع +
+        r"|"
+        r"(00964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"  # مع 00
+        r"|"
+        r"(0(1\d{2})\d{7})"  # الخطوط الأرضية مثل 010xxxxxxx
+        r")$"
+    )
+    return bool(pattern.match(phone))
+
 def login_page():
     if "mode" not in st.session_state:
         st.session_state.mode = "login"
@@ -126,6 +141,8 @@ def login_page():
         if st.button("إنشاء الحساب"):
             if not u or not p or not f or not g or not ph:
                 st.warning("❗ يرجى ملء جميع الحقول")
+            elif not validate_iraqi_phone(ph):
+                st.error("❌ رقم الهاتف غير صالح. الرجاء إدخاله بالشكل الصحيح (مثال: 07701234567 أو +9647701234567).")
             else:
                 res = add_user(u, p, f, g, ph)
                 if res == "USERNAME_EXISTS":
@@ -148,7 +165,6 @@ def login_page():
         full_name = st.text_input("✍️ اكتب اسمك الثلاثي", key="forgot_fullname")
 
         if st.button("متابعة"):
-            # تحقق من وجود الاسم الكامل في النظام قبل الانتقال
             def full_name_exists(name):
                 res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
                 if res:
