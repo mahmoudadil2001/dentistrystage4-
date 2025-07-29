@@ -5,7 +5,7 @@ import sys
 import importlib
 
 from versions_manager import get_lectures_and_versions, select_version_ui_with_checkboxes
-from versions_storage import save_version_to_sheet, get_user_versions  # استدعاء دوال النسخ
+from versions_storage import save_user_version, get_user_versions  # تم تعديل الاسم
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -32,7 +32,6 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
-    # تعديل هنا: اسم المستخدم في session_state هو "user_name" وليس "username"
     username = st.session_state.get("user_name", None)
     if username is None:
         st.warning("Please login or set your username first.")
@@ -74,18 +73,14 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    # استرجع النسخة المحفوظة مسبقًا لهذا المستخدم والموضوع (المادة + المحاضرة)
     user_versions = get_user_versions(username)
-    # المفتاح للحفظ يكون اسم الشيت بناء على الموضوع + المحاضرة مثلاً
     sheet_name = f"{subject}_{lec_num}"
     saved_version = user_versions.get(sheet_name, None)
 
-    # إذا وجد نسخة محفوظة نستخدمها كاختيار افتراضي
     selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=saved_version)
 
-    # احفظ النسخة التي اختارها المستخدم تلقائيًا عند كل تغيير
     if selected_version != saved_version:
-        save_version_to_sheet(username, sheet_name, selected_version)
+        save_user_version(username, sheet_name, selected_version)
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -170,7 +165,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -185,7 +180,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -212,7 +207,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
@@ -256,7 +251,3 @@ def main():
     '''
     , unsafe_allow_html=True
     )
-
-
-if __name__ == "__main__":
-    main()
