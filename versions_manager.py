@@ -4,18 +4,18 @@ import re
 
 def select_version_ui(versions_dict, sidebar_title="Select Question version", sidebar_label="Available versions", key="version_select"):
     """
-    عرض واجهة اختيار النسخة في الشريط الجانبي.
-    ترجع رقم النسخة المختارة وقائمة النسخ اللي تم تحديدها عبر checkboxes.
+    واجهة اختيار النسخة في الشريط الجانبي مع إمكانية وضع علامة صح على النسخة.
+    ترجع رقم النسخة المختارة + حالة كل Checkbox لكل نسخة.
     """
     versions_count = len(versions_dict)
     selected_version = 1
-    selected_checkboxes = {}
+    completed_versions = {}
 
-    if versions_count > 0:
+    if versions_count > 1:
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
 
-        # Radio لتحديد النسخة الأساسية
+        # اختيار النسخة بالراديو
         selected_version = st.sidebar.radio(
             sidebar_label,
             options=version_keys,
@@ -23,22 +23,25 @@ def select_version_ui(versions_dict, sidebar_title="Select Question version", si
             key=f"{key}_radio"
         )
 
-        st.sidebar.markdown("#### اختر النسخ الإضافية:")
+        st.sidebar.markdown("### ضع علامة عند إنهاء النسخة")
         for v in version_keys:
-            checked = st.sidebar.checkbox(
-                f"تحديد النسخة {v}",
+            completed_versions[v] = st.sidebar.checkbox(
+                f"✔️ النسخة {v}",
                 key=f"{key}_checkbox_{v}"
             )
-            selected_checkboxes[v] = checked
     else:
         selected_version = 1
+        completed_versions[1] = st.sidebar.checkbox(
+            "✔️ النسخة 1",
+            key=f"{key}_checkbox_1"
+        )
 
-    return selected_version, selected_checkboxes
+    return selected_version, completed_versions
 
 
 def get_lectures_and_versions(subject_name, base_path="."):
     """
-    Returns dict:
+    يرجع قاموس بشكل:
     { lec_num: { version_num: filename, ... }, ... }
     """
     subject_path = os.path.join(base_path, subject_name)
