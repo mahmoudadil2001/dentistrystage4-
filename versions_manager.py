@@ -1,26 +1,39 @@
 import streamlit as st
+import os
+import re
 
 def select_version_ui(versions_dict, sidebar_title="Select Question version", sidebar_label="Available versions", key="version_select"):
     """
     عرض واجهة اختيار النسخة في الشريط الجانبي.
-    ترجع رقم النسخة المختارة.
+    ترجع رقم النسخة المختارة وقائمة النسخ اللي تم تحديدها عبر checkboxes.
     """
     versions_count = len(versions_dict)
     selected_version = 1
+    selected_checkboxes = {}
 
-    if versions_count > 1:
+    if versions_count > 0:
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
+
+        # Radio لتحديد النسخة الأساسية
         selected_version = st.sidebar.radio(
             sidebar_label,
             options=version_keys,
             index=0,
-            key=key
+            key=f"{key}_radio"
         )
+
+        st.sidebar.markdown("#### اختر النسخ الإضافية:")
+        for v in version_keys:
+            checked = st.sidebar.checkbox(
+                f"تحديد النسخة {v}",
+                key=f"{key}_checkbox_{v}"
+            )
+            selected_checkboxes[v] = checked
     else:
         selected_version = 1
 
-    return selected_version
+    return selected_version, selected_checkboxes
 
 
 def get_lectures_and_versions(subject_name, base_path="."):
@@ -28,9 +41,6 @@ def get_lectures_and_versions(subject_name, base_path="."):
     Returns dict:
     { lec_num: { version_num: filename, ... }, ... }
     """
-    import os
-    import re
-
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
         return {}
