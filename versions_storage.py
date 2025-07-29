@@ -35,25 +35,3 @@ def get_user_versions(username):
         return versions
     except requests.exceptions.RequestException as e:
         return {}
-
-def get_user_checkboxes(username, sheet_name):
-    payload = {
-        "action": "get_user_checkboxes",
-        "username": username,
-        "sheet_name": sheet_name
-    }
-    try:
-        response = requests.post(GOOGLE_SCRIPT_URL, data=payload)
-        text = response.text.strip()
-        if not text:
-            return {}
-        lines = text.split("\n")
-        states = {}
-        for line in lines:
-            parts = line.split(",")
-            if len(parts) == 2:
-                version, checked = parts
-                states[int(version)] = (checked.upper() == "TRUE")
-        return states
-    except requests.exceptions.RequestException as e:
-        return {}
