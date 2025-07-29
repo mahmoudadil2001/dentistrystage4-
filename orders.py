@@ -4,11 +4,11 @@ import importlib.util
 import sys
 import importlib
 
-from versions_manager import get_lectures_and_versions, select_version_ui_with_checkboxes
+from versions_manager import get_lectures_and_versions, select_version_ui
 
 
 def load_lecture_titles(subject_name):
-    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
+    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")  # ملاحظة: 'edit' بحروف صغيرة
     if not os.path.exists(titles_file):
         return {}
 
@@ -16,6 +16,7 @@ def load_lecture_titles(subject_name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
+    # تفادي الكاش
     if f"{subject_name}_titles" in sys.modules:
         importlib.reload(sys.modules[f"{subject_name}_titles"])
 
@@ -52,12 +53,16 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
+    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
-        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
+        if title:
+            display_name = f"Lec {lec_num}  {title}"
+        else:
+            display_name = f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))
 
     lec_num = st.selectbox(
@@ -68,7 +73,7 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    selected_version = select_version_ui_with_checkboxes(versions_dict)
+    selected_version = select_version_ui(versions_dict)
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -215,13 +220,11 @@ def main():
         ">
         Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    , unsafe_allow_html=True)
     orders_o()
 
-    st.markdown(
-        '''
+    st.markdown('''
     <div style="display:flex; justify-content:center; margin-top:50px;">
         <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
             Telegram Channel
@@ -236,10 +239,7 @@ def main():
     <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
         Subscribe to the Telegram channel to get all updates and new lectures I will upload here, God willing.
     </div>
-    '''
-    , unsafe_allow_html=True
-    )
-
+    ''', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
