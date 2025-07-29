@@ -85,7 +85,7 @@ def login_page():
             st.session_state.user_full_name = ""
             st.session_state.user_name = ""
             st.session_state.mode = "login"
-            st.experimental_rerun()
+            st.rerun()
         return
 
     if st.session_state.mode == "login":
@@ -101,7 +101,7 @@ def login_page():
                     st.session_state.user_full_name = user['full_name']
                     st.session_state.user_name = user['username']
                     send_telegram_message(f"✅ تسجيل دخول:\n{user}")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("❌ خطأ في جلب بيانات المستخدم")
             else:
@@ -109,11 +109,11 @@ def login_page():
 
         if st.button("إنشاء حساب جديد"):
             st.session_state.mode = "signup"
-            st.experimental_rerun()
+            st.rerun()
 
         if st.button("نسيت كلمة المرور؟"):
             st.session_state.mode = "forgot"
-            st.experimental_rerun()
+            st.rerun()
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
@@ -135,13 +135,13 @@ def login_page():
                 elif res == "ADDED":
                     st.success("✅ تم إنشاء الحساب بنجاح")
                     st.session_state.mode = "login"
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
-            st.experimental_rerun()
+            st.rerun()
 
     elif st.session_state.mode == "forgot":
         st.header("🔒 استعادة كلمة المرور")
@@ -166,13 +166,13 @@ def login_page():
             elif full_name_exists(full_name):
                 st.session_state.temp_fullname = full_name
                 st.session_state.mode = "forgot_last4"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ الاسم الكامل غير موجود في النظام، تحقق من بياناتك")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
-            st.experimental_rerun()
+            st.rerun()
 
     elif st.session_state.mode == "forgot_last4":
         st.subheader(f"✅ الاسم: {st.session_state.temp_fullname}")
@@ -183,13 +183,13 @@ def login_page():
             if username != "NOT_FOUND":
                 st.session_state.found_username = username
                 st.session_state.mode = "reset_password"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ البيانات غير صحيحة")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "forgot"
-            st.experimental_rerun()
+            st.rerun()
 
     elif st.session_state.mode == "reset_password":
         st.success(f"✅ اسم المستخدم: {st.session_state.found_username}")
@@ -199,13 +199,13 @@ def login_page():
             if update_password(st.session_state.found_username, new_pass):
                 st.success("✅ تم تحديث كلمة المرور")
                 st.session_state.mode = "login"
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ فشل التحديث")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
-            st.experimental_rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     login_page()
