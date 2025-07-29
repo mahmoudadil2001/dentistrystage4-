@@ -99,29 +99,17 @@ def orders_o():
     versions_count = len(versions_dict)
 
     selected_version = 1
-if versions_count > 1:
-    st.sidebar.markdown("### Select Question version")
-    version_keys = sorted(versions_dict.keys())
-
-    for v in version_keys:
-        key_checkbox = f"version_checkbox_{v}"
-        if key_checkbox not in st.session_state:
-            st.session_state[key_checkbox] = False
-        checked = st.sidebar.checkbox(f"Version {v}", value=st.session_state[key_checkbox], key=key_checkbox)
-        st.session_state[key_checkbox] = checked
-
-    # اختر أول نسخة معلمة checkbox كنسخة مختارة
-    selected_version = None
-    for v in version_keys:
-        if st.session_state.get(f"version_checkbox_{v}", False):
-            selected_version = v
-            break
-
-    if selected_version is None:
-        selected_version = version_keys[0]
-else:
-    selected_version = 1
-
+    if versions_count > 1:
+        st.sidebar.markdown("### Select Question version")
+        version_keys = sorted(versions_dict.keys())
+        selected_version = st.sidebar.radio(
+            "النسخ المتاحة:",
+            options=version_keys,
+            index=0,
+            key="version_select"
+        )
+    else:
+        selected_version = 1
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
