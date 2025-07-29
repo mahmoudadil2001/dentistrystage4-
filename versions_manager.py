@@ -2,10 +2,17 @@ import streamlit as st
 import os
 import re
 
-def select_version_ui(versions_dict, sidebar_title="Select Question version", sidebar_label="Available versions", key="version_select"):
+def select_version_ui(
+    versions_dict, 
+    sidebar_title="Select Question version", 
+    sidebar_label="Available versions", 
+    key="version_select"
+):
     """
-    عرض واجهة اختيار النسخة في الشريط الجانبي.
-    ترجع رقم النسخة المختارة + حالة كل Checkbox لكل نسخة.
+    واجهة اختيار النسخة في الشريط الجانبي.
+    🔹 ترجع:
+       - إذا استدعيتها كالسابق → نفس رقم النسخة فقط.
+       - وإذا خزّنت النتيجة في متغيرين → يعطيك (selected_version, completed_versions).
     """
     versions_count = len(versions_dict)
     selected_version = 1
@@ -15,7 +22,7 @@ def select_version_ui(versions_dict, sidebar_title="Select Question version", si
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
 
-        # نفس وظيفة الكود الأساسية (Radio لاختيار النسخة)
+        # الوظيفة الأساسية (اختيار النسخة)
         selected_version = st.sidebar.radio(
             sidebar_label,
             options=version_keys,
@@ -23,14 +30,13 @@ def select_version_ui(versions_dict, sidebar_title="Select Question version", si
             key=key
         )
 
-        # إضافة Checkbox لكل نسخة بدون التأثير على الاختيار
+        # إضافة Checkboxes بدون التأثير على الكود القديم
         st.sidebar.markdown("### ضع علامة صح إذا أنهيت النسخة:")
         for v in version_keys:
             completed_versions[v] = st.sidebar.checkbox(
                 f"✔️ النسخة {v}",
                 key=f"{key}_checkbox_{v}"
             )
-
     else:
         selected_version = 1
         completed_versions[1] = st.sidebar.checkbox(
@@ -38,6 +44,8 @@ def select_version_ui(versions_dict, sidebar_title="Select Question version", si
             key=f"{key}_checkbox_1"
         )
 
+    # إذا استُخدمت كما في الكود القديم → ترجع رقم النسخة فقط
+    # وإذا استُخدمت مع متغيرين → ترجع النسخة وحالة الصح
     return selected_version, completed_versions
 
 
