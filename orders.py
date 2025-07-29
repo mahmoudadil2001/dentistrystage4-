@@ -1,9 +1,11 @@
 import streamlit as st
 import os
 import importlib.util
-import re
 import sys
 import importlib
+
+from versions_manager import get_lectures_and_versions, select_version_ui
+
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")  # ملاحظة: 'edit' بحروف صغيرة
@@ -20,32 +22,6 @@ def load_lecture_titles(subject_name):
 
     return getattr(module, "lecture_titles", {})
 
-def get_lectures_and_versions(subject_name, base_path="."):
-    """
-    Returns dict:
-    { lec_num: { version_num: filename, ... }, ... }
-    """
-    subject_path = os.path.join(base_path, subject_name)
-    if not os.path.exists(subject_path):
-        return {}
-
-    files = os.listdir(subject_path)
-    # filename pattern: subjectname + lec number + _v version number (optional) + .py
-    pattern = re.compile(rf"^{re.escape(subject_name)}(\d+)(?:_v(\d+))?\.py$", re.IGNORECASE)
-
-    lectures = {}
-    for f in files:
-        m = pattern.match(f)
-        if m:
-            lec_num = int(m.group(1))
-            version_num = int(m.group(2)) if m.group(2) else 1  # version 1 if not specified
-            if lec_num not in lectures:
-                lectures[lec_num] = {}
-            lectures[lec_num][version_num] = f
-
-    for lec in lectures:
-        lectures[lec] = dict(sorted(lectures[lec].items()))
-    return lectures
 
 def import_module_from_file(filepath):
     if not os.path.exists(filepath):
@@ -54,6 +30,7 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 def orders_o():
     subjects = [
@@ -83,12 +60,11 @@ def orders_o():
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
         if title:
-            display_name = f"Lec {lec_num}  {title}"  # رقم المحاضرة + مسافة + الاسم
+            display_name = f"Lec {lec_num}  {title}"
         else:
             display_name = f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))  # (رقم المحاضرة, اسم للعرض)
+        lectures_options.append((lec_num, display_name))
 
-    # عرض الاسم فقط، والقيمة المختارة هي رقم المحاضرة
     lec_num = st.selectbox(
         "Select Lecture",
         options=lectures_options,
@@ -96,20 +72,8 @@ def orders_o():
     )[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
-    versions_count = len(versions_dict)
 
-    selected_version = 1
-    if versions_count > 1:
-        st.sidebar.markdown("### Select Question version")
-        version_keys = sorted(versions_dict.keys())
-        selected_version = st.sidebar.radio(
-            "النسخ المتاحة:",
-            options=version_keys,
-            index=0,
-            key="version_select"
-        )
-    else:
-        selected_version = 1
+    selected_version = select_version_ui(versions_dict)
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -237,6 +201,7 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.rerun()
+
 
 def main():
     st.markdown(
