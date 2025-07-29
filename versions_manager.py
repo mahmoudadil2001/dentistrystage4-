@@ -23,7 +23,7 @@ def select_version_ui(
         version_keys = sorted(versions_dict.keys())
 
         for v in version_keys:
-            cols = st.sidebar.columns([1, 0.3])  # عمود للراديو أكبر، وعمود صغير جداً للcheckbox قريب منه
+            cols = st.sidebar.columns([0.1, 3])  # عمود للراديو أكبر، وعمود صغير جداً للcheckbox قريب منه
 
             # Radio لاختيار النسخة بدون نص label
             if cols[0].radio(
