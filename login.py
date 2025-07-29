@@ -154,9 +154,9 @@ def login_page():
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم (إنجليزي، كلمة واحدة، حتى 10 أحرف)", key="signup_username")
+        u = st.text_input("اسم المستخدم (إنجليزي)", key="signup_username")
         p = st.text_input("كلمة المرور", type="password", key="signup_password")
-        f = st.text_input("الاسم الكامل (3 كلمات، كل كلمة حتى 10 أحرف)", key="signup_full_name")
+        f = st.text_input("الاسم الكامل (3 كلمات)", key="signup_full_name")
         g = st.text_input("الجروب", key="signup_group")
         ph = st.text_input("رقم الهاتف", key="signup_phone")
 
