@@ -51,62 +51,37 @@ def add_user(username, password, full_name, group, phone):
     })
     return res.text.strip()
 
-def find_username_by_last4(full_name, last4):
-    res = requests.post(GOOGLE_SCRIPT_URL, data={
-        "action": "find_username_by_last4",
-        "full_name": full_name,
-        "last4": last4
-    })
-    return res.text.strip()
-
-def update_password(username, new_password):
-    res = requests.post(GOOGLE_SCRIPT_URL, data={
-        "action": "update_password",
-        "username": username,
-        "new_password": new_password
-    })
-    return res.text.strip() == "UPDATED"
-
 def validate_iraqi_phone(phone):
     pattern = re.compile(
-        r"^(?:"  
-        r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"       # محلي 10 أرقام
+        r"^(?:"
+        r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
         r"|"
-        r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"   # مع +
+        r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
         r"|"
-        r"(00964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"  # مع 00
+        r"(00964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
         r"|"
-        r"(0(1\d{2})\d{7})"  # الخطوط الأرضية مثل 010xxxxxxx
+        r"(0(1\d{2})\d{7})"
         r")$"
     )
     return bool(pattern.match(phone))
 
 def validate_username(username):
-    # اسم المستخدم كلمة واحدة (لا تحتوي على فراغات) من حروف، أرقام، أو رموز إنجليزية، ولا تزيد عن 10 أحرف
-    if not username:
-        return False
-    if len(username) > 10:
-        return False
-    # يسمح بأي حرف انجليزي أو رقم أو رموز محددة (مثل _ - .) بدون فراغات
-    # يمكن تعديل هذه الصيغة لتسمح برموز أخرى حسب الحاجة
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+", username):
-        return False
-    return True
+    return bool(username) and len(username) <= 10 and re.fullmatch(r"[A-Za-z0-9_.-]+", username)
 
 def validate_full_name(full_name):
-    # الاسم الكامل 3 كلمات بالضبط، كل كلمة بالعربي (يوجد حروف عربية فقط)، كل كلمة لا تزيد عن 10 أحرف
     if not full_name:
         return False
     words = full_name.strip().split()
     if len(words) != 3:
         return False
-    arabic_pattern = re.compile(r"^[\u0600-\u06FF]+$")  # حروف عربية فقط
-    for w in words:
-        if len(w) > 10:
-            return False
-        if not arabic_pattern.match(w):
-            return False
-    return True
+    arabic_pattern = re.compile(r"^[\u0600-\u06FF]+$")
+    return all(len(w) <= 10 and arabic_pattern.match(w) for w in words)
+
+def validate_password(password):
+    return bool(password) and 4 <= len(password) <= 16
+
+def validate_group(group):
+    return bool(re.fullmatch(r"[A-Za-z]", group))
 
 def login_page():
     if "mode" not in st.session_state:
@@ -120,8 +95,6 @@ def login_page():
 
     if st.session_state.logged_in:
         st.header(f"مرحباً بك يا {st.session_state.user_full_name} في صفحة الأسئلة!")
-        st.write("هنا يمكنك وضع أسئلة وأجوبة المشروع أو أي محتوى آخر.")
-
         if st.button("تسجيل خروج"):
             st.session_state.logged_in = False
             st.session_state.user_full_name = ""
@@ -132,8 +105,8 @@ def login_page():
 
     if st.session_state.mode == "login":
         st.header("🔑 تسجيل الدخول")
-        username = st.text_input("اسم المستخدم", key="login_username")
-        password = st.text_input("كلمة المرور", type="password", key="login_password")
+        username = st.text_input("اسم المستخدم")
+        password = st.text_input("كلمة المرور", type="password")
 
         if st.button("تسجيل الدخول"):
             if check_login(username, password):
@@ -153,78 +126,43 @@ def login_page():
             st.session_state.mode = "signup"
             st.rerun()
 
-        if st.button("نسيت كلمة المرور؟"):
-            st.session_state.mode = "forgot"
-            st.rerun()
-
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم", key="signup_username")
-        p = st.text_input("كلمة المرور", type="password", key="signup_password")
-        f = st.text_input("الاسم الثلاثي (بالعربي)", key="signup_full_name")
-        g = st.text_input("الجروب", key="signup_group")
-        ph = st.text_input("رقم الهاتف", key="signup_phone")
+        u = st.text_input("اسم المستخدم (حتى 10 أحرف)")
+        p = st.text_input("كلمة المرور (4-16 حرف)", type="password")
+        f = st.text_input("الاسم الثلاثي (بالعربي)")
+        g = st.text_input("الجروب (حرف واحد بالإنجليزية)")
+        ph = st.text_input("رقم الهاتف")
 
         if st.button("إنشاء الحساب"):
-            if not u or not p or not f or not g or not ph:
+            if not all([u, p, f, g, ph]):
                 st.warning("❗ يرجى ملء جميع الحقول")
+            elif not validate_username(u):
+                st.error("❌ اسم المستخدم غير صالح")
+            elif not validate_password(p):
+                st.error("❌ كلمة المرور يجب أن تكون بين 4 و 16 رمز")
+            elif not validate_full_name(f):
+                st.error("❌ الاسم الكامل يجب أن يكون 3 كلمات عربية، كل كلمة ≤ 10 أحرف")
+            elif not validate_group(g):
+                st.error("❌ الجروب يجب أن يكون حرفًا واحدًا بالإنجليزية")
+            elif not validate_iraqi_phone(ph):
+                st.error("❌ رقم الهاتف غير صالح")
             else:
-                if not validate_username(u):
-                    st.error("❌ اسم المستخدم غير صالح. كلمة واحدة (أحرف، أرقام، رموز)، حتى 10 أحرف، بدون فراغات")
-                elif not validate_full_name(f):
-                    st.error("❌ الاسم الكامل غير صالح. يجب أن يحتوي على 3 كلمات عربية، كل كلمة لا تزيد عن 10 أحرف")
-                elif not validate_iraqi_phone(ph):
-                    st.error("❌ رقم الهاتف غير صالح. الرجاء إدخاله بالشكل الصحيح (مثال: 07701234567 أو +9647701234567).")
+                res = add_user(u, p, f, g, ph)
+                if res == "USERNAME_EXISTS":
+                    st.error("❌ اسم المستخدم موجود مسبقًا")
+                elif res == "FULLNAME_EXISTS":
+                    st.error("❌ الاسم الكامل موجود مسبقًا")
+                elif res == "ADDED":
+                    st.success("✅ تم إنشاء الحساب بنجاح")
+                    st.session_state.mode = "login"
+                    st.rerun()
                 else:
-                    res = add_user(u, p, f, g, ph)
-                    if res == "USERNAME_EXISTS":
-                        st.error("❌ اسم المستخدم موجود، اختر اسمًا آخر")
-                    elif res == "FULLNAME_EXISTS":
-                        st.error("❌ الاسم الكامل موجود مسبقًا، تحقق من بياناتك أو اتصل بالدعم")
-                    elif res == "ADDED":
-                        st.success("✅ تم إنشاء الحساب بنجاح")
-                        st.session_state.mode = "login"
-                        st.rerun()
-                    else:
-                        st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
+                    st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
             st.rerun()
 
-    elif st.session_state.mode == "forgot":
-        st.header("🔒 استعادة كلمة المرور")
-        full_name = st.text_input("✍️ اكتب اسمك الثلاثي", key="forgot_fullname")
-
-        if st.button("متابعة"):
-            def full_name_exists(name):
-                res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
-                if res:
-                    lines = res.split("\n")
-                    for line in lines:
-                        parts = line.split(",")
-                        if len(parts) >= 2:
-                            existing_fullname = parts[1].strip().lower()
-                            if existing_fullname == name.strip().lower():
-                                return True
-                return False
-
-            if not full_name.strip():
-                st.warning("❗ الرجاء إدخال الاسم الكامل")
-            elif full_name_exists(full_name):
-                st.session_state.temp_fullname = full_name
-                st.session_state.mode = "forgot_last4"
-                st.rerun()
-            else:
-                st.error("❌ الاسم الكامل غير موجود في النظام، تحقق من بياناتك")
-
-        if st.button("🔙 رجوع"):
-            st.session_state.mode = "login"
-            st.rerun()
-
-    elif st.session_state.mode == "forgot_last4":
-        st.subheader(f"✅ الاسم: {st.session_state.temp_fullname}")
-        last4 = st.text_input("📱 اكتب آخر 4 أرقام من رقم هاتفك", key="forgot_last4")
-
-        if st.button("تحقق"):
-            username
+if __name__ == "__main__":
+    login_page()
