@@ -50,13 +50,27 @@ def select_version_ui(
     selected_version = 1
     completed_versions = {}
 
+    # إضافة CSS لتعديل شكل أزرار الشريط الجانبي
+    st.sidebar.markdown(
+        """
+        <style>
+        /* زيادة ارتفاع وعرض أزرار الشريط الجانبي */
+        div.stButton > button {
+            height: 45px;      /* ارتفاع الزر */
+            width: 130px;      /* عرض الزر */
+            font-size: 18px;   /* حجم الخط */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     if versions_count > 1:
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
 
         for v in version_keys:
-            cols = st.sidebar.columns([0.1, 3])  # عمود صغير للcheckbox، وعمود كبير لزر النسخة
-
+            cols = st.sidebar.columns([0.2, 3])  # عمود checkbox صغير وعمود زر أعرض
             completed_versions[v] = cols[0].checkbox(
                 label="",
                 key=f"{key}_checkbox_{v}"
@@ -79,13 +93,28 @@ def select_version_ui_with_checkboxes(versions_dict, sidebar_title="Select Quest
     selected_version = 1
     completed_versions = {}
 
+    # إضافة CSS لتعديل شكل أزرار الشريط الجانبي
+    st.sidebar.markdown(
+        """
+        <style>
+        /* زيادة ارتفاع وعرض أزرار الشريط الجانبي */
+        div.stButton > button {
+            height: 30px;      /* ارتفاع الزر */
+            width: 130px;      /* عرض الزر */
+            font-size: 18px;   /* حجم الخط */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.sidebar.markdown(f"### {sidebar_title}")
 
     version_keys = sorted(versions_dict.keys())
 
     # عرض 3 نسخ الأولى
     for v in version_keys[:3]:
-        cols = st.sidebar.columns([0.1, 3])
+        cols = st.sidebar.columns([0.2, 3])
         completed_versions[v] = cols[0].checkbox("", key=f"{key}_checkbox_{v}")
         if cols[1].button(f"نسخة {v}", key=f"{key}_button_{v}"):
             selected_version = v
@@ -94,7 +123,7 @@ def select_version_ui_with_checkboxes(versions_dict, sidebar_title="Select Quest
     if len(version_keys) > 3:
         st.sidebar.markdown("#### نسخ المجموعة 2")
         for v in version_keys[3:6]:
-            cols = st.sidebar.columns([0.1, 3])
+            cols = st.sidebar.columns([0.2, 3])
             completed_versions[v] = cols[0].checkbox("", key=f"{key}_checkbox_{v}")
             if cols[1].button(f"نسخة {v}", key=f"{key}_button_{v}"):
                 selected_version = v
