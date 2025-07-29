@@ -8,12 +8,6 @@ def select_version_ui(
     sidebar_label="Available versions", 
     key="version_select"
 ):
-    """
-    واجهة اختيار النسخة في الشريط الجانبي مع Checkbox قريب جداً يمين و Radio يسار.
-    ترجع:
-    selected_version → النسخة المختارة
-    completed_versions → حالة كل Checkbox
-    """
     versions_count = len(versions_dict)
     selected_version = 1
     completed_versions = {}
@@ -23,31 +17,22 @@ def select_version_ui(
         version_keys = sorted(versions_dict.keys())
 
         for v in version_keys:
-            cols = st.sidebar.columns([0.1, 3])  # عمود للراديو أكبر، وعمود صغير جداً للcheckbox قريب منه
+            cols = st.sidebar.columns([0.1, 3])  # عمود صغير للcheckbox، وعمود كبير للنسخة
 
-            # Radio لاختيار النسخة بدون نص label
-            if cols[0].radio(
-                label="",
-                options=[v],
-                index=0 if v == version_keys[0] else -1,
-                key=f"{key}_radio_{v}"
-            ):
-                selected_version = v
-
-            # Checkbox بدون نص label عشان يكون مربع صغير فقط قريب
-            completed_versions[v] = cols[1].checkbox(
+            # Checkbox بدون نص في العمود الأول
+            completed_versions[v] = cols[0].checkbox(
                 label="",
                 key=f"{key}_checkbox_{v}"
             )
+
+            # رقم النسخة يظهر كنص عادي (بدل الراديو) في العمود الثاني
+            if cols[1].button(f"نسخة {v}", key=f"{key}_button_{v}"):
+                selected_version = v
 
     return selected_version, completed_versions
 
 
 def get_lectures_and_versions(subject_name, base_path="."):
-    """
-    Returns dict:
-    { lec_num: { version_num: filename, ... }, ... }
-    """
     subject_path = os.path.join(base_path, subject_name)
     if not os.path.exists(subject_path):
         return {}
