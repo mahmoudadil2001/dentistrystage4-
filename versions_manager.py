@@ -109,9 +109,9 @@ def select_version_ui_with_checkboxes(versions_dict, sidebar_title="Select Quest
         """
         <style>
         div.custom-version-button > div.stButton > button {
-            height: 20px;
+            height: 25px;
             width: 90px;
-            font-size: 18px;
+            font-size: 14px;
             background-color: #4CAF50;
             color: white;
             border-radius: 5px;
