@@ -28,6 +28,7 @@ def get_lectures_and_versions(subject_name, base_path="."):
         lectures[lec] = dict(sorted(lectures[lec].items()))
     return lectures
 
+
 def select_version_ui(
     versions_dict, 
     sidebar_title="Select Question version", 
@@ -60,6 +61,7 @@ def select_version_ui(
         selected_version = 1
 
     return selected_version
+
 
 def select_version_ui_with_checkboxes(versions_dict, sidebar_title="Select Question version", key="version_select"):
     """
