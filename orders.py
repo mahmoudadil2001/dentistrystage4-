@@ -59,10 +59,7 @@ def orders_o():
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
-        if title:
-            display_name = f"Lec {lec_num}  {title}"
-        else:
-            display_name = f"Lec {lec_num}"
+        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))
 
     lec_num = st.selectbox(
@@ -87,6 +84,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # إعادة تهيئة حالة الأسئلة إذا تغيرت المحاضرة أو النسخة أو الموضوع
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -126,12 +124,7 @@ def orders_o():
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
+            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
 
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
@@ -159,7 +152,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -174,7 +167,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -201,7 +194,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
