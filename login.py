@@ -177,6 +177,8 @@ def login_page():
                     st.session_state.signup_phone = ""
                     st.session_state.mode = "login"
                     st.rerun()
+                else:
+                    st.error("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
