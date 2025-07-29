@@ -36,7 +36,7 @@ def select_version_ui(
     key="version_select"
 ):
     """
-    عرض واجهة اختيار النسخة في الشريط الجانبي.
+    واجهة اختيار النسخة في الشريط الجانبي.
     ترجع رقم النسخة المختارة.
     """
     versions_count = len(versions_dict)
