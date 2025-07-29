@@ -27,6 +27,25 @@ def get_user_data(username):
     return None
 
 def add_user(username, password, full_name, group, phone):
+    # قبل الإضافة نتأكد أن اسم المستخدم أو الاسم الكامل غير موجودين
+    res_all = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
+    # نفترض أنك أضفت في GAS دالة تعيد جميع أسماء المستخدمين والأسماء الكاملة (انصحك تضيفها)
+    # نحلل النص لنتأكد وجود اسم المستخدم أو الاسم الكامل
+    # إذا لم تضع هذه الدالة، سأعطيك بعد قليل تعديل لـ GAS لإضافتها
+
+    if res_all:
+        lines = res_all.split("\n")
+        for line in lines:
+            parts = line.split(",")
+            if len(parts) >= 3:
+                existing_username = parts[0].strip().lower()
+                existing_fullname = parts[2].strip().lower()
+                if existing_username == username.lower():
+                    return "USERNAME_EXISTS"
+                if existing_fullname == full_name.lower():
+                    return "FULLNAME_EXISTS"
+
+    # إذا لم يتم إيجاد نفس الاسم أو المستخدم، نضيف الحساب
     res = requests.post(GOOGLE_SCRIPT_URL, data={
         "action": "add",
         "username": username,
@@ -53,22 +72,50 @@ def update_password(username, new_password):
     })
     return res.text.strip() == "UPDATED"
 
+
 def login_page():
     if "mode" not in st.session_state:
         st.session_state.mode = "login"
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "user_full_name" not in st.session_state:
+        st.session_state.user_full_name = ""
+    if "user_name" not in st.session_state:
+        st.session_state.user_name = ""
 
+    # لو المستخدم سجل دخول بالفعل، نعرض له صفحة الأسئلة
+    if st.session_state.logged_in:
+        st.header(f"مرحباً بك يا {st.session_state.user_full_name} في صفحة الأسئلة!")
+        # مثال محتوى صفحة الأسئلة (ضع المحتوى اللي تحتاجه هنا)
+        st.write("هنا يمكنك وضع أسئلة وأجوبة المشروع أو أي محتوى آخر.")
+
+        if st.button("تسجيل خروج"):
+            st.session_state.logged_in = False
+            st.session_state.user_full_name = ""
+            st.session_state.user_name = ""
+            st.session_state.mode = "login"
+            st.rerun()
+        return  # منع عرض أي شيء آخر إذا مسجل دخول
+
+    # --- صفحات تسجيل الدخول، التسجيل، واستعادة كلمة المرور ---
     if st.session_state.mode == "login":
         st.header("🔑 تسجيل الدخول")
-        username = st.text_input("اسم المستخدم")
-        password = st.text_input("كلمة المرور", type="password")
+        username = st.text_input("اسم المستخدم", key="login_username")
+        password = st.text_input("كلمة المرور", type="password", key="login_password")
 
         if st.button("تسجيل الدخول"):
             if check_login(username, password):
                 user = get_user_data(username)
-                st.success(f"✅ أهلاً {user['full_name']}")
-                send_telegram_message(f"✅ تسجيل دخول:\n{user}")
+                if user:
+                    st.session_state.logged_in = True
+                    st.session_state.user_full_name = user['full_name']
+                    st.session_state.user_name = user['username']
+                    send_telegram_message(f"✅ تسجيل دخول:\n{user}")
+                    st.rerun()
+                else:
+                    st.error("❌ خطأ في جلب بيانات المستخدم")
             else:
-                st.error("❌ بيانات غير صحيحة")
+                st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة")
 
         if st.button("إنشاء حساب جديد"):
             st.session_state.mode = "signup"
@@ -80,11 +127,11 @@ def login_page():
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم")
-        p = st.text_input("كلمة المرور", type="password")
-        f = st.text_input("الاسم الكامل")
-        g = st.text_input("الجروب")
-        ph = st.text_input("رقم الهاتف")
+        u = st.text_input("اسم المستخدم", key="signup_username")
+        p = st.text_input("كلمة المرور", type="password", key="signup_password")
+        f = st.text_input("الاسم الكامل", key="signup_full_name")
+        g = st.text_input("الجروب", key="signup_group")
+        ph = st.text_input("رقم الهاتف", key="signup_phone")
 
         if st.button("إنشاء الحساب"):
             if not u or not p or not f or not g or not ph:
@@ -93,8 +140,12 @@ def login_page():
                 res = add_user(u, p, f, g, ph)
                 if res == "USERNAME_EXISTS":
                     st.error("❌ اسم المستخدم موجود، اختر اسمًا آخر")
+                elif res == "FULLNAME_EXISTS":
+                    st.error("❌ الاسم الكامل موجود مسبقًا، تحقق من بياناتك أو اتصل بالدعم")
                 elif res == "ADDED":
-                    st.success("✅ تم إنشاء الحساب بنجاح")
+                    st.session_state.logged_in = True
+                    st.session_state.user_full_name = f
+                    st.session_state.user_name = u
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
@@ -106,7 +157,7 @@ def login_page():
 
     elif st.session_state.mode == "forgot":
         st.header("🔒 استعادة كلمة المرور")
-        full_name = st.text_input("✍️ اكتب اسمك الثلاثي")
+        full_name = st.text_input("✍️ اكتب اسمك الثلاثي", key="forgot_fullname")
 
         if st.button("متابعة"):
             st.session_state.temp_fullname = full_name
@@ -119,7 +170,7 @@ def login_page():
 
     elif st.session_state.mode == "forgot_last4":
         st.subheader(f"✅ الاسم: {st.session_state.temp_fullname}")
-        last4 = st.text_input("📱 اكتب آخر 4 أرقام من رقم هاتفك")
+        last4 = st.text_input("📱 اكتب آخر 4 أرقام من رقم هاتفك", key="forgot_last4")
 
         if st.button("تحقق"):
             username = find_username_by_last4(st.session_state.temp_fullname, last4)
@@ -136,7 +187,7 @@ def login_page():
 
     elif st.session_state.mode == "reset_password":
         st.success(f"✅ اسم المستخدم: {st.session_state.found_username}")
-        new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password")
+        new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password", key="reset_new_pass")
 
         if st.button("حفظ كلمة المرور"):
             if update_password(st.session_state.found_username, new_pass):
@@ -149,3 +200,6 @@ def login_page():
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
             st.rerun()
+
+if __name__ == "__main__":
+    login_page()
