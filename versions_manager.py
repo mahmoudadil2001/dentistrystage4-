@@ -24,7 +24,7 @@ def select_version_ui(
 
         # استخدام أعمدة لوضع Checkbox يمين و Radio يسار
         for v in version_keys:
-            cols = st.sidebar.columns([1, 0.3])  # العمود الأول أكبر للراديو، الثاني أصغر للصح
+            cols = st.sidebar.columns([1, 3])  # العمود الأول أكبر للراديو، الثاني أصغر للصح
 
             # Radio لاختيار النسخة
             if cols[0].radio(
