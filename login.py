@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyliGRttMqNg3WSz3ApBSUiF1mkYp22P1Zqluc0umRzpnrL7zQD5ZrASdvdZqA8WubN/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJyx-6Izo4fuxeOq-QEtjHt6OYxbBnZ77PXR6v6LeXvCyV-e0YU1EInXbi16C-Zc8t/exec"
 
 def send_telegram_message(message):
     bot_token = "ضع_توكن_البوت"
@@ -27,7 +27,6 @@ def get_user_data(username):
     return None
 
 def add_user(username, password, full_name, group, phone):
-    # نجيب كل المستخدمين الحاليين للتحقق من التكرار
     res_all = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
     if res_all:
         lines = res_all.split("\n")
@@ -79,7 +78,7 @@ def login_page():
 
     if st.session_state.logged_in:
         st.header(f"مرحباً بك يا {st.session_state.user_full_name} في صفحة الأسئلة!")
-        st.write("هنا يمكنك وضع محتوى الأسئلة والأجوبة الخاص بك.")
+        st.write("هنا يمكنك وضع أسئلة وأجوبة المشروع أو أي محتوى آخر.")
 
         if st.button("تسجيل خروج"):
             st.session_state.logged_in = False
@@ -134,7 +133,7 @@ def login_page():
                 elif res == "FULLNAME_EXISTS":
                     st.error("❌ الاسم الكامل موجود مسبقًا، تحقق من بياناتك أو اتصل بالدعم")
                 elif res == "ADDED":
-                    st.success("✅ تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول الآن")
+                    st.success("✅ تم إنشاء الحساب بنجاح")
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
