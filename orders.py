@@ -73,14 +73,17 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
+    if not versions_dict:
+        st.error(f"⚠️ No versions found for lecture {lec_num} in subject {subject}!")
+        return
+
     user_versions = get_user_versions(username)
     sheet_name = f"{subject}_{lec_num}"
+    saved_version = user_versions.get(sheet_name, None)
 
-    saved_version_raw = user_versions.get(sheet_name, None)
-    try:
-        saved_version = int(saved_version_raw) if saved_version_raw is not None else None
-    except ValueError:
-        saved_version = None
+    # تأكد أن saved_version من النسخ الموجودة أو اختار أول نسخة
+    if saved_version not in versions_dict:
+        saved_version = list(versions_dict.keys())[0]
 
     selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=saved_version)
 
@@ -170,7 +173,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -185,7 +188,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -212,7 +215,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
@@ -249,10 +252,13 @@ def main():
             </span>
         </a>
     </div>
-    ''',
-        unsafe_allow_html=True,
-    )
 
+    <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
+        Subscribe for updates and join our community!
+    </div>
+    '''
+    , unsafe_allow_html=True
+    )
 
 if __name__ == "__main__":
     main()
