@@ -7,29 +7,19 @@ def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    data = {"chat_id": chat_id, "text": message, "parse_mode": "HTML"}
-    try:
-        requests.post(url, data=data)
-    except Exception as e:
-        st.error(f"خطأ في إرسال رسالة التليجرام: {e}")
+    requests.post(url, data={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
 
 def check_login(username, password):
-    data = {"action": "check", "username": username, "password": password}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "check", "username": username, "password": password}, timeout=120)
         return res.text.strip() == "TRUE"
-    except Exception as e:
-        st.error(f"خطأ في التحقق من تسجيل الدخول: {e}")
+    except:
         return False
 
 def get_user_data(username):
-    data = {"action": "get_user_data", "username": username}
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        text = res.text.strip()
-        if text == "NOT_FOUND":
-            return None
-        parts = text.split(",")
+        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_user_data", "username": username}, timeout=120)
+        parts = res.text.strip().split(",")
         if len(parts) == 5:
             return {
                 "username": parts[0],
@@ -38,43 +28,26 @@ def get_user_data(username):
                 "group": parts[3],
                 "phone": parts[4]
             }
-        return None
-    except Exception as e:
-        st.error(f"خطأ في جلب بيانات المستخدم: {e}")
+    except:
         return None
 
 def add_user(username, password, full_name, group, phone):
-    data = {
-        "action": "add",
-        "username": username,
-        "password": password,
-        "full_name": full_name,
-        "group": group,
-        "phone": phone
-    }
     try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
+        res = requests.post(GOOGLE_SCRIPT_URL, data={
+            "action": "add",
+            "username": username,
+            "password": password,
+            "full_name": full_name,
+            "group": group,
+            "phone": phone
+        }, timeout=120)
         return res.text.strip() == "Added"
-    except Exception as e:
-        st.error(f"خطأ في تسجيل المستخدم الجديد: {e}")
-        return False
-
-def update_password(username, full_name, new_password):
-    data = {
-        "action": "update_password",
-        "username": username,
-        "full_name": full_name,
-        "new_password": new_password
-    }
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data=data, timeout=120)
-        return res.text.strip() == "UPDATED"
-    except Exception as e:
-        st.error(f"خطأ في تحديث كلمة المرور: {e}")
+    except:
         return False
 
 def login_page():
-    st.title("تسجيل الدخول")
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    st.markdown("<h1>🔑 تسجيل الدخول</h1>", unsafe_allow_html=True)
 
     if 'show_signup' not in st.session_state:
         st.session_state['show_signup'] = False
@@ -117,18 +90,17 @@ def login_page():
             st.success("✅ تم إنشاء الحساب بنجاح، سجل دخولك الآن")
             st.session_state['signup_success'] = False
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("إنشاء حساب جديد"):
-                st.session_state['show_signup'] = True
-                st.rerun()
-        with col2:
-            if st.button("هل نسيت كلمة المرور؟"):
-                st.session_state['show_forgot'] = True
-                st.rerun()
+        st.markdown('<div class="login-links">', unsafe_allow_html=True)
+        if st.button("إنشاء حساب جديد"):
+            st.session_state['show_signup'] = True
+            st.rerun()
+        if st.button("هل نسيت كلمة المرور؟"):
+            st.session_state['show_forgot'] = True
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        st.title("إنشاء حساب جديد")
+        st.markdown("<h1>📝 إنشاء حساب جديد</h1>", unsafe_allow_html=True)
         signup_username = st.text_input("اسم المستخدم", key="signup_username")
         signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
         signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
@@ -146,50 +118,6 @@ def login_page():
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
-        if st.button("العودة لتسجيل الدخول"):
+        if st.button("🔙 العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
             st.rerun()
-
-def forgot_password_page():
-    st.title("استعادة كلمة المرور")
-
-    username = st.text_input("اسم المستخدم", key="forgot_username")
-    full_name = st.text_input("الاسم الكامل", key="forgot_full_name")
-
-    if 'password_updated' not in st.session_state:
-        st.session_state['password_updated'] = False
-
-    if st.button("عودة"):
-        st.session_state['show_forgot'] = False
-        st.session_state['allow_reset'] = False
-        st.session_state['password_updated'] = False
-        st.rerun()
-
-    if st.button("تحقق"):
-        if not username.strip() or not full_name.strip():
-            st.warning("يرجى ملء اسم المستخدم والاسم الكامل")
-            st.session_state['allow_reset'] = False
-        else:
-            user_data = get_user_data(username)
-            if user_data and user_data['full_name'].strip().lower() == full_name.strip().lower():
-                st.success("✅ تم التحقق بنجاح، أدخل كلمة مرور جديدة")
-                st.session_state['allow_reset'] = True
-            else:
-                st.error("اسم المستخدم أو الاسم الكامل غير صحيح")
-                st.session_state['allow_reset'] = False
-
-    if st.session_state.get('allow_reset', False) and not st.session_state['password_updated']:
-        new_password = st.text_input("كلمة المرور الجديدة", type="password", key="new_pass")
-        confirm_password = st.text_input("تأكيد كلمة المرور", type="password", key="confirm_pass")
-
-        if st.button("تحديث كلمة المرور"):
-            if new_password != confirm_password:
-                st.warning("كلمة المرور غير متطابقة")
-            elif update_password(username, full_name, new_password):
-                st.session_state['password_reset_message'] = "✅ تم تحديث كلمة المرور، سجل دخولك الآن"
-                st.session_state['password_updated'] = True
-                st.session_state['allow_reset'] = False
-                st.session_state['show_forgot'] = False
-                st.rerun()
-            else:
-                st.error("فشل في تحديث كلمة المرور")
