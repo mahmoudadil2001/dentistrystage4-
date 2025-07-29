@@ -5,7 +5,7 @@ import sys
 import importlib
 
 from versions_manager import get_lectures_and_versions, select_version_ui_with_checkboxes
-from versions_storage import save_user_version, get_user_versions  # تم تعديل الاسم
+from versions_storage import save_user_version, get_user_versions
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -50,7 +50,22 @@ def orders_o():
         "prosthodontics"
     ]
 
-    subject = st.selectbox("Select Subject", subjects)
+    # تحديد المادة (Subject)
+    if "current_subject" not in st.session_state:
+        st.session_state.current_subject = subjects[0]
+
+    subject = st.selectbox("Select Subject", subjects, index=subjects.index(st.session_state.current_subject))
+
+    if subject != st.session_state.current_subject:
+        st.session_state.current_subject = subject
+        # Reset lecture, version, quiz state عند تغيير المادة
+        st.session_state.pop("current_lecture", None)
+        st.session_state.pop("current_version", None)
+        st.session_state.pop("questions_count", None)
+        st.session_state.pop("current_question", None)
+        st.session_state.pop("user_answers", None)
+        st.session_state.pop("answer_shown", None)
+        st.session_state.pop("quiz_completed", None)
 
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
@@ -59,30 +74,64 @@ def orders_o():
 
     lecture_titles = load_lecture_titles(subject)
 
+    # تجهيز قائمة المحاضرات للعرض
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
         display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))
 
+    # تعيين المحاضرة الحالية في الحالة (state)
+    if "current_lecture" not in st.session_state or st.session_state.current_lecture not in lectures_versions:
+        st.session_state.current_lecture = lectures_options[0][0]
+
     lec_num = st.selectbox(
         "Select Lecture",
         options=lectures_options,
+        index=[i for i, v in enumerate(lectures_options) if v[0] == st.session_state.current_lecture][0],
         format_func=lambda x: x[1]
     )[0]
 
+    if lec_num != st.session_state.current_lecture:
+        st.session_state.current_lecture = lec_num
+        # Reset نسخة، الأسئلة، والإجابات عند تغيير المحاضرة
+        st.session_state.pop("current_version", None)
+        st.session_state.pop("questions_count", None)
+        st.session_state.pop("current_question", None)
+        st.session_state.pop("user_answers", None)
+        st.session_state.pop("answer_shown", None)
+        st.session_state.pop("quiz_completed", None)
+
     versions_dict = lectures_versions.get(lec_num, {})
 
+    # جلب النسخة المختارة سابقًا من Google Sheets (لو موجودة)
     user_versions = get_user_versions(username)
     sheet_name = f"{subject}_{lec_num}"
     saved_version = user_versions.get(sheet_name, None)
 
-    selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=saved_version)
+    # إعداد النسخة الحالية أو القيمة الافتراضية
+    if "current_version" not in st.session_state:
+        st.session_state.current_version = int(saved_version) if saved_version and saved_version.isdigit() and int(saved_version) in versions_dict else 1
 
-    if selected_version != saved_version:
+    # عرض واجهة اختيار النسخة مع checkboxes (بدون rerun ثقيل)
+    selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=st.session_state.current_version)
+
+    if selected_version != st.session_state.current_version:
+        st.session_state.current_version = selected_version
         save_user_version(username, sheet_name, selected_version)
+        # Reset الأسئلة والإجابات عند تغيير النسخة
+        st.session_state.pop("questions_count", None)
+        st.session_state.pop("current_question", None)
+        st.session_state.pop("user_answers", None)
+        st.session_state.pop("answer_shown", None)
+        st.session_state.pop("quiz_completed", None)
+        # لا تستخدم st.experimental_rerun() لتجنب إعادة تحميل ثقيل، نعتمد على إعادة بناء الواجهة الآلية
 
-    filename = versions_dict[selected_version]
+    filename = versions_dict.get(st.session_state.current_version)
+    if not filename:
+        st.error("⚠️ النسخة المختارة غير موجودة!")
+        return
+
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
 
@@ -93,11 +142,12 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # تهيئة حالة الأسئلة والإجابات في الحالة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
        (st.session_state.get("current_subject", None) != subject) or \
-       (st.session_state.get("current_version", None) != selected_version):
+       (st.session_state.get("current_version", None) != st.session_state.current_version):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -106,7 +156,7 @@ def orders_o():
         st.session_state.quiz_completed = False
         st.session_state.current_lecture = lec_num
         st.session_state.current_subject = subject
-        st.session_state.current_version = selected_version
+        st.session_state.current_version = st.session_state.current_version
 
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
@@ -165,7 +215,8 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                # لا نعيد تحميل الصفحة كاملة، فقط إعادة بناء الواجهة تلقائيًا
+                # st.experimental_rerun()  # لا حاجة هنا
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -180,7 +231,8 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                # إعادة بناء الواجهة تلقائياً بدون تحميل ثقيل
+                # st.experimental_rerun()  # لا حاجة
 
         if Links:
             st.markdown("---")
@@ -207,7 +259,8 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            # إعادة بناء الواجهة تلقائياً بدون تحميل ثقيل
+            # st.experimental_rerun()  # لا حاجة
 
 
 def main():
