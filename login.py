@@ -61,6 +61,7 @@ def login_page():
         st.header("🔑 تسجيل الدخول")
         username = st.text_input("اسم المستخدم")
         password = st.text_input("كلمة المرور", type="password")
+
         if st.button("تسجيل الدخول"):
             if check_login(username, password):
                 user = get_user_data(username)
@@ -71,9 +72,11 @@ def login_page():
 
         if st.button("إنشاء حساب جديد"):
             st.session_state.mode = "signup"
+            st.rerun()
 
         if st.button("نسيت كلمة المرور؟"):
             st.session_state.mode = "forgot"
+            st.rerun()
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
@@ -93,45 +96,56 @@ def login_page():
                 elif res == "ADDED":
                     st.success("✅ تم إنشاء الحساب بنجاح")
                     st.session_state.mode = "login"
+                    st.rerun()
                 else:
                     st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
+            st.rerun()
 
     elif st.session_state.mode == "forgot":
         st.header("🔒 استعادة كلمة المرور")
         full_name = st.text_input("✍️ اكتب اسمك الثلاثي")
+
         if st.button("متابعة"):
             st.session_state.temp_fullname = full_name
             st.session_state.mode = "forgot_last4"
+            st.rerun()
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
+            st.rerun()
 
     elif st.session_state.mode == "forgot_last4":
         st.subheader(f"✅ الاسم: {st.session_state.temp_fullname}")
         last4 = st.text_input("📱 اكتب آخر 4 أرقام من رقم هاتفك")
+
         if st.button("تحقق"):
             username = find_username_by_last4(st.session_state.temp_fullname, last4)
             if username != "NOT_FOUND":
                 st.session_state.found_username = username
                 st.session_state.mode = "reset_password"
+                st.rerun()
             else:
                 st.error("❌ البيانات غير صحيحة")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "forgot"
+            st.rerun()
 
     elif st.session_state.mode == "reset_password":
         st.success(f"✅ اسم المستخدم: {st.session_state.found_username}")
         new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password")
+
         if st.button("حفظ كلمة المرور"):
             if update_password(st.session_state.found_username, new_pass):
                 st.success("✅ تم تحديث كلمة المرور")
                 st.session_state.mode = "login"
+                st.rerun()
             else:
                 st.error("❌ فشل التحديث")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
+            st.rerun()
