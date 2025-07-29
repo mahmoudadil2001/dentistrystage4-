@@ -98,7 +98,7 @@ def forgot_password_page():
                     st.session_state['fp_step'] = 2
                     st.session_state['fp_full_name'] = full_name
                     st.session_state['fp_phone'] = phone
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("لم يتم العثور على حساب مطابق لهذه البيانات")
 
@@ -118,13 +118,13 @@ def forgot_password_page():
                     st.success("✅ تم تحديث كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول.")
                     st.session_state['fp_step'] = 1
                     st.session_state['found_username'] = None
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("حدث خطأ أثناء تحديث كلمة المرور، حاول مرة أخرى.")
 
     if st.button("🔙 العودة لتسجيل الدخول"):
         st.session_state['show_forgot'] = False
-        st.experimental_rerun()
+        st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -165,7 +165,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -182,10 +182,10 @@ def login_page():
         st.markdown('<div class="login-links">', unsafe_allow_html=True)
         if st.button("إنشاء حساب جديد"):
             st.session_state['show_signup'] = True
-            st.experimental_rerun()
+            st.rerun()
         if st.button("هل نسيت كلمة المرور؟"):
             st.session_state['show_forgot'] = True
-            st.experimental_rerun()
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     else:
@@ -203,12 +203,12 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("🔙 العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()
+            st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
