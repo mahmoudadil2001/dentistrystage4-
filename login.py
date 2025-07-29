@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbym9JKqwj0nWl2znbJoh48M_DTIBhyOLkFUo040aOijdeyssePBvoXW3qHdKLf_8lbF/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6fFL3KAjQ-0NO1FGqfwkQKfTSpGskKomUZ1n4jFHWTYyodBmoOpzKSogSdFAbmonM/exec"
 
 def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
@@ -45,7 +45,7 @@ def add_user(username, password, full_name, group, phone):
     except:
         return False
 
-def find_username(full_name, phone):
+def find_username_by_fullname_and_phone(full_name, phone):
     try:
         res = requests.post(GOOGLE_SCRIPT_URL, data={
             "action": "find_username",
@@ -53,9 +53,9 @@ def find_username(full_name, phone):
             "phone": phone
         }, timeout=120)
         username = res.text.strip()
-        if username != "NOT_FOUND":
-            return username
-        return None
+        if username == "NOT_FOUND":
+            return None
+        return username
     except:
         return None
 
@@ -71,11 +71,34 @@ def update_password(username, full_name, new_password):
     except:
         return False
 
+def mask_phone(phone):
+    # إظهار رقم الهاتف مع إخفاء آخر 4 أرقام بـ X
+    if len(phone) <= 4:
+        return "X" * len(phone)
+    return phone[:-4] + "XXXX"
+
 def login_page():
+    st.markdown(
+        """
+        <style>
+        .login-container {
+          max-width: 400px;
+          margin: 60px auto;
+          background: white;
+          padding: 25px;
+          border-radius: 15px;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+          text-align: center;
+          font-family: 'Tajawal', sans-serif;
+          color: #003049;
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
+
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown("<h1>🔑 تسجيل الدخول</h1>", unsafe_allow_html=True)
 
-    # إدارة حالات الصفحة
     if 'show_signup' not in st.session_state:
         st.session_state['show_signup'] = False
     if 'signup_success' not in st.session_state:
@@ -86,12 +109,13 @@ def login_page():
         st.session_state['forgot_step'] = 1
     if 'forgot_full_name' not in st.session_state:
         st.session_state['forgot_full_name'] = ""
-    if 'forgot_phone_last4' not in st.session_state:
-        st.session_state['forgot_phone_last4'] = ""
     if 'forgot_username' not in st.session_state:
         st.session_state['forgot_username'] = ""
-    
-    # إذا وضعنا صفحة تسجيل الدخول العادية
+    if 'forgot_phone' not in st.session_state:
+        st.session_state['forgot_phone'] = ""
+    if 'forgot_verified' not in st.session_state:
+        st.session_state['forgot_verified'] = False
+
     if not st.session_state['show_signup'] and not st.session_state['show_forgot']:
         username = st.text_input("اسم المستخدم", key="login_username")
         password = st.text_input("كلمة المرور", type="password", key="login_password")
@@ -114,7 +138,7 @@ def login_page():
                             f"رقم الهاتف: <b>{user_data['phone']}</b>"
                         )
                         send_telegram_message(message)
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("تعذر جلب بيانات المستخدم")
                 else:
@@ -131,14 +155,13 @@ def login_page():
         st.markdown('<div class="login-links">', unsafe_allow_html=True)
         if st.button("إنشاء حساب جديد"):
             st.session_state['show_signup'] = True
-            st.rerun()
+            st.experimental_rerun()
         if st.button("هل نسيت كلمة المرور؟"):
             st.session_state['show_forgot'] = True
             st.session_state['forgot_step'] = 1
-            st.rerun()
+            st.experimental_rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # صفحة إنشاء حساب جديد
     elif st.session_state['show_signup']:
         st.markdown("<h1>📝 إنشاء حساب جديد</h1>", unsafe_allow_html=True)
         signup_username = st.text_input("اسم المستخدم", key="signup_username")
@@ -154,96 +177,95 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("🔙 العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.rerun()
+            st.experimental_rerun()
 
-    # صفحة "هل نسيت كلمة المرور؟" مع الخطوات الجديدة
     elif st.session_state['show_forgot']:
-        st.markdown("<h1>🔐 هل نسيت كلمة المرور؟</h1>", unsafe_allow_html=True)
+        st.markdown("<h1>🔐 استعادة كلمة المرور</h1>", unsafe_allow_html=True)
 
         if st.session_state['forgot_step'] == 1:
-            full_name = st.text_input("اكتب اسمك الكامل (الاسم الثلاثي)", key="forgot_full_name_input")
-            if st.button("موافق"):
-                if not full_name.strip():
-                    st.warning("يرجى إدخال اسمك الكامل")
+            full_name_input = st.text_input("اكتب اسمك الثلاثي الكامل", key="forgot_full_name_input")
+
+            if st.button("موافق - تحقق من الاسم"):
+                if not full_name_input.strip():
+                    st.warning("يرجى كتابة الاسم الكامل")
                 else:
-                    st.session_state['forgot_full_name'] = full_name.strip()
+                    # ابحث عن اسم المستخدم ورقم الهاتف بناءً على الاسم الكامل
+                    # سنرسل action=find_username و phone=any (سنبحث عن الاسم فقط الآن)
+                    # في الكود جوجل سكريبت يبحث عن تطابق الاسم الكامل ورقم الهاتف معاً لذا نحتاج هنا نبحث بطريقة أخرى
+                    # فسنرسل الاسم فقط ونبحث في جوجل شيت عن أول تطابق
+                    # ولكن حسب الكود السابق لا يوجد دالة بحث عن الاسم فقط، لذلك نستخدم نفس دالة find_username لكن نمرر رقم هاتف فارغ
+                    username_found = None
+                    phone_found = None
+
+                    # لكي نتحقق من الاسم فقط مع الرقم نحتاج طلب منفصل
+                    # هنا نستخدم طلب get كامل للبيانات (غير مفعّل في الكود الحالي) لذا سنطلب من المستخدم الاسم الكامل والرقم كاملاً في خطوة 1
+                    # لتبسيط العمل، نغير طريقة الخطوتين: في خطوة 1 يكتب الاسم الكامل والرقم كاملاً
+                    # لذلك ننقل هذا إلى الخطوة 1 (تعديل هنا أدناه)
+
+                    st.session_state['forgot_full_name'] = full_name_input
                     st.session_state['forgot_step'] = 2
                     st.experimental_rerun()
 
         elif st.session_state['forgot_step'] == 2:
-            # هنا نطلب آخر 4 أرقام من رقم الهاتف
-            # لكن نحتاج نعرض إكسات للأرقام كاملة ما عدا آخر 4 أرقام
-            full_name = st.session_state['forgot_full_name']
+            st.markdown("**الآن، اكتب رقم هاتفك كاملاً للتحقق**")
+            phone_input = st.text_input("رقم الهاتف (أدخل الرقم كاملاً)", key="forgot_phone_input")
 
-            # نحاول جلب اسم المستخدم ورقم الهاتف الكامل من Google Sheet عن طريق full_name
-            # لنجعلها أكثر أمانا، نطلب من المستخدم كتابة آخر 4 أرقام من رقم الهاتف بنفسه
-            st.markdown(f"الاسم المدخل: **{full_name}**")
-            last4_input = st.text_input("اكتب آخر 4 أرقام من رقم هاتفك", max_chars=4, key="forgot_phone_last4_input")
-
-            if st.button("تحقق"):
-                # نبحث عن اسم المستخدم عبر full_name + رقم الهاتف (يجب التحقق من آخر 4 أرقام فقط)
-                # لكن API لا تدعم البحث بهذه الطريقة، فنحتاج تحميل كل البيانات أو تعديل السكريبت ليدعم ذلك
-                # الحل السهل: نبحث عن اسم المستخدم عبر full_name فقط، ثم نتحقق من رقم الهاتف من الواجهة
-
-                # أرسل طلب للبحث باسم المستخدم باستخدام full_name فقط (تحتاج تعديل السكريبت اذا تريد حسب رقم الهاتف)
-                # لكن السكريبت يدعم البحث full_name + phone كامل
-                # إذا أردت التحقق من الرقم بالكامل لازم تطلب من المستخدم كتابة الرقم كامل لكنك تريد آخر 4 أرقام فقط
-                # الحل: جلب اسم المستخدم ثم جلب بياناته ومقارنة آخر 4 أرقام
-
-                # أولاً نبحث عن اسم المستخدم عبر full_name مع رقم الهاتف = "" مؤقتاً (ليجد الاسم فقط)
-                # لكن السكريبت لا يدعم هذا، لذلك سنجرب نمرر full_name مع phone=last4_input ونتحقق يدوياً
-
-                # سنجرب استدعاء find_username مع full_name والرقم الكامل - لكن الرقم الكامل غير متوفر. لذا سنقوم بتعديل هنا:
-                # بدل أن نستخدم find_username، نستخدم get_user_data لكل المستخدمين ونتحقق من الاسم الثلاثي والرقم
-                # لكن لا يمكن لأن API لا ترجع جميع البيانات دفعة واحدة.
-
-                # الحل الأفضل: نطلب من المستخدم كتابة رقم الهاتف كاملاً (أو نطلب منه رقم الهاتف كاملاً من البداية)
-
-                # هنا أبسط حل هو أن تطلب من المستخدم إدخال رقم الهاتف كاملاً بدلاً من آخر 4 أرقام
-
-                st.warning("التحقق من آخر 4 أرقام غير مفعّل بعد، يرجى إدخال رقم الهاتف كامل")
-
-            if st.button("عودة"):
-                st.session_state['forgot_step'] = 1
-                st.experimental_rerun()
-
-        elif st.session_state['forgot_step'] == 3:
-            # يظهر اسم المستخدم ويطلب كلمة سر جديدة
-            username = st.session_state.get('forgot_username', '')
-            st.markdown(f"اسم المستخدم المرتبط: **{username}**")
-
-            new_password = st.text_input("اكتب كلمة المرور الجديدة", type="password", key="forgot_new_password")
-
-            if st.button("تغيير كلمة السر"):
-                full_name = st.session_state['forgot_full_name']
-                if not new_password.strip():
-                    st.warning("يرجى إدخال كلمة المرور الجديدة")
+            if st.button("تحقق من الاسم والرقم"):
+                if not phone_input.strip():
+                    st.warning("يرجى كتابة رقم الهاتف كاملاً")
                 else:
-                    updated = update_password(username, full_name, new_password.strip())
-                    if updated:
-                        st.success("✅ تم تحديث كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول بالكلمة الجديدة")
-                        # إعادة تعيين الحالة
-                        st.session_state['show_forgot'] = False
-                        st.session_state['forgot_step'] = 1
-                        st.session_state['forgot_full_name'] = ""
-                        st.session_state['forgot_phone_last4'] = ""
-                        st.session_state['forgot_username'] = ""
-                        st.session_state['forgot_new_password'] = ""
-                        st.session_state['password_reset_message'] = "✅ تم تغيير كلمة المرور بنجاح!"
+                    username_found = find_username_by_fullname_and_phone(st.session_state['forgot_full_name'], phone_input.strip())
+                    if username_found:
+                        st.session_state['forgot_username'] = username_found
+                        st.session_state['forgot_phone'] = phone_input.strip()
+                        st.session_state['forgot_step'] = 3
                         st.experimental_rerun()
                     else:
-                        st.error("فشل في تحديث كلمة المرور. يرجى المحاولة لاحقاً.")
+                        st.error("لا يوجد حساب مرتبط بهذا الاسم ورقم الهاتف")
 
-            if st.button("عودة"):
-                st.session_state['show_forgot'] = False
-                st.session_state['forgot_step'] = 1
-                st.experimental_rerun()
+        elif st.session_state['forgot_step'] == 3:
+            # عرض رقم الهاتف مع إخفاء آخر 4 أرقام بـ X
+            masked_phone = mask_phone(st.session_state['forgot_phone'])
+            st.markdown(f"رقم هاتفك المسجل هو: {masked_phone}")
+            last_4_input = st.text_input("يرجى كتابة آخر 4 أرقام من رقم هاتفك للتحقق", max_chars=4)
 
-if __name__ == "__main__":
-    login_page()
+            if st.button("تحقق من آخر 4 أرقام"):
+                if not last_4_input.strip():
+                    st.warning("يرجى كتابة آخر 4 أرقام من رقم هاتفك")
+                elif last_4_input.strip() != st.session_state['forgot_phone'][-4:]:
+                    st.error("آخر 4 أرقام غير صحيحة. يرجى المحاولة مجدداً.")
+                else:
+                    st.session_state['forgot_verified'] = True
+                    st.experimental_rerun()
+
+            if st.session_state['forgot_verified']:
+                new_password = st.text_input("اكتب كلمة سر جديدة", type="password")
+                if st.button("تغيير كلمة السر"):
+                    if not new_password.strip():
+                        st.warning("يرجى كتابة كلمة السر الجديدة")
+                    else:
+                        updated = update_password(st.session_state['forgot_username'], st.session_state['forgot_full_name'], new_password.strip())
+                        if updated:
+                            st.success("تم تغيير كلمة السر بنجاح. يمكنك الآن تسجيل الدخول بكلمة السر الجديدة.")
+                            # إعادة تعيين متغيرات نسيت كلمة السر
+                            st.session_state['show_forgot'] = False
+                            st.session_state['forgot_step'] = 1
+                            st.session_state['forgot_full_name'] = ""
+                            st.session_state['forgot_username'] = ""
+                            st.session_state['forgot_phone'] = ""
+                            st.session_state['forgot_verified'] = False
+                        else:
+                            st.error("حدث خطأ أثناء تغيير كلمة السر. حاول مرة أخرى.")
+
+        if st.button("🔙 العودة لتسجيل الدخول"):
+            st.session_state['show_forgot'] = False
+            st.session_state['forgot_step'] = 1
+            st.experimental_rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
