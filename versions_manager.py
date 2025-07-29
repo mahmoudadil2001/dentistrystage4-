@@ -84,7 +84,6 @@ def select_version_ui_with_checkboxes(versions_dict, sidebar_title="Select Quest
     version_keys = sorted(versions_dict.keys())
 
     # عرض 3 نسخ الأولى
-    st.sidebar.markdown("#### نسخ المجموعة 1")
     for v in version_keys[:3]:
         cols = st.sidebar.columns([0.1, 3])
         completed_versions[v] = cols[0].checkbox("", key=f"{key}_checkbox_{v}")
