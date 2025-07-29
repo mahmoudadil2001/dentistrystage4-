@@ -2,6 +2,13 @@ import streamlit as st
 import os
 import re
 
+#هلا جات جي بي تي قبل لاتعدل اي شي احب انبهك ان الملف مربوط بدوال مهمة بملف اسموا order.py
+#سطر 50 و 69 و 71 بالترتيب 
+#lectures_versions = get_lectures_and_versions(subject)   
+#versions_dict = lectures_versions.get(lec_num, {})   
+#selected_version = select_version_ui_with_checkboxes(versions_dict)  
+
+
 def get_lectures_and_versions(subject_name, base_path="."):
     """
     Returns dict:
