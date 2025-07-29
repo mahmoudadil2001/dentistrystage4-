@@ -1,44 +1,37 @@
 import requests
 
-# ضع هنا رابط سكربت Google Apps Script
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGxzNfgsJhN8x_W-IgtaL98KTUGIulaYHgr9SQHgFPoIz3PSSMmX5PZin_J_-iKqRV/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0Y1Iq0incLLHdMAQUDWOp2qRXivZthdfLYEusIXZUEgCltNvxjuIRSaK4M2WUlfwK/exec"
 
-def save_version_to_sheet(username, sheet_name, selected_version):
-    """
-    يحفظ النسخة المحددة للمستخدم في شيت Google
-    """
-    data = {
+def save_user_version(username, sheet_name, selected_version):
+    payload = {
         "action": "save_version",
         "username": username,
         "sheet_name": sheet_name,
         "selected_version": selected_version
     }
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, data=data)
-        return r.text.strip()
-    except Exception as e:
-        return f"ERROR: {e}"
+        response = requests.post(GOOGLE_SCRIPT_URL, data=payload)
+        return response.text
+    except requests.exceptions.RequestException as e:
+        return f"ERROR: {str(e)}"
 
 def get_user_versions(username):
-    """
-    يجلب جميع النسخ التي حددها المستخدم سابقًا
-    """
-    data = {
+    payload = {
         "action": "get_user_versions",
         "username": username
     }
     try:
-        r = requests.post(GOOGLE_SCRIPT_URL, data=data)
-        if r.text.strip() == "":
+        response = requests.post(GOOGLE_SCRIPT_URL, data=payload)
+        text = response.text.strip()
+        if not text:
             return {}
-        
-        result = {}
-        rows = r.text.strip().split("\n")
-        for row in rows:
-            parts = row.split(",")
+        lines = text.split("\n")
+        versions = {}
+        for line in lines:
+            parts = line.split(",")
             if len(parts) == 2:
                 sheet_name, version = parts
-                result[sheet_name] = version
-        return result
-    except Exception as e:
+                versions[sheet_name] = version
+        return versions
+    except requests.exceptions.RequestException as e:
         return {}
