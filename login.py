@@ -7,7 +7,10 @@ def send_telegram_message(message):
     bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
     chat_id = "6283768537"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
+    try:
+        requests.post(url, data={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
+    except:
+        pass
 
 def check_login(username, password):
     try:
@@ -45,88 +48,88 @@ def add_user(username, password, full_name, group, phone):
     except:
         return False
 
-def find_username_by_fullname_and_phone(full_name, phone):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={
-            "action": "find_username",
-            "full_name": full_name,
-            "phone": phone
-        }, timeout=120)
-        username = res.text.strip()
-        if username and username != "NOT_FOUND":
-            return username
-        return None
-    except:
-        return None
-
-def update_password(username, full_name, new_password):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={
-            "action": "update_password",
-            "username": username,
-            "full_name": full_name,
-            "new_password": new_password
-        }, timeout=120)
-        return res.text.strip() == "UPDATED"
-    except:
-        return False
-
-def forgot_password_page():
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    st.markdown("<h1>🔒 استعادة كلمة المرور</h1>", unsafe_allow_html=True)
+def forgot_password_flow():
+    st.header("هل نسيت كلمة المرور؟")
 
     if 'fp_step' not in st.session_state:
         st.session_state['fp_step'] = 1
-    if 'found_username' not in st.session_state:
-        st.session_state['found_username'] = None
-    if 'fp_full_name' not in st.session_state:
-        st.session_state['fp_full_name'] = ""
-    if 'fp_phone' not in st.session_state:
-        st.session_state['fp_phone'] = ""
+        st.session_state['fp_user'] = None
 
     if st.session_state['fp_step'] == 1:
-        full_name = st.text_input("أدخل اسمك الثلاثي الكامل", key="fp_full_name")
-        phone = st.text_input("أدخل رقم هاتفك", key="fp_phone")
-
-        if st.button("تحقق من البيانات"):
-            if not full_name or not phone:
-                st.warning("يرجى ملء الاسم الثلاثي ورقم الهاتف")
+        full_name = st.text_input("أدخل اسمك الكامل:")
+        if st.button("موافق"):
+            if not full_name.strip():
+                st.warning("الرجاء إدخال الاسم الكامل")
             else:
-                username = find_username_by_fullname_and_phone(full_name, phone)
-                if username:
-                    st.session_state['found_username'] = username
-                    st.session_state['fp_step'] = 2
-                    st.session_state['fp_full_name'] = full_name
-                    st.session_state['fp_phone'] = phone
-                    st.rerun()
-                else:
-                    st.error("لم يتم العثور على حساب مطابق لهذه البيانات")
+                try:
+                    res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "find_by_fullname", "full_name": full_name.strip()}, timeout=120)
+                    data = res.text.strip()
+                    if data == "NOT_FOUND":
+                        st.error("لم يتم العثور على اسمك الكامل في النظام.")
+                    else:
+                        parts = data.split(",")
+                        if len(parts) == 5:
+                            st.session_state['fp_user'] = {
+                                "username": parts[0],
+                                "full_name": parts[2],
+                                "phone": parts[4]
+                            }
+                            st.session_state['fp_step'] = 2
+                            st.rerun()
+                        else:
+                            st.error("حدث خطأ في البيانات المسترجعة.")
+                except Exception:
+                    st.error("خطأ في الاتصال، حاول مرة أخرى.")
 
     elif st.session_state['fp_step'] == 2:
-        st.markdown(f"اسم المستخدم المرتبط ببياناتك هو: **{st.session_state['found_username']}**")
-        new_password = st.text_input("أدخل كلمة المرور الجديدة", type="password", key="fp_new_password")
-        new_password_confirm = st.text_input("أعد إدخال كلمة المرور الجديدة", type="password", key="fp_new_password_confirm")
+        user = st.session_state['fp_user']
+        phone = user['phone']
+        if len(phone) > 4:
+            masked_phone = "X" * (len(phone) - 4) + phone[-4:]
+        else:
+            masked_phone = phone
 
-        if st.button("تحديث كلمة المرور"):
-            if not new_password or not new_password_confirm:
-                st.warning("يرجى إدخال كلمة المرور الجديدة مرتين")
-            elif new_password != new_password_confirm:
-                st.error("كلمتا المرور غير متطابقتين")
+        st.write(f"رقم هاتفك المسجل: {masked_phone}")
+        last4_input = st.text_input("الرجاء كتابة آخر 4 أرقام من رقم هاتفك للتحقق:")
+
+        if st.button("تحقق"):
+            if len(last4_input) != 4 or not last4_input.isdigit():
+                st.warning("الرجاء إدخال آخر 4 أرقام بشكل صحيح.")
             else:
-                updated = update_password(st.session_state['found_username'], st.session_state['fp_full_name'], new_password)
-                if updated:
-                    st.success("✅ تم تحديث كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول.")
-                    st.session_state['fp_step'] = 1
-                    st.session_state['found_username'] = None
+                if phone.endswith(last4_input):
+                    st.session_state['fp_step'] = 3
                     st.rerun()
                 else:
-                    st.error("حدث خطأ أثناء تحديث كلمة المرور، حاول مرة أخرى.")
+                    st.error("الأرقام التي أدخلتها لا تتطابق مع رقم هاتفك.")
 
-    if st.button("🔙 العودة لتسجيل الدخول"):
-        st.session_state['show_forgot'] = False
-        st.rerun()
+    elif st.session_state['fp_step'] == 3:
+        user = st.session_state['fp_user']
+        st.write(f"اسم المستخدم الخاص بك هو: **{user['username']}**")
+        new_password = st.text_input("أدخل كلمة المرور الجديدة:", type="password")
+        new_password_confirm = st.text_input("أعد إدخال كلمة المرور الجديدة:", type="password")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("تغيير كلمة المرور"):
+            if not new_password or not new_password_confirm:
+                st.warning("يرجى إدخال كلمة المرور الجديدة مرتين.")
+            elif new_password != new_password_confirm:
+                st.error("كلمتا المرور غير متطابقتين.")
+            else:
+                try:
+                    res = requests.post(GOOGLE_SCRIPT_URL, data={
+                        "action": "update_password",
+                        "username": user['username'],
+                        "full_name": user['full_name'],
+                        "new_password": new_password
+                    }, timeout=120)
+                    result = res.text.strip()
+                    if result == "UPDATED":
+                        st.success("تم تغيير كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول.")
+                        st.session_state['fp_step'] = 1
+                        st.session_state['fp_user'] = None
+                    else:
+                        st.error("حدث خطأ أثناء تغيير كلمة المرور، حاول مرة أخرى.")
+                except Exception:
+                    st.error("خطأ في الاتصال، حاول مرة أخرى.")
 
 def login_page():
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
@@ -139,11 +142,7 @@ def login_page():
     if 'show_forgot' not in st.session_state:
         st.session_state['show_forgot'] = False
 
-    if st.session_state['show_forgot']:
-        forgot_password_page()
-        return
-
-    if not st.session_state['show_signup']:
+    if not st.session_state['show_signup'] and not st.session_state['show_forgot']:
         username = st.text_input("اسم المستخدم", key="login_username")
         password = st.text_input("كلمة المرور", type="password", key="login_password")
 
@@ -188,7 +187,7 @@ def login_page():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    else:
+    elif st.session_state['show_signup']:
         st.markdown("<h1>📝 إنشاء حساب جديد</h1>", unsafe_allow_html=True)
         signup_username = st.text_input("اسم المستخدم", key="signup_username")
         signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
@@ -210,5 +209,8 @@ def login_page():
         if st.button("🔙 العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
             st.rerun()
+
+    elif st.session_state['show_forgot']:
+        forgot_password_flow()
 
     st.markdown('</div>', unsafe_allow_html=True)
