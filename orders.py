@@ -5,7 +5,7 @@ import sys
 import importlib
 
 from versions_manager import get_lectures_and_versions, select_version_ui_with_checkboxes
-
+from versions_storage import save_version_to_sheet, get_user_versions  # استدعاء دوال النسخ
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -32,6 +32,12 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
+    # افترض أن اسم المستخدم موجود في session_state من تسجيل الدخول أو إدخال سابق
+    username = st.session_state.get("username", None)
+    if username is None:
+        st.warning("Please login or set your username first.")
+        return
+
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -68,7 +74,18 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    selected_version = select_version_ui_with_checkboxes(versions_dict)
+    # استرجع النسخة المحفوظة مسبقًا لهذا المستخدم والموضوع (المادة + المحاضرة)
+    user_versions = get_user_versions(username)
+    # المفتاح للحفظ يكون اسم الشيت بناء على الموضوع + المحاضرة مثلاً
+    sheet_name = f"{subject}_{lec_num}"
+    saved_version = user_versions.get(sheet_name, None)
+
+    # إذا وجد نسخة محفوظة نستخدمها كاختيار افتراضي
+    selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=saved_version)
+
+    # احفظ النسخة التي اختارها المستخدم تلقائيًا عند كل تغيير
+    if selected_version != saved_version:
+        save_version_to_sheet(username, sheet_name, selected_version)
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
