@@ -177,8 +177,6 @@ def login_page():
                     st.session_state.signup_phone = ""
                     st.session_state.mode = "login"
                     st.rerun()
-                else:
-                    st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
