@@ -5,7 +5,7 @@ import sys
 import importlib
 
 from versions_manager import get_lectures_and_versions, select_version_ui_with_checkboxes
-from versions_storage import save_user_version, get_user_versions  # تم تعديل الاسم
+
 
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -32,11 +32,6 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
-    username = st.session_state.get("user_name", None)
-    if username is None:
-        st.warning("Please login or set your username first.")
-        return
-
     subjects = [
         "endodontics",
         "generalmedicine",
@@ -72,27 +67,8 @@ def orders_o():
     )[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
-    if not versions_dict:
-        st.error(f"⚠️ No versions found for lecture {lec_num}!")
-        return
 
-    user_versions = get_user_versions(username)
-    sheet_name = f"{subject}_{lec_num}"
-
-    saved_version_raw = user_versions.get(sheet_name, None)
-    try:
-        saved_version = int(saved_version_raw)
-    except (ValueError, TypeError):
-        saved_version = None
-
-    # تحقق أن saved_version ضمن مفاتيح versions_dict وإلا عين النسخة الأولى
-    if saved_version not in versions_dict:
-        saved_version = sorted(versions_dict.keys())[0]
-
-    selected_version = select_version_ui_with_checkboxes(versions_dict, default_version=saved_version)
-
-    if selected_version != saved_version:
-        save_user_version(username, sheet_name, selected_version)
+    selected_version = select_version_ui_with_checkboxes(versions_dict)
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -177,7 +153,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -192,7 +168,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
         if Links:
             st.markdown("---")
@@ -219,7 +195,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
 
 
 def main():
@@ -263,3 +239,7 @@ def main():
     '''
     , unsafe_allow_html=True
     )
+
+
+if __name__ == "__main__":
+    main()
