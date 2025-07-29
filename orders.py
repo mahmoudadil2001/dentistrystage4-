@@ -8,7 +8,7 @@ from versions_manager import get_lectures_and_versions, select_version_ui_with_c
 
 
 def load_lecture_titles(subject_name):
-    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")  # ملاحظة: 'edit' بحروف صغيرة
+    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
     if not os.path.exists(titles_file):
         return {}
 
@@ -16,7 +16,6 @@ def load_lecture_titles(subject_name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    # تفادي الكاش
     if f"{subject_name}_titles" in sys.modules:
         importlib.reload(sys.modules[f"{subject_name}_titles"])
 
@@ -53,7 +52,6 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
@@ -70,7 +68,6 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    # استخدم الدالة الجديدة لواجهة اختيار النسخة مع checkboxes
     selected_version = select_version_ui_with_checkboxes(versions_dict)
 
     filename = versions_dict[selected_version]
@@ -84,7 +81,6 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # إعادة تهيئة حالة الأسئلة إذا تغيرت المحاضرة أو النسخة أو الموضوع
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -124,7 +120,12 @@ def orders_o():
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
 
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
@@ -152,7 +153,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -167,7 +168,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
         if Links:
             st.markdown("---")
@@ -194,7 +195,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
 
 
 def main():
@@ -214,11 +215,13 @@ def main():
         ">
         Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
         </div>
-        """
-    , unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
     orders_o()
 
-    st.markdown('''
+    st.markdown(
+        '''
     <div style="display:flex; justify-content:center; margin-top:50px;">
         <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
             Telegram Channel
@@ -233,7 +236,10 @@ def main():
     <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
         Subscribe to the Telegram channel to get all updates and new lectures I will upload here, God willing.
     </div>
-    ''', unsafe_allow_html=True)
+    '''
+    , unsafe_allow_html=True
+    )
+
 
 if __name__ == "__main__":
     main()
