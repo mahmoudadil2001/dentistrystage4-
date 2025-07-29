@@ -1,135 +1,142 @@
 import streamlit as st
 import requests
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWrMPa814AWJL5j93LtQaiszWLgdcwTmognCPML0MTofTin-RSt_hl1jq97TpdX-fZ/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbwNxvRTvClnSlcZ1iRu6jMydObLrUo_ylaVwSFAFNMMvM71RKi1edi53jT_Teb9siDJ/exec"
+# إعداد الصفحة
+st.set_page_config(page_title="تسجيل الدخول", page_icon="🔑", layout="centered")
 
-def send_telegram_message(message):
-    bot_token = "8165532786:AAHYiNEgO8k1TDz5WNtXmPHNruQM15LIgD4"
-    chat_id = "6283768537"
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, data={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
+# 🎨 تصميم CSS للباقات
+st.markdown("""
+    <style>
+    .card {
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        width: 400px;
+        margin: auto;
+    }
+    .title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        color: #333333;
+        margin-bottom: 20px;
+    }
+    .stButton>button {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 18px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-def check_login(username, password):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "check", "username": username, "password": password}, timeout=120)
-        return res.text.strip() == "TRUE"
-    except:
-        return False
+st.markdown("<div class='title'>🔐 نظام تسجيل الدخول</div>", unsafe_allow_html=True)
 
-def check_username_exists(username):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "check_username", "username": username}, timeout=30)
-        return res.text.strip() == "EXISTS"
-    except:
-        return False
+option = st.radio("اختر الإجراء:", ["تسجيل الدخول", "إنشاء حساب", "نسيت كلمة السر"])
 
-def get_user_data(username):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_user_data", "username": username}, timeout=120)
-        parts = res.text.strip().split(",")
-        if len(parts) == 5:
-            return {
-                "username": parts[0],
-                "password": parts[1],
-                "full_name": parts[2],
-                "group": parts[3],
-                "phone": parts[4]
-            }
-    except:
-        return None
-
-def add_user(username, password, full_name, group, phone):
-    try:
-        res = requests.post(GOOGLE_SCRIPT_URL, data={
-            "action": "add",
-            "username": username,
-            "password": password,
-            "full_name": full_name,
-            "group": group,
-            "phone": phone
-        }, timeout=120)
-        return res.text.strip() == "Added"
-    except:
-        return False
-
-def login_page():
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    st.markdown("<h1>🔑 تسجيل الدخول</h1>", unsafe_allow_html=True)
-
-    if 'show_signup' not in st.session_state:
-        st.session_state['show_signup'] = False
-    if 'signup_success' not in st.session_state:
-        st.session_state['signup_success'] = False
-
-    if not st.session_state['show_signup']:
-        username = st.text_input("اسم المستخدم", key="login_username")
-        password = st.text_input("كلمة المرور", type="password", key="login_password")
-
-        if st.button("دخول"):
-            if not username or not password:
-                st.warning("يرجى ملء جميع الحقول")
+# 🟢 تسجيل الدخول
+if option == "تسجيل الدخول":
+    with st.container():
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        username = st.text_input("👤 اسم المستخدم")
+        password = st.text_input("🔑 كلمة المرور", type="password")
+        if st.button("تسجيل الدخول"):
+            res = requests.post(API_URL, data={"action": "check", "username": username, "password": password})
+            if res.text == "TRUE":
+                st.success("✅ تم تسجيل الدخول بنجاح")
             else:
-                if check_login(username, password):
-                    user_data = get_user_data(username)
-                    if user_data:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_name'] = user_data['username']
-                        message = (
-                            f"🔑 تم تسجيل دخول المستخدم:\n"
-                            f"اسم المستخدم: <b>{user_data['username']}</b>\n"
-                            f"كلمة المرور: <b>{user_data['password']}</b>\n"
-                            f"الاسم الكامل: <b>{user_data['full_name']}</b>\n"
-                            f"الجروب: <b>{user_data['group']}</b>\n"
-                            f"رقم الهاتف: <b>{user_data['phone']}</b>"
-                        )
-                        send_telegram_message(message)
-                        st.rerun()
-                    else:
-                        st.error("تعذر جلب بيانات المستخدم")
-                else:
-                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+                st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        if st.session_state.get('password_reset_message'):
-            st.success(st.session_state['password_reset_message'])
-            st.session_state['password_reset_message'] = None
-
-        if st.session_state['signup_success']:
-            st.success("✅ تم إنشاء الحساب بنجاح، سجل دخولك الآن")
-            st.session_state['signup_success'] = False
-
-        st.markdown('<div class="login-links">', unsafe_allow_html=True)
-        if st.button("إنشاء حساب جديد"):
-            st.session_state['show_signup'] = True
-            st.rerun()
-        if st.button("هل نسيت كلمة المرور؟"):
-            st.session_state['show_forgot'] = True
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    else:
-        st.markdown("<h1>📝 إنشاء حساب جديد</h1>", unsafe_allow_html=True)
-        signup_username = st.text_input("اسم المستخدم", key="signup_username")
-        signup_password = st.text_input("كلمة المرور", type="password", key="signup_password")
-        signup_full_name = st.text_input("الاسم الكامل", key="signup_full_name")
-        signup_group = st.text_input("الجروب", key="signup_group")
-        signup_phone = st.text_input("رقم الهاتف", key="signup_phone")
-
-        if st.button("تسجيل"):
-            if not signup_username or not signup_password or not signup_full_name or not signup_group or not signup_phone:
-                st.warning("يرجى ملء جميع الحقول")
+# 🟡 إنشاء حساب
+elif option == "إنشاء حساب":
+    with st.container():
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        new_username = st.text_input("👤 اسم المستخدم الجديد")
+        new_password = st.text_input("🔑 كلمة المرور", type="password")
+        full_name = st.text_input("📛 الاسم الثلاثي الكامل")
+        group = st.text_input("🏫 المجموعة")
+        phone = st.text_input("📱 رقم الهاتف")
+        
+        if st.button("إنشاء الحساب"):
+            res = requests.post(API_URL, data={
+                "action": "add",
+                "username": new_username,
+                "password": new_password,
+                "full_name": full_name,
+                "group": group,
+                "phone": phone
+            })
+            if res.text == "USERNAME_EXISTS":
+                st.error("⚠️ هذا الاسم مستخدم مسبقًا، اختر اسمًا آخر")
+            elif res.text == "ADDED":
+                st.success("✅ تم إنشاء الحساب بنجاح")
             else:
-                if check_username_exists(signup_username):
-                    st.error("حبيبي، اسم المستخدم هذا موجود، اكتب اسم مستخدم غيره")
+                st.error("❌ حدث خطأ")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# 🔵 نسيت كلمة السر (بخطوتين)
+elif option == "نسيت كلمة السر":
+    step = st.session_state.get("step", 1)
+
+    # 🟢 الخطوة 1: إدخال الاسم الثلاثي
+    if step == 1:
+        with st.container():
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            full_name = st.text_input("📛 أدخل اسمك الثلاثي الكامل")
+            if st.button("بحث"):
+                res = requests.post(API_URL, data={"action": "find_username", "full_name": full_name})
+                if res.text.startswith("FOUND"):
+                    _, masked_phone, found_username = res.text.split(",")
+                    st.session_state["step"] = 2
+                    st.session_state["full_name"] = full_name
+                    st.session_state["masked_phone"] = masked_phone
+                    st.session_state["found_username"] = found_username
+                    st.rerun()
                 else:
-                    if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
-                        st.session_state['show_signup'] = False
-                        st.session_state['signup_success'] = True
-                        st.rerun()
-                    else:
-                        st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
+                    st.error("❌ لم يتم العثور على مستخدم بهذا الاسم")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        if st.button("🔙 العودة لتسجيل الدخول"):
-            st.session_state['show_signup'] = False
-            st.rerun()
+    # 🟢 الخطوة 2: إدخال آخر 4 أرقام
+    elif step == 2:
+        with st.container():
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.info(f"📞 رقم هاتفك: {st.session_state['masked_phone']}")
+            last4 = st.text_input("✍️ أدخل آخر 4 أرقام من رقم هاتفك")
+            if st.button("تحقق"):
+                res = requests.post(API_URL, data={
+                    "action": "verify_last4",
+                    "full_name": st.session_state["full_name"],
+                    "last4": last4
+                })
+                if res.text.startswith("VERIFIED"):
+                    _, username = res.text.split(",")
+                    st.session_state["step"] = 3
+                    st.session_state["username"] = username
+                    st.rerun()
+                else:
+                    st.error("❌ الأرقام غير صحيحة")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 🟢 الخطوة 3: إظهار اسم المستخدم وتغيير كلمة المرور
+    elif step == 3:
+        with st.container():
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.success(f"✅ تم التحقق! اسم المستخدم الخاص بك هو: {st.session_state['username']}")
+            new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password")
+            if st.button("تغيير كلمة المرور"):
+                res = requests.post(API_URL, data={
+                    "action": "update_password",
+                    "username": st.session_state["username"],
+                    "new_password": new_pass
+                })
+                if res.text == "UPDATED":
+                    st.success("✅ تم تحديث كلمة المرور بنجاح!")
+                    st.session_state["step"] = 1
+                else:
+                    st.error("⚠️ حدث خطأ")
+            st.markdown("</div>", unsafe_allow_html=True)
