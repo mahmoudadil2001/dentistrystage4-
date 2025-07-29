@@ -69,7 +69,7 @@ def update_password(username, new_password):
 
 def validate_iraqi_phone(phone):
     pattern = re.compile(
-        r"^(?:"
+        r"^(?:"  
         r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"       # محلي 10 أرقام
         r"|"
         r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"   # مع +
@@ -82,24 +82,29 @@ def validate_iraqi_phone(phone):
     return bool(pattern.match(phone))
 
 def validate_username(username):
-    # اسم المستخدم يجب أن يكون كلمة واحدة إنجليزية فقط ولا يزيد عن 10 أحرف
+    # اسم المستخدم كلمة واحدة (لا تحتوي على فراغات) من حروف، أرقام، أو رموز إنجليزية، ولا تزيد عن 10 أحرف
     if not username:
         return False
     if len(username) > 10:
         return False
-    if not re.fullmatch(r"[A-Za-z]+", username):
+    # يسمح بأي حرف انجليزي أو رقم أو رموز محددة (مثل _ - .) بدون فراغات
+    # يمكن تعديل هذه الصيغة لتسمح برموز أخرى حسب الحاجة
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", username):
         return False
     return True
 
 def validate_full_name(full_name):
-    # الاسم الكامل يجب أن يحتوي على 3 كلمات بالضبط، كل كلمة لا تزيد عن 10 أحرف
+    # الاسم الكامل 3 كلمات بالضبط، كل كلمة بالعربي (يوجد حروف عربية فقط)، كل كلمة لا تزيد عن 10 أحرف
     if not full_name:
         return False
     words = full_name.strip().split()
     if len(words) != 3:
         return False
+    arabic_pattern = re.compile(r"^[\u0600-\u06FF]+$")  # حروف عربية فقط
     for w in words:
         if len(w) > 10:
+            return False
+        if not arabic_pattern.match(w):
             return False
     return True
 
@@ -154,9 +159,9 @@ def login_page():
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم (إنجليزي)", key="signup_username")
+        u = st.text_input("اسم المستخدم", key="signup_username")
         p = st.text_input("كلمة المرور", type="password", key="signup_password")
-        f = st.text_input("الاسم الكامل (3 كلمات)", key="signup_full_name")
+        f = st.text_input("الاسم الثلاثي (بالعربي)", key="signup_full_name")
         g = st.text_input("الجروب", key="signup_group")
         ph = st.text_input("رقم الهاتف", key="signup_phone")
 
@@ -165,9 +170,9 @@ def login_page():
                 st.warning("❗ يرجى ملء جميع الحقول")
             else:
                 if not validate_username(u):
-                    st.error("❌ اسم المستخدم غير صالح. يجب أن يكون كلمة إنجليزية واحدة فقط ولا يزيد عن 10 أحرف")
+                    st.error("❌ اسم المستخدم غير صالح. كلمة واحدة (أحرف، أرقام، رموز)، حتى 10 أحرف، بدون فراغات")
                 elif not validate_full_name(f):
-                    st.error("❌ الاسم الكامل غير صالح. يجب أن يحتوي على 3 كلمات بالضبط، وكل كلمة لا تزيد عن 10 أحرف")
+                    st.error("❌ الاسم الكامل غير صالح. يجب أن يحتوي على 3 كلمات عربية، كل كلمة لا تزيد عن 10 أحرف")
                 elif not validate_iraqi_phone(ph):
                     st.error("❌ رقم الهاتف غير صالح. الرجاء إدخاله بالشكل الصحيح (مثال: 07701234567 أو +9647701234567).")
                 else:
@@ -222,33 +227,4 @@ def login_page():
         last4 = st.text_input("📱 اكتب آخر 4 أرقام من رقم هاتفك", key="forgot_last4")
 
         if st.button("تحقق"):
-            username = find_username_by_last4(st.session_state.temp_fullname, last4)
-            if username != "NOT_FOUND":
-                st.session_state.found_username = username
-                st.session_state.mode = "reset_password"
-                st.rerun()
-            else:
-                st.error("❌ البيانات غير صحيحة")
-
-        if st.button("🔙 رجوع"):
-            st.session_state.mode = "forgot"
-            st.rerun()
-
-    elif st.session_state.mode == "reset_password":
-        st.success(f"✅ اسم المستخدم: {st.session_state.found_username}")
-        new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password", key="reset_new_pass")
-
-        if st.button("حفظ كلمة المرور"):
-            if update_password(st.session_state.found_username, new_pass):
-                st.success("✅ تم تحديث كلمة المرور")
-                st.session_state.mode = "login"
-                st.rerun()
-            else:
-                st.error("❌ فشل التحديث")
-
-        if st.button("🔙 رجوع"):
-            st.session_state.mode = "login"
-            st.rerun()
-
-if __name__ == "__main__":
-    login_page()
+            username
