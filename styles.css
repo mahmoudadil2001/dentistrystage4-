@@ -7,17 +7,6 @@ body {
   padding: 0;
 }
 
-/* 🎯 صندوق تسجيل الدخول */
-.login-container {
-  max-width: 400px;
-  margin: 60px auto;
-  background: white;
-  padding: 25px;
-  border-radius: 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  text-align: center;
-}
-
 /* 🔹 العنوان */
 .login-container h1 {
   font-size: 28px;
