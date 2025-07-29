@@ -9,7 +9,7 @@ def select_version_ui(
     key="version_select"
 ):
     """
-    واجهة اختيار النسخة في الشريط الجانبي مع Checkbox أمام كل نسخة.
+    واجهة اختيار النسخة في الشريط الجانبي مع Checkbox على اليمين و Radio على اليسار.
     ترجع:
     selected_version → النسخة المختارة
     completed_versions → حالة كل Checkbox
@@ -22,30 +22,24 @@ def select_version_ui(
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
 
-        # نستخدم Radio يدوي عن طريق buttons عشان نتحكم بالشكل
-        for i, v in enumerate(version_keys):
-            cols = st.sidebar.columns([0.7, 0.3])  # عمود للراديو وعمود للصح
-            
-            # نحدد إذا هذه النسخة هي المختارة
-            if "selected_radio" not in st.session_state:
-                st.session_state.selected_radio = version_keys[0]
+        # استخدام أعمدة لوضع Checkbox يمين و Radio يسار
+        for v in version_keys:
+            cols = st.sidebar.columns([0.7, 0.3])  # العمود الأول أكبر للراديو، الثاني أصغر للصح
 
-            # زر لاختيار النسخة
+            # Radio لاختيار النسخة
             if cols[0].radio(
                 label="",
                 options=[v],
-                index=0 if st.session_state.selected_radio == v else -1,
+                index=0 if v == version_keys[0] else -1,
                 key=f"{key}_radio_{v}"
             ):
-                st.session_state.selected_radio = v
+                selected_version = v
 
-            # Checkbox أمام النسخة
+            # Checkbox على اليمين
             completed_versions[v] = cols[1].checkbox(
                 "✔️",
                 key=f"{key}_checkbox_{v}"
             )
-
-        selected_version = st.session_state.selected_radio
 
     return selected_version, completed_versions
 
