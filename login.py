@@ -81,6 +81,32 @@ def validate_iraqi_phone(phone):
     )
     return bool(pattern.match(phone))
 
+def validate_username(username):
+    # يجب أن يحتوي على أحرف إنجليزية فقط ومسافات أو بدون مسافات (حسب ما تريد)
+    # بناءً على طلبك: لا يزيد عن 10 كلمات، فقط أحرف إنجليزية ومسافات
+    if not username:
+        return False
+    words = username.strip().split()
+    if len(words) > 10:
+        return False
+    # كل كلمة يجب أن تكون أحرف a-z أو A-Z فقط
+    for w in words:
+        if not re.fullmatch(r"[A-Za-z]+", w):
+            return False
+    return True
+
+def validate_full_name(full_name):
+    # يجب أن يحتوي على 3 كلمات فقط، كل كلمة لا تزيد عن 10 أحرف (أي حروف عربية مقبولة)
+    if not full_name:
+        return False
+    words = full_name.strip().split()
+    if len(words) != 3:
+        return False
+    for w in words:
+        if len(w) > 10:
+            return False
+    return True
+
 def login_page():
     if "mode" not in st.session_state:
         st.session_state.mode = "login"
@@ -132,15 +158,19 @@ def login_page():
 
     elif st.session_state.mode == "signup":
         st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم", key="signup_username")
+        u = st.text_input("اسم المستخدم (إنجليزي، حتى 10 كلمات)", key="signup_username")
         p = st.text_input("كلمة المرور", type="password", key="signup_password")
-        f = st.text_input("الاسم الكامل", key="signup_full_name")
+        f = st.text_input("الاسم الكامل (3 كلمات، كل كلمة حتى 10 أحرف)", key="signup_full_name")
         g = st.text_input("الجروب", key="signup_group")
         ph = st.text_input("رقم الهاتف", key="signup_phone")
 
         if st.button("إنشاء الحساب"):
             if not u or not p or not f or not g or not ph:
                 st.warning("❗ يرجى ملء جميع الحقول")
+            elif not validate_username(u):
+                st.error("❌ اسم المستخدم يجب أن يكون إنجليزي فقط، ولا يزيد عن 10 كلمات، كل كلمة أحرف فقط")
+            elif not validate_full_name(f):
+                st.error("❌ الاسم الكامل يجب أن يحتوي على 3 كلمات فقط، وكل كلمة لا تزيد عن 10 أحرف")
             elif not validate_iraqi_phone(ph):
                 st.error("❌ رقم الهاتف غير صالح. الرجاء إدخاله بالشكل الصحيح (مثال: 07701234567 أو +9647701234567).")
             else:
