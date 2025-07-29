@@ -9,43 +9,44 @@ def select_version_ui(
     key="version_select"
 ):
     """
-    واجهة اختيار النسخة في الشريط الجانبي.
-    🔹 ترجع:
-       - إذا استدعيتها كالسابق → نفس رقم النسخة فقط.
-       - وإذا خزّنت النتيجة في متغيرين → يعطيك (selected_version, completed_versions).
+    واجهة اختيار النسخة في الشريط الجانبي مع Checkbox أمام كل نسخة.
+    ترجع:
+    selected_version → النسخة المختارة
+    completed_versions → حالة كل Checkbox
     """
     versions_count = len(versions_dict)
     selected_version = 1
     completed_versions = {}
 
-    if versions_count > 1:
+    if versions_count > 0:
         st.sidebar.markdown(f"### {sidebar_title}")
         version_keys = sorted(versions_dict.keys())
 
-        # الوظيفة الأساسية (اختيار النسخة)
-        selected_version = st.sidebar.radio(
-            sidebar_label,
-            options=version_keys,
-            index=0,
-            key=key
-        )
+        # نستخدم Radio يدوي عن طريق buttons عشان نتحكم بالشكل
+        for i, v in enumerate(version_keys):
+            cols = st.sidebar.columns([0.7, 0.3])  # عمود للراديو وعمود للصح
+            
+            # نحدد إذا هذه النسخة هي المختارة
+            if "selected_radio" not in st.session_state:
+                st.session_state.selected_radio = version_keys[0]
 
-        # إضافة Checkboxes بدون التأثير على الكود القديم
-        st.sidebar.markdown("### ضع علامة صح إذا أنهيت النسخة:")
-        for v in version_keys:
-            completed_versions[v] = st.sidebar.checkbox(
-                f"✔️ النسخة {v}",
+            # زر لاختيار النسخة
+            if cols[0].radio(
+                label="",
+                options=[v],
+                index=0 if st.session_state.selected_radio == v else -1,
+                key=f"{key}_radio_{v}"
+            ):
+                st.session_state.selected_radio = v
+
+            # Checkbox أمام النسخة
+            completed_versions[v] = cols[1].checkbox(
+                "✔️",
                 key=f"{key}_checkbox_{v}"
             )
-    else:
-        selected_version = 1
-        completed_versions[1] = st.sidebar.checkbox(
-            "✔️ النسخة 1",
-            key=f"{key}_checkbox_1"
-        )
 
-    # إذا استُخدمت كما في الكود القديم → ترجع رقم النسخة فقط
-    # وإذا استُخدمت مع متغيرين → ترجع النسخة وحالة الصح
+        selected_version = st.session_state.selected_radio
+
     return selected_version, completed_versions
 
 
