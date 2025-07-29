@@ -149,7 +149,7 @@ def login_page():
                     # نطلب رقم الهاتف في الخطوة التالية
                     st.session_state['forgot_full_name'] = full_name.strip()
                     st.session_state['forgot_step'] = 2
-                    st.experimental_rerun()
+                    st.rerun()
 
         elif st.session_state['forgot_step'] == 2:
             # Step 2: طلب آخر 4 أرقام من رقم الهاتف
@@ -168,7 +168,7 @@ def login_page():
                     else:
                         st.session_state['forgot_username'] = username_found
                         st.session_state['forgot_step'] = 3
-                        st.experimental_rerun()
+                        st.rerun()
 
         elif st.session_state['forgot_step'] == 3:
             # Step 3: عرض اسم المستخدم وطلب كلمة السر الجديدة
@@ -198,7 +198,7 @@ def login_page():
                         st.session_state['forgot_step'] = 0
                         st.session_state['forgot_full_name'] = ""
                         st.session_state['forgot_username'] = ""
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("حدث خطأ أثناء تحديث كلمة السر، حاول مرة أخرى")
 
@@ -207,7 +207,7 @@ def login_page():
                 st.session_state['forgot_step'] = 0
                 st.session_state['forgot_full_name'] = ""
                 st.session_state['forgot_username'] = ""
-                st.experimental_rerun()
+                st.rerun()
 
     # ----------------------------------------
     elif st.session_state['show_signup']:
@@ -225,12 +225,12 @@ def login_page():
                 if add_user(signup_username, signup_password, signup_full_name, signup_group, signup_phone):
                     st.session_state['show_signup'] = False
                     st.session_state['signup_success'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("فشل في إنشاء الحساب، حاول مرة أخرى")
 
         if st.button("🔙 العودة لتسجيل الدخول"):
             st.session_state['show_signup'] = False
-            st.experimental_rerun()
+            st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
