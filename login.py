@@ -116,7 +116,9 @@ def login_page():
 
     if st.session_state.mode == "login":
         st.header("🔑 تسجيل الدخول")
-        username = st.text_input("اسم المستخدم")
+        # املأ حقل اسم المستخدم بالاسم الجديد لو موجود
+        default_username = st.session_state.get("new_username", "")
+        username = st.text_input("اسم المستخدم", value=default_username)
         password = st.text_input("كلمة المرور", type="password")
 
         if st.button("تسجيل الدخول"):
@@ -126,6 +128,8 @@ def login_page():
                     st.session_state.logged_in = True
                     st.session_state.user_full_name = user['full_name']
                     st.session_state.user_name = user['username']
+                    if "new_username" in st.session_state:
+                        del st.session_state["new_username"]
                     send_telegram_message(f"✅ تسجيل دخول:\n{user}")
                     st.rerun()
                 else:
@@ -170,6 +174,8 @@ def login_page():
                     st.error("❌ الاسم الكامل موجود مسبقًا")
                 elif res == "ADDED":
                     st.success("✅ تم إنشاء الحساب بنجاح")
+                    # حفظ اسم المستخدم الجديد ليُملأ تلقائيًا في صفحة تسجيل الدخول
+                    st.session_state.new_username = u
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
