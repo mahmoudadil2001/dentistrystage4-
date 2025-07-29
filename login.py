@@ -27,25 +27,20 @@ def get_user_data(username):
     return None
 
 def add_user(username, password, full_name, group, phone):
-    # قبل الإضافة نتأكد أن اسم المستخدم أو الاسم الكامل غير موجودين
+    # نجيب كل المستخدمين الحاليين للتحقق من التكرار
     res_all = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
-    # نفترض أنك أضفت في GAS دالة تعيد جميع أسماء المستخدمين والأسماء الكاملة (انصحك تضيفها)
-    # نحلل النص لنتأكد وجود اسم المستخدم أو الاسم الكامل
-    # إذا لم تضع هذه الدالة، سأعطيك بعد قليل تعديل لـ GAS لإضافتها
-
     if res_all:
         lines = res_all.split("\n")
         for line in lines:
             parts = line.split(",")
-            if len(parts) >= 3:
+            if len(parts) >= 2:
                 existing_username = parts[0].strip().lower()
-                existing_fullname = parts[2].strip().lower()
+                existing_fullname = parts[1].strip().lower()
                 if existing_username == username.lower():
                     return "USERNAME_EXISTS"
                 if existing_fullname == full_name.lower():
                     return "FULLNAME_EXISTS"
 
-    # إذا لم يتم إيجاد نفس الاسم أو المستخدم، نضيف الحساب
     res = requests.post(GOOGLE_SCRIPT_URL, data={
         "action": "add",
         "username": username,
@@ -72,7 +67,6 @@ def update_password(username, new_password):
     })
     return res.text.strip() == "UPDATED"
 
-
 def login_page():
     if "mode" not in st.session_state:
         st.session_state.mode = "login"
@@ -83,11 +77,9 @@ def login_page():
     if "user_name" not in st.session_state:
         st.session_state.user_name = ""
 
-    # لو المستخدم سجل دخول بالفعل، نعرض له صفحة الأسئلة
     if st.session_state.logged_in:
         st.header(f"مرحباً بك يا {st.session_state.user_full_name} في صفحة الأسئلة!")
-        # مثال محتوى صفحة الأسئلة (ضع المحتوى اللي تحتاجه هنا)
-        st.write("هنا يمكنك وضع أسئلة وأجوبة المشروع أو أي محتوى آخر.")
+        st.write("هنا يمكنك وضع محتوى الأسئلة والأجوبة الخاص بك.")
 
         if st.button("تسجيل خروج"):
             st.session_state.logged_in = False
@@ -95,9 +87,8 @@ def login_page():
             st.session_state.user_name = ""
             st.session_state.mode = "login"
             st.rerun()
-        return  # منع عرض أي شيء آخر إذا مسجل دخول
+        return
 
-    # --- صفحات تسجيل الدخول، التسجيل، واستعادة كلمة المرور ---
     if st.session_state.mode == "login":
         st.header("🔑 تسجيل الدخول")
         username = st.text_input("اسم المستخدم", key="login_username")
@@ -143,9 +134,7 @@ def login_page():
                 elif res == "FULLNAME_EXISTS":
                     st.error("❌ الاسم الكامل موجود مسبقًا، تحقق من بياناتك أو اتصل بالدعم")
                 elif res == "ADDED":
-                    st.session_state.logged_in = True
-                    st.session_state.user_full_name = f
-                    st.session_state.user_name = u
+                    st.success("✅ تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول الآن")
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
