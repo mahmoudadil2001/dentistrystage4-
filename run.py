@@ -4,9 +4,8 @@ from orders import main as orders_main
 
 def local_css(file_name):
     try:
-        with open(file_name, "r", encoding="utf-8") as f:
-            css = f.read()
-        st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error loading CSS file: {e}")
 
