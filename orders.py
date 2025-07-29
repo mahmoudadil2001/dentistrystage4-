@@ -73,15 +73,15 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    if not versions_dict:
-        st.error(f"⚠️ No versions found for lecture {lec_num} in subject {subject}!")
-        return
-
     user_versions = get_user_versions(username)
     sheet_name = f"{subject}_{lec_num}"
-    saved_version = user_versions.get(sheet_name, None)
 
-    # تأكد أن saved_version من النسخ الموجودة أو اختار أول نسخة
+    saved_version_raw = user_versions.get(sheet_name, None)
+    try:
+        saved_version = int(saved_version_raw)
+    except (ValueError, TypeError):
+        saved_version = None
+
     if saved_version not in versions_dict:
         saved_version = list(versions_dict.keys())[0]
 
@@ -173,7 +173,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.experimental_rerun()
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -188,7 +188,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.experimental_rerun()
+                st.rerun()
 
         if Links:
             st.markdown("---")
@@ -215,7 +215,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.experimental_rerun()
+            st.rerun()
 
 
 def main():
@@ -247,18 +247,15 @@ def main():
             Telegram Channel
             <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
                 <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
-                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58 84.6l-19.7 92.8c-1.5 6.7-5.5 8.4-11.1 5.2l-30.8-22.7-14.9 14.3c-1.7 1.7-3.1 3.1-6.4 3.1l2.3-32.5 59.1-53.3c2.6-2.3-.6-3.6-4-1.3l-72.8 45.7-31.4-9.8c-6.8-2.1-6.9-6.8 1.4-10.1l123.1-47.5c5.7-2.2 10.7 1.3 8.8 10z"/>
+                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58.6 78.6l-19 89.3c-1.4 6.5-5 8-10.2 5l-28.3-20.9-13.7 13.2c-1.5 1.5-2.7 2.7-5.6 2.7l2-28.7 52.3-47.3c2.3-2.3-.5-3.6-3.5-1.3L88 122.3 57.2 105.3c-6.3-2-6.4-6.3 1.4-9.3l90.6-34.9c4.2-1.6 7.8 1 6.8 7.5z"/>
                 </svg>
             </span>
         </a>
     </div>
-
-    <div style="text-align:center; margin-top:15px; font-size:16px; color:#444;">
-        Subscribe for updates and join our community!
-    </div>
-    '''
-    , unsafe_allow_html=True
+    ''',
+        unsafe_allow_html=True,
     )
+
 
 if __name__ == "__main__":
     main()
