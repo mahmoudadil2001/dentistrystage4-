@@ -145,45 +145,53 @@ def login_page():
             st.session_state.mode = "forgot"
             st.rerun()
 
-    elif st.session_state.mode == "signup":
-        st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم")
-        p = st.text_input("كلمة المرور", type="password")
-        f = st.text_input("الاسم الثلاثي (بالعربي)")
-        g = st.text_input("الجروب")
-        ph = st.text_input("رقم الهاتف")
+elif st.session_state.mode == "signup":
+    st.header("📝 إنشاء حساب جديد")
+    u = st.text_input("اسم المستخدم", key="signup_username")
+    p = st.text_input("كلمة المرور", type="password", key="signup_password")
+    f = st.text_input("الاسم الثلاثي (بالعربي)", key="signup_full_name")
+    g = st.text_input("الجروب", key="signup_group")
+    ph = st.text_input("رقم الهاتف", key="signup_phone")
 
-        if st.button("إنشاء الحساب"):
-            if not (u and p and f and g and ph):
-                st.warning("❗ يرجى ملء جميع الحقول")
-            elif not validate_username(u):
-                st.error("❌ اسم المستخدم غير صالح (حتى 10 أحرف/أرقام/رموز بدون فراغات)")
-            elif not validate_password(p):
-                st.error("❌ كلمة المرور يجب أن تكون بين 4 و 16 رمز")
-            elif not validate_full_name(f):
-                st.error("❌ الاسم الكامل يجب أن يكون 3 كلمات بالعربي وكل كلمة ≤ 10 أحرف")
-            elif not validate_group(g):
-                st.error("❌ الجروب يجب أن يكون حرف واحد بالإنجليزي")
-            elif not validate_iraqi_phone(ph):
-                st.error("❌ رقم الهاتف غير صالح")
+    if st.button("إنشاء الحساب"):
+        if not (u and p and f and g and ph):
+            st.warning("❗ يرجى ملء جميع الحقول")
+        elif not validate_username(u):
+            st.error("❌ اسم المستخدم غير صالح (حتى 10 أحرف/أرقام/رموز بدون فراغات)")
+        elif not validate_password(p):
+            st.error("❌ كلمة المرور يجب أن تكون بين 4 و 16 رمز")
+        elif not validate_full_name(f):
+            st.error("❌ الاسم الكامل يجب أن يكون 3 كلمات بالعربي وكل كلمة ≤ 10 أحرف")
+        elif not validate_group(g):
+            st.error("❌ الجروب يجب أن يكون حرف واحد بالإنجليزي")
+        elif not validate_iraqi_phone(ph):
+            st.error("❌ رقم الهاتف غير صالح")
+        else:
+            res = add_user(u, p, f, g, ph)
+            if res == "USERNAME_EXISTS":
+                st.error("❌ اسم المستخدم موجود")
+            elif res == "FULLNAME_EXISTS":
+                st.error("❌ الاسم الكامل موجود مسبقًا")
+            elif res == "ADDED":
+                st.success("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
+                
+                # مسح حقول الإدخال
+                st.session_state.signup_username = ""
+                st.session_state.signup_password = ""
+                st.session_state.signup_full_name = ""
+                st.session_state.signup_group = ""
+                st.session_state.signup_phone = ""
+
+                # تحويل وضع الصفحة إلى تسجيل دخول
+                st.session_state.mode = "login"
+                st.experimental_rerun()
             else:
-                res = add_user(u, p, f, g, ph)
-                if res == "USERNAME_EXISTS":
-                    st.error("❌ اسم المستخدم موجود")
-                elif res == "FULLNAME_EXISTS":
-                    st.error("❌ الاسم الكامل موجود مسبقًا")
-                elif res == "ADDED":
-                    st.success("✅ تم إنشاء الحساب بنجاح")
-                    # حفظ اسم المستخدم الجديد ليُملأ تلقائيًا في صفحة تسجيل الدخول
-                    st.session_state.new_username = u
-                    st.session_state.mode = "login"
-                    st.rerun()
-                else:
-                    st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
+                st.error("⚠ حدث خطأ أثناء إنشاء الحساب")
 
-        if st.button("🔙 رجوع"):
-            st.session_state.mode = "login"
-            st.rerun()
+    if st.button("🔙 رجوع"):
+        st.session_state.mode = "login"
+        st.experimental_rerun()
+
 
     elif st.session_state.mode == "forgot":
         st.header("🔒 استعادة كلمة المرور")
