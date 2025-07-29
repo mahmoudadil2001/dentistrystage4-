@@ -1,51 +1,76 @@
-button {
-    background-color: #0078d7;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 22px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
-}
-
-button:hover {
-    background-color: #005a9e;
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 90, 158, 0.5);
-}
-
-
-/* 🔵 خلفية متدرجة جميلة */
+/* 🔵 خلفية متدرجة */
 body {
   background: linear-gradient(to bottom right, #d4f1f9, #eafaf1);
   font-family: 'Tajawal', sans-serif;
   color: #003049;
+  margin: 0;
+  padding: 0;
 }
 
-/* 🔹 أزرار جميلة */
-.button {
-  display: inline-block;
-  padding: 12px 24px;
-  margin: 10px;
-  background-color: #0096c7;
-  color: white;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: background-color 0.3s ease-in-out;
-  font-size: 16px;
-}
-
-.button:hover {
-  background-color: #0077b6;
-}
-
-/* 🔸 الفوتر */
-.footer {
-  margin-top: 50px;
+/* 🎯 صندوق تسجيل الدخول */
+.login-container {
+  max-width: 400px;
+  margin: 60px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   text-align: center;
-  color: #555;
+}
+
+/* 🔹 العنوان */
+.login-container h1 {
+  font-size: 28px;
+  color: #0078d7;
+  margin-bottom: 20px;
+}
+
+/* 📝 الحقول */
+.stTextInput label {
+  font-weight: bold;
+  color: #333;
+}
+
+/* 🔘 الأزرار */
+button, .stButton button {
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
+}
+
+button:hover, .stButton button:hover {
+  background-color: #005a9e;
+  transform: scale(1.05);
+}
+
+/* 🔗 الروابط */
+.login-links {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.login-links button {
+  background: none !important;
+  color: #0077b6 !important;
+  border: none !important;
   font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 📱 تجاوب مع الموبايل */
+@media (max-width: 500px) {
+  .login-container {
+    width: 90%;
+    margin: 30px auto;
+    padding: 20px;
+  }
 }
