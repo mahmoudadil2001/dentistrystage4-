@@ -3,8 +3,6 @@ import os
 import importlib.util
 import sys
 import importlib
-import json
-import re
 
 from versions_manager import get_lectures_and_versions, select_version_ui
 
@@ -23,15 +21,6 @@ def load_lecture_titles(subject_name):
         importlib.reload(sys.modules[f"{subject_name}_titles"])
 
     return getattr(module, "lecture_titles", {})
-
-
-def save_lecture_titles(subject_name, lecture_titles):
-    titles_path = os.path.join(subject_name, "edit", "lecture_titles.py")
-    if not os.path.exists(os.path.dirname(titles_path)):
-        os.makedirs(os.path.dirname(titles_path))
-
-    with open(titles_path, "w", encoding="utf-8") as f:
-        f.write("lecture_titles = " + json.dumps(lecture_titles, ensure_ascii=False, indent=4))
 
 
 def import_module_from_file(filepath):
@@ -81,14 +70,6 @@ def orders_o():
         options=lectures_options,
         format_func=lambda x: x[1]
     )[0]
-
-    # عرض وتحرير عنوان المحاضرة:
-    current_title = lecture_titles.get(lec_num, "")
-    new_title = st.text_input("Edit Lecture Title", value=current_title)
-    if st.button("💾 Save Lecture Title"):
-        lecture_titles[lec_num] = new_title.strip()
-        save_lecture_titles(subject, lecture_titles)
-        st.success(f"✅ Lecture title updated to: {new_title}")
 
     versions_dict = lectures_versions.get(lec_num, {})
 
