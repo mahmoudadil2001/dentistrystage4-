@@ -4,7 +4,7 @@ import importlib.util
 import sys
 import importlib
 
-from versions_manager import get_lectures_and_versions, select_version_ui
+from versions_manager import get_lectures_and_versions
 
 
 def load_lecture_titles(subject_name):
@@ -49,8 +49,6 @@ def orders_o():
     subject = st.selectbox("Select Subject", subjects)
 
     lectures_versions = get_lectures_and_versions(subject)
-    st.write("🔍 lectures_versions:", lectures_versions)  # Debug print
-
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
@@ -74,19 +72,24 @@ def orders_o():
     )[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
-    st.write(f"🔍 versions_dict for lecture {lec_num}:", versions_dict)  # Debug print
 
-    versions_keys = list(versions_dict.keys())
+    # ----- تعديل هنا لضمان اختيار نسخة موجودة -----
+    versions_keys = sorted(versions_dict.keys())
     if not versions_keys:
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
         return
 
-    selected_version = select_version_ui(versions_dict)
-    st.write(f"🔍 selected_version: {selected_version}")  # Debug print
+    if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
+        st.session_state.selected_version = versions_keys[0]
 
-    if selected_version not in versions_dict:
-        st.error("⚠️ نسخة المحاضرة غير موجودة. الرجاء إعادة اختيار النسخة.")
-        return
+    selected_version = st.selectbox(
+        "Select Version",
+        options=versions_keys,
+        index=versions_keys.index(st.session_state.selected_version)
+    )
+
+    st.session_state.selected_version = selected_version
+    # ---------------------------------------------
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
