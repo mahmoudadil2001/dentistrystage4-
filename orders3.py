@@ -1,4 +1,5 @@
 import streamlit as st
+from orders2 import normalize_answer   # أضف هذا السطر
 
 def add_sidebar_navigation(subject, questions):
     st.sidebar.markdown(f"### 🧪 {subject.upper()}")
