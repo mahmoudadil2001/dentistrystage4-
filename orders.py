@@ -33,6 +33,23 @@ def import_module_from_file(filepath):
     return module
 
 
+def normalize_answer(q):
+    answer = q.get("answer") or q.get("correct_answer")
+    options = q["options"]
+
+    if isinstance(answer, int) and 0 <= answer < len(options):
+        return options[answer]
+
+    if isinstance(answer, str):
+        answer_clean = answer.strip().upper()
+        if answer_clean in ["A", "B", "C", "D"]:
+            idx = ord(answer_clean) - ord("A")
+            if 0 <= idx < len(options):
+                return options[idx]
+        if answer in options:
+            return answer
+
+    return None
 def orders_o():
     subjects = [
         "endodontics",
@@ -80,8 +97,6 @@ def orders_o():
     )
     st.session_state.selected_version = selected_version
 
-    st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة
-
     file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
 
@@ -92,39 +107,29 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # تهيئة متغيرات الجلسة المهمة مع التحقق من صحة الطول
+    # تهيئة متغيرات الجلسة المهمة
     if "current_question" not in st.session_state:
         st.session_state.current_question = 0
-
     if "user_answers" not in st.session_state or len(st.session_state.user_answers) != len(questions):
         st.session_state.user_answers = [None] * len(questions)
-
     if "answer_shown" not in st.session_state or len(st.session_state.answer_shown) != len(questions):
         st.session_state.answer_shown = [False] * len(questions)
-
     if "quiz_completed" not in st.session_state:
         st.session_state.quiz_completed = False
-
     if "in_quiz_mode" not in st.session_state:
         st.session_state.in_quiz_mode = False
 
-    def normalize_answer(q):
-        answer = q.get("answer") or q.get("correct_answer")
-        options = q["options"]
-
-        if isinstance(answer, int) and 0 <= answer < len(options):
-            return options[answer]
-
-        if isinstance(answer, str):
-            answer_clean = answer.strip().upper()
-            if answer_clean in ["A", "B", "C", "D"]:
-                idx = ord(answer_clean) - ord("A")
-                if 0 <= idx < len(options):
-                    return options[idx]
-            if answer in options:
-                return answer
-
-        return None
+    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة تقريباً)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if not st.session_state.in_quiz_mode:
+            if st.button("▶️ الدخول في وضع الاختبار"):
+                st.session_state.in_quiz_mode = True
+                st.rerun()
+        else:
+            if st.button("⬅️ خروج من وضع الاختبار"):
+                st.session_state.in_quiz_mode = False
+                st.rerun()
 
     def show_question(index):
         q = questions[index]
@@ -166,20 +171,9 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
-    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة تقريباً)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if not st.session_state.in_quiz_mode:
-            if st.button("▶️ الدخول في وضع الاختبار"):
-                st.session_state.in_quiz_mode = True
-                st.rerun()
-        else:
-            if st.button("⬅️ خروج من وضع الاختبار"):
-                st.session_state.in_quiz_mode = False
-                st.rerun()
-
+    # هنا نقرر ماذا نعرض بناءً على وضع الاختبار
     if st.session_state.in_quiz_mode:
-        # عرض السؤال فقط مع الخيارات
+        # عرض السؤال فقط مع الاختيارات (لا عنوان، لا شريط جانبي، لا شرح)
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -201,8 +195,9 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.rerun()
+
     else:
-        # الوضع الطبيعي: عرض الشريط الجانبي مع شرح المحاضرة إذا وجد
+        # الوضع الطبيعي: عرض كل شيء - الشريط الجانبي، العنوان، الشرح، أسئلة قابلة للتصفح
         with st.sidebar:
             st.markdown(f"### 🧪 {subject.upper()}")
 
@@ -262,28 +257,3 @@ def orders_o():
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
-
-def main():
-    st.markdown(
-        """
-        <div style="
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            border-radius: 15px;
-            padding: 20px;
-            color: #003049;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        ">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
-        </div>
-        """
-    , unsafe_allow_html=True)
-    orders_o()
-
-
-if __name__ == "__main__":
-    main()
