@@ -83,7 +83,7 @@ def add_lecture_page():
         "periodontology", "prosthodontics"
     ]
 
-    tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
+    tab1, tab2, tab3 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات", "✏️ تعديل المحاضرة"])
 
     # ➕ إضافة محاضرة
     with tab1:
@@ -187,5 +187,77 @@ def add_lecture_page():
                             else:
                                 st.error("❌ الملف غير موجود للحذف")
 
-if __name__ == "__main__":
+    # ✏️ تعديل المحاضرة
+    with tab3:
+        st.header("✏️ تعديل المحاضرة")
+        subject = st.selectbox("📌 اختر المادة", [""] + subjects, key="edit_subject")
+        if subject:
+            lecture_dict = get_existing_lectures(subject)
+            lecture_titles = load_lecture_titles(subject)
+
+            if not lecture_dict:
+                st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
+            else:
+                options = []
+                for lec_num in sorted(lecture_dict.keys()):
+                    title = lecture_titles.get(lec_num, "بدون عنوان")
+                    options.append(f"{lec_num} - {title}")
+
+                selected_option = st.selectbox("اختر محاضرة", [""] + options, key="edit_lecture_select")
+                if selected_option:
+                    selected_lec_num = int(selected_option.split(" - ")[0])
+                    versions = sorted(lecture_dict[selected_lec_num], key=lambda x: x[0])
+                    version_options = [f"نسخة {v[0]} - {v[1]}" for v in versions]
+
+                    selected_version = st.selectbox("اختر النسخة لتعديلها", [""] + version_options, key="edit_version_select")
+                    if selected_version:
+                        selected_file = versions[version_options.index(selected_version)][1]
+                        file_path = os.path.join(subject, selected_file)
+
+                        lec_title = st.text_input("تعديل عنوان المحاضرة", value=lecture_titles.get(selected_lec_num, ""), key="edit_lec_title")
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            existing_code = f.read()
+
+                        content_code = st.text_area("تعديل كود المحاضرة", value=existing_code, height=300, key="edit_code")
+
+                        if st.button("💾 حفظ التعديلات", key="edit_save_button"):
+                            if not lec_title.strip():
+                                st.error("❌ يجب كتابة عنوان المحاضرة")
+                            elif not content_code.strip():
+                                st.error("❌ يجب كتابة الكود")
+                            else:
+                                with open(file_path, "w", encoding="utf-8") as f:
+                                    f.write(content_code)
+
+                                lecture_titles[selected_lec_num] = lec_title.strip()
+                                titles_path = save_lecture_titles(subject, lecture_titles)
+
+                                push_to_github(file_path, f"Edit lecture {selected_file}")
+                                push_to_github(titles_path, f"Update lecture titles for {subject}")
+
+                                st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
+
+def main():
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: #003049;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        ">
+        مرحبًا بكم! هذا القسم مخصص لإدارة المحاضرات: الإضافة، الحذف، والتعديل.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     add_lecture_page()
+
+if __name__ == "__main__":
+    main()
