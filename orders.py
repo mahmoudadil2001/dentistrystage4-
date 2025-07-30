@@ -5,7 +5,6 @@ import sys
 
 from versions_manager import get_lectures_and_versions
 
-
 def load_lecture_titles(subject_name):
     import os
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -23,7 +22,6 @@ def load_lecture_titles(subject_name):
 
     return getattr(module, "lecture_titles", {})
 
-
 def import_module_from_file(filepath):
     if not os.path.exists(filepath):
         return None
@@ -31,7 +29,6 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
 
 def normalize_answer(q):
     answer = q.get("answer") or q.get("correct_answer")
@@ -50,6 +47,7 @@ def normalize_answer(q):
             return answer
 
     return None
+
 def orders_o():
     subjects = [
         "endodontics",
@@ -107,7 +105,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # تهيئة متغيرات الجلسة المهمة
+    # تهيئة متغيرات الجلسة
     if "current_question" not in st.session_state:
         st.session_state.current_question = 0
     if "user_answers" not in st.session_state or len(st.session_state.user_answers) != len(questions):
@@ -119,7 +117,7 @@ def orders_o():
     if "in_quiz_mode" not in st.session_state:
         st.session_state.in_quiz_mode = False
 
-    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة تقريباً)
+    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if not st.session_state.in_quiz_mode:
@@ -171,9 +169,9 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
-    # هنا نقرر ماذا نعرض بناءً على وضع الاختبار
+    # بناءً على وضع الاختبار نعرض المحتوى
     if st.session_state.in_quiz_mode:
-        # عرض السؤال فقط مع الاختيارات (لا عنوان، لا شريط جانبي، لا شرح)
+        # فقط عرض السؤال مع الخيارات والإجابة وزر التالي
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -195,9 +193,8 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.rerun()
-
     else:
-        # الوضع الطبيعي: عرض كل شيء - الشريط الجانبي، العنوان، الشرح، أسئلة قابلة للتصفح
+        # الوضع الطبيعي: عرض الشريط الجانبي، السؤال مع الشرح، الروابط
         with st.sidebar:
             st.markdown(f"### 🧪 {subject.upper()}")
 
@@ -214,7 +211,7 @@ def orders_o():
                 if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                     st.session_state.current_question = i
 
-        # عرض السؤال والشرح المعتاد
+        # عرض السؤال مع الشرح والإجابة المعتاد
         q = questions[st.session_state.current_question]
 
         st.markdown(f"### Question {st.session_state.current_question + 1}/{len(questions)}: {q['question']}")
@@ -256,4 +253,3 @@ def orders_o():
             st.markdown("---")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
-
