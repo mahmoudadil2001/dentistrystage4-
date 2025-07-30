@@ -34,12 +34,11 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
-    # ضبط حالة وضع الاختبار
     if "in_quiz_mode" not in st.session_state:
         st.session_state.in_quiz_mode = False
 
     if not st.session_state.in_quiz_mode:
-        # الوضع العادي: اختيار الموضوع، المحاضرة، النسخة، التنقل بالأسئلة
+        # الوضع العادي: عرض كل العناصر
 
         subjects = [
             "endodontics",
@@ -139,22 +138,7 @@ def orders_o():
 
             return None
 
-        # الشريط الجانبي للتنقل في الأسئلة
-        with st.sidebar:
-            st.markdown(f"### 🧪 {subject.upper()}")
-
-            for i in range(len(questions)):
-                correct_text = normalize_answer(questions[i])
-                user_ans = st.session_state.user_answers[i]
-                if user_ans is None:
-                    status = "⬜"
-                elif user_ans == correct_text:
-                    status = "✅"
-                else:
-                    status = "❌"
-
-                if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                    st.session_state.current_question = i
+        # الشريط الجانبي مُخفي في الوضع العادي حسب طلبك (تمت إزالته بالكامل)
 
         def show_question(index):
             q = questions[index]
@@ -225,7 +209,8 @@ def orders_o():
                 st.rerun()
 
     else:
-        # وضع الاختبار: عرض سؤال واحد فقط بدون عناصر أخرى مع زر خروج
+        # وضع الاختبار فقط: صفحة نظيفة جداً، فقط السؤال مع الخيارات وأزرار الإجابة والتنقل والخروج
+
         subject = st.session_state.current_subject
         lec_num = st.session_state.current_lecture
         selected_version = st.session_state.current_version
@@ -303,14 +288,14 @@ def orders_o():
                 for link in Links:
                     st.markdown(f"- [{link['title']}]({link['url']})")
 
-        if not st.session_state.quiz_completed:
-            # زر خروج من وضع الاختبار أعلى الصفحة
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                if st.button("⬅️ خروج من وضع الاختبار"):
-                    st.session_state.in_quiz_mode = False
-                    st.rerun()
+        # زر خروج من وضع الاختبار أعلى الصفحة فقط
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("⬅️ خروج من وضع الاختبار"):
+                st.session_state.in_quiz_mode = False
+                st.rerun()
 
+        if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
             st.header("🎉 Quiz Completed!")
@@ -325,7 +310,6 @@ def orders_o():
                     st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
             st.success(f"Score: {correct} out of {len(questions)}")
 
-            # زر إعادة بدء الاختبار
             if st.button("🔁 Restart Quiz"):
                 st.session_state.current_question = 0
                 st.session_state.user_answers = [None] * len(questions)
@@ -333,7 +317,7 @@ def orders_o():
                 st.session_state.quiz_completed = False
                 st.rerun()
 
-            # زر خروج من وضع الاختبار حتى بعد الانتهاء
+            # زر خروج بعد انتهاء الاختبار
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
                 if st.button("⬅️ خروج من وضع الاختبار"):
