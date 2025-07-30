@@ -5,6 +5,7 @@ import sys
 
 from versions_manager import get_lectures_and_versions
 
+
 def load_lecture_titles(subject_name):
     import os
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
@@ -22,6 +23,7 @@ def load_lecture_titles(subject_name):
 
     return getattr(module, "lecture_titles", {})
 
+
 def import_module_from_file(filepath):
     if not os.path.exists(filepath):
         return None
@@ -29,6 +31,7 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 def orders_o():
     subjects = [
@@ -44,16 +47,13 @@ def orders_o():
         "prosthodontics"
     ]
 
-    # اختيار المادة
     subject = st.selectbox("Select Subject", subjects)
 
-    # جلب المحاضرات والنسخ
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # جلب عناوين المحاضرات
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
@@ -70,7 +70,6 @@ def orders_o():
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
         return
 
-    # تعيين النسخة المختارة في الحالة الجلسة
     if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
         st.session_state.selected_version = versions_keys[0]
 
@@ -81,26 +80,8 @@ def orders_o():
     )
     st.session_state.selected_version = selected_version
 
-    # مسافة بسيطة تحت اختيار النسخة
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة
 
-    # ضبط متغير الوضع الافتراضي
-    if "in_quiz_mode" not in st.session_state:
-        st.session_state.in_quiz_mode = False
-
-    # زر الدخول والخروج من وضع الاختبار - في منتصف الصفحة تقريبًا
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if not st.session_state.in_quiz_mode:
-            if st.button("▶️ الدخول في وضع الاختبار"):
-                st.session_state.in_quiz_mode = True
-                st.rerun()
-        else:
-            if st.button("⬅️ خروج من وضع الاختبار"):
-                st.session_state.in_quiz_mode = False
-                st.rerun()
-
-    # تحميل ملف الأسئلة
     file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
 
@@ -111,21 +92,21 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # إعادة تهيئة حالة الأسئلة عند تغيير المادة، المحاضرة أو النسخة
-    if ("questions_count" not in st.session_state or
-        st.session_state.questions_count != len(questions) or
-        st.session_state.get("current_lecture") != lec_num or
-        st.session_state.get("current_subject") != subject or
-        st.session_state.get("current_version") != selected_version):
-        
-        st.session_state.questions_count = len(questions)
+    # تهيئة متغيرات الجلسة المهمة مع التحقق من صحة الطول
+    if "current_question" not in st.session_state:
         st.session_state.current_question = 0
+
+    if "user_answers" not in st.session_state or len(st.session_state.user_answers) != len(questions):
         st.session_state.user_answers = [None] * len(questions)
+
+    if "answer_shown" not in st.session_state or len(st.session_state.answer_shown) != len(questions):
         st.session_state.answer_shown = [False] * len(questions)
+
+    if "quiz_completed" not in st.session_state:
         st.session_state.quiz_completed = False
-        st.session_state.current_lecture = lec_num
-        st.session_state.current_subject = subject
-        st.session_state.current_version = selected_version
+
+    if "in_quiz_mode" not in st.session_state:
+        st.session_state.in_quiz_mode = False
 
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
@@ -154,7 +135,7 @@ def orders_o():
         st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
-        if "user_answers" in st.session_state and st.session_state.user_answers[index] in q["options"]:
+        if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
         selected_answer = st.radio(
@@ -164,13 +145,13 @@ def orders_o():
             key=f"radio_{index}"
         )
 
-        if not ("answer_shown" in st.session_state and st.session_state.answer_shown[index]):
+        if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
                 st.rerun()
         else:
-            user_ans = st.session_state.user_answers[index] if "user_answers" in st.session_state else None
+            user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
                 st.success("✅ Correct answer")
             else:
@@ -185,9 +166,20 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
-    # --- هنا العرض حسب وضع الاختبار ---
+    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة تقريباً)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if not st.session_state.in_quiz_mode:
+            if st.button("▶️ الدخول في وضع الاختبار"):
+                st.session_state.in_quiz_mode = True
+                st.rerun()
+        else:
+            if st.button("⬅️ خروج من وضع الاختبار"):
+                st.session_state.in_quiz_mode = False
+                st.rerun()
+
     if st.session_state.in_quiz_mode:
-        # عرض السؤال فقط مع أزرار الاجابة والتنقل (بدون الشرح، روابط، شريط جانبي)
+        # عرض السؤال فقط مع الخيارات
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -195,7 +187,7 @@ def orders_o():
             correct = 0
             for i, q in enumerate(questions):
                 correct_text = normalize_answer(q)
-                user = st.session_state.user_answers[i] if "user_answers" in st.session_state else None
+                user = st.session_state.user_answers[i]
                 if user == correct_text:
                     correct += 1
                     st.write(f"Question {i+1}: ✅ Correct")
@@ -210,13 +202,13 @@ def orders_o():
                 st.session_state.quiz_completed = False
                 st.rerun()
     else:
-        # الوضع العادي: عرض شريط جانبي، الشرح، الروابط، والسؤال مع الاجابة والتنقل
+        # الوضع الطبيعي: عرض الشريط الجانبي مع شرح المحاضرة إذا وجد
         with st.sidebar:
             st.markdown(f"### 🧪 {subject.upper()}")
 
             for i in range(len(questions)):
                 correct_text = normalize_answer(questions[i])
-                user_ans = st.session_state.user_answers[i] if "user_answers" in st.session_state else None
+                user_ans = st.session_state.user_answers[i]
                 if user_ans is None:
                     status = "⬜"
                 elif user_ans == correct_text:
@@ -227,16 +219,13 @@ def orders_o():
                 if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                     st.session_state.current_question = i
 
-        # عرض السؤال الحالي مع الشرح والروابط
+        # عرض السؤال والشرح المعتاد
         q = questions[st.session_state.current_question]
-        correct_text = normalize_answer(q)
-        current_q_num = st.session_state.current_question + 1
-        total_qs = len(questions)
 
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Question {st.session_state.current_question + 1}/{len(questions)}: {q['question']}")
 
         default_idx = 0
-        if "user_answers" in st.session_state and st.session_state.user_answers[st.session_state.current_question] in q["options"]:
+        if st.session_state.user_answers[st.session_state.current_question] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[st.session_state.current_question])
 
         selected_answer = st.radio(
@@ -246,13 +235,14 @@ def orders_o():
             key=f"radio_{st.session_state.current_question}"
         )
 
-        if not ("answer_shown" in st.session_state and st.session_state.answer_shown[st.session_state.current_question]):
+        if not st.session_state.answer_shown[st.session_state.current_question]:
             if st.button("Answer", key=f"submit_{st.session_state.current_question}"):
                 st.session_state.user_answers[st.session_state.current_question] = selected_answer
                 st.session_state.answer_shown[st.session_state.current_question] = True
                 st.rerun()
         else:
-            user_ans = st.session_state.user_answers[st.session_state.current_question] if "user_answers" in st.session_state else None
+            user_ans = st.session_state.user_answers[st.session_state.current_question]
+            correct_text = normalize_answer(q)
             if user_ans == correct_text:
                 st.success("✅ Correct answer")
             else:
@@ -271,6 +261,7 @@ def orders_o():
             st.markdown("---")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
+
 
 def main():
     st.markdown(
@@ -292,6 +283,7 @@ def main():
         """
     , unsafe_allow_html=True)
     orders_o()
+
 
 if __name__ == "__main__":
     main()
