@@ -56,6 +56,19 @@ def push_to_github(file_path, commit_message, delete=False):
         st.error(f"❌ خطأ في GitHub: {res.status_code}")
         st.json(res.json())
 
+def get_existing_lectures(subject):
+    """ ترجع فقط المحاضرات اللي لها ملف فعلي موجود """
+    lecture_files = os.listdir(subject) if os.path.exists(subject) else []
+    existing_numbers = set()
+
+    for f in lecture_files:
+        if f.startswith(subject) and f.endswith(".py"):
+            num_part = f[len(subject):].split("_v")[0].replace(".py", "")
+            if num_part.isdigit():
+                existing_numbers.add(int(num_part))
+
+    return existing_numbers
+
 def add_lecture_page():
     st.title("📚 إدارة المحاضرات (إضافة / حذف)")
 
@@ -67,10 +80,14 @@ def add_lecture_page():
     subject = st.selectbox("اختر المادة", subjects)
 
     lecture_titles = load_lecture_titles(subject)
+    existing_numbers = get_existing_lectures(subject)
+
+    # ✅ فلترة المحاضرات: فقط اللي لها ملف فعلي
+    filtered_titles = {num: title for num, title in lecture_titles.items() if num in existing_numbers}
 
     st.subheader("📋 المحاضرات الحالية")
-    if lecture_titles:
-        options = [f"{lec_num} - {lec_title}" for lec_num, lec_title in sorted(lecture_titles.items())]
+    if filtered_titles:
+        options = [f"{lec_num} - {lec_title}" for lec_num, lec_title in sorted(filtered_titles.items())]
         selected_option = st.selectbox("اختر محاضرة لحذفها", options)
         selected_lec_num = int(selected_option.split(" - ")[0])
 
@@ -104,7 +121,6 @@ def add_lecture_page():
             st.error("❌ يجب كتابة الكود")
             return
 
-        # ✅ إنشاء ملف المحاضرة
         filename = f"{subject}{int(lec_num)}" + (f"_v{int(version_num)}" if version_num > 1 else "") + ".py"
         file_path = os.path.join(subject, filename)
 
@@ -114,7 +130,6 @@ def add_lecture_page():
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content_code)
 
-        # ✅ تحديث lecture_titles.py
         lecture_titles[int(lec_num)] = lec_title
         save_lecture_titles(subject, lecture_titles)
 
