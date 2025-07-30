@@ -149,20 +149,6 @@ def add_lecture_page():
                     st.rerun()
                 else:
                     st.error("❌ الملف غير موجود للحذف")
-
-            if st.button("🚮 حذف كل النسخ لهذه المحاضرة"):
-                for _, f in versions:
-                    file_path = os.path.join(subject, f)
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
-                        push_to_github(file_path, f"Delete lecture {f}", delete=True)
-
-                if selected_lec_num in lecture_titles:
-                    lecture_titles.pop(selected_lec_num)
-                    save_lecture_titles(subject, lecture_titles)
-
-                st.success(f"✅ تم حذف كل النسخ للمحاضرة {selected_lec_num}")
-                st.rerun()
         else:
             st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
