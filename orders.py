@@ -5,8 +5,8 @@ import sys
 
 from versions_manager import get_lectures_and_versions
 
+
 def load_lecture_titles(subject_name):
-    import os
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
     if not os.path.exists(titles_file):
         return {}
@@ -22,6 +22,7 @@ def load_lecture_titles(subject_name):
 
     return getattr(module, "lecture_titles", {})
 
+
 def import_module_from_file(filepath):
     if not os.path.exists(filepath):
         return None
@@ -29,6 +30,7 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
 
 def normalize_answer(q):
     answer = q.get("answer") or q.get("correct_answer")
@@ -48,6 +50,7 @@ def normalize_answer(q):
 
     return None
 
+
 def orders_o():
     subjects = [
         "endodontics",
@@ -62,38 +65,61 @@ def orders_o():
         "prosthodontics"
     ]
 
-    subject = st.selectbox("Select Subject", subjects)
+    if "in_quiz_mode" not in st.session_state:
+        st.session_state.in_quiz_mode = False
 
-    lectures_versions = get_lectures_and_versions(subject)
-    if not lectures_versions:
-        st.error(f"⚠️ No lecture files found for subject {subject}!")
-        return
+    # فقط في الوضع العادي (مو في الاختبار) تظهر خيارات المادة والمحاضرة والنسخة
+    if not st.session_state.in_quiz_mode:
+        subject = st.selectbox("Select Subject", subjects)
 
-    lecture_titles = load_lecture_titles(subject)
+        lectures_versions = get_lectures_and_versions(subject)
+        if not lectures_versions:
+            st.error(f"⚠️ No lecture files found for subject {subject}!")
+            return
 
-    lectures_options = []
-    for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, "").strip()
-        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))
+        lecture_titles = load_lecture_titles(subject)
 
-    lec_num = st.selectbox("Select Lecture", options=lectures_options, format_func=lambda x: x[1])[0]
+        lectures_options = []
+        for lec_num in sorted(lectures_versions.keys()):
+            title = lecture_titles.get(lec_num, "").strip()
+            display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
+            lectures_options.append((lec_num, display_name))
 
-    versions_dict = lectures_versions.get(lec_num, {})
-    versions_keys = sorted(versions_dict.keys())
-    if not versions_keys:
-        st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
-        return
+        lec_num = st.selectbox("Select Lecture", options=lectures_options, format_func=lambda x: x[1])[0]
 
-    if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
-        st.session_state.selected_version = versions_keys[0]
+        versions_dict = lectures_versions.get(lec_num, {})
+        versions_keys = sorted(versions_dict.keys())
+        if not versions_keys:
+            st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
+            return
 
-    selected_version = st.selectbox(
-        "Select Version",
-        options=versions_keys,
-        index=versions_keys.index(st.session_state.selected_version)
-    )
-    st.session_state.selected_version = selected_version
+        if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
+            st.session_state.selected_version = versions_keys[0]
+
+        selected_version = st.selectbox(
+            "Select Version",
+            options=versions_keys,
+            index=versions_keys.index(st.session_state.selected_version)
+        )
+        st.session_state.selected_version = selected_version
+
+        # حفظ القيم الحالية في الجلسة لاستخدامها لاحقاً في وضع الاختبار
+        st.session_state.current_subject = subject
+        st.session_state.current_lecture = lec_num
+        st.session_state.current_version = selected_version
+
+    else:
+        # في وضع الاختبار، نستخدم القيم المخزنة من قبل
+        subject = st.session_state.get("current_subject", None)
+        lec_num = st.session_state.get("current_lecture", None)
+        selected_version = st.session_state.get("current_version", None)
+
+        if not subject or not lec_num or not selected_version:
+            st.error("⚠️ البيانات غير مكتملة لدخول وضع الاختبار.")
+            return
+
+        lectures_versions = get_lectures_and_versions(subject)
+        versions_dict = lectures_versions.get(lec_num, {})
 
     file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
@@ -105,7 +131,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # تهيئة متغيرات الجلسة
+    # تهيئة متغيرات الجلسة المهمة
     if "current_question" not in st.session_state:
         st.session_state.current_question = 0
     if "user_answers" not in st.session_state or len(st.session_state.user_answers) != len(questions):
@@ -114,10 +140,8 @@ def orders_o():
         st.session_state.answer_shown = [False] * len(questions)
     if "quiz_completed" not in st.session_state:
         st.session_state.quiz_completed = False
-    if "in_quiz_mode" not in st.session_state:
-        st.session_state.in_quiz_mode = False
 
-    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة)
+    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة تقريباً)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if not st.session_state.in_quiz_mode:
@@ -169,9 +193,9 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
-    # بناءً على وضع الاختبار نعرض المحتوى
+    # بناءً على وضع الاختبار نقرر ماذا نعرض
     if st.session_state.in_quiz_mode:
-        # فقط عرض السؤال مع الخيارات والإجابة وزر التالي
+        # عرض السؤال فقط مع الاختيارات وزر خروج من وضع الاختبار
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -193,8 +217,9 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.rerun()
+
     else:
-        # الوضع الطبيعي: عرض الشريط الجانبي، السؤال مع الشرح، الروابط
+        # الوضع الطبيعي: عرض الشريط الجانبي، السؤال، والشرح
         with st.sidebar:
             st.markdown(f"### 🧪 {subject.upper()}")
 
@@ -211,7 +236,7 @@ def orders_o():
                 if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                     st.session_state.current_question = i
 
-        # عرض السؤال مع الشرح والإجابة المعتاد
+        # عرض السؤال والشرح المعتاد
         q = questions[st.session_state.current_question]
 
         st.markdown(f"### Question {st.session_state.current_question + 1}/{len(questions)}: {q['question']}")
