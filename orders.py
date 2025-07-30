@@ -1,238 +1,155 @@
 import streamlit as st
 import os
-import importlib.util
-import sys
-import importlib
+import json
+import re
+import base64
+import requests
 
-from versions_manager import get_lectures_and_versions, select_version_ui
-
-def load_lecture_titles(subject_name):
-    titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
-    if not os.path.exists(titles_file):
+def load_lecture_titles(subject):
+    titles_path = os.path.join(subject, "edit", "lecture_titles.py")
+    if not os.path.exists(titles_path):
         return {}
+    with open(titles_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    namespace = {}
+    exec(content, namespace)
+    return namespace.get("lecture_titles", {})
 
-    spec = importlib.util.spec_from_file_location(f"{subject_name}_titles", titles_file)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+def save_lecture_titles(subject, lecture_titles):
+    titles_path = os.path.join(subject, "edit", "lecture_titles.py")
+    if not os.path.exists(os.path.dirname(titles_path)):
+        os.makedirs(os.path.dirname(titles_path))
+    with open(titles_path, "w", encoding="utf-8") as f:
+        f.write("lecture_titles = " + json.dumps(lecture_titles, ensure_ascii=False, indent=4))
 
-    if f"{subject_name}_titles" in sys.modules:
-        importlib.reload(sys.modules[f"{subject_name}_titles"])
+def get_existing_lectures(subject):
+    lecture_files = os.listdir(subject) if os.path.exists(subject) else []
+    lecture_dict = {}
+    for f in lecture_files:
+        match = re.match(rf"{subject}(\d+)(?:_v(\d+))?\.py$", f)
+        if match:
+            lec_num = int(match.group(1))
+            version = int(match.group(2)) if match.group(2) else 1
+            if lec_num not in lecture_dict:
+                lecture_dict[lec_num] = []
+            lecture_dict[lec_num].append((version, f))
+    return lecture_dict
 
-    return getattr(module, "lecture_titles", {})
+def push_to_github(file_path, commit_message, delete=False):
+    token = st.secrets["GITHUB_TOKEN"]
+    user = st.secrets["GITHUB_USER"]
+    repo = st.secrets["GITHUB_REPO"]
 
-def import_module_from_file(filepath):
-    if not os.path.exists(filepath):
-        return None
-    spec = importlib.util.spec_from_file_location(os.path.basename(filepath).replace(".py", ""), filepath)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    url = f"https://api.github.com/repos/{user}/{repo}/contents/{file_path}"
+    r = requests.get(url, headers={"Authorization": f"token {token}"})
+    sha = r.json().get("sha") if r.status_code == 200 else None
 
-def orders_o():
-    subjects = [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
-    ]
-
-    subject = st.selectbox("Select Subject", subjects)
-
-    lectures_versions = get_lectures_and_versions(subject)
-    if not lectures_versions:
-        st.error(f"⚠️ No lecture files found for subject {subject}!")
-        return
-
-    # تحميل عناوين المحاضرات
-    lecture_titles = load_lecture_titles(subject)
-
-    lectures_options = []
-    for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, None)
-        if title:
-            display_name = f"Lec {lec_num} - {title}"
-        else:
-            display_name = f"Lec {lec_num} - (بدون عنوان)"
-        lectures_options.append((lec_num, display_name))
-
-    lec_num = st.selectbox(
-        "Select Lecture",
-        options=lectures_options,
-        format_func=lambda x: x[1]
-    )[0]
-
-    # اختيار نسخة الأسئلة إذا كانت موجودة
-    versions_dict = lectures_versions.get(lec_num, {})
-
-    selected_version = select_version_ui(versions_dict)
-
-    filename = versions_dict[selected_version]
-    file_path = os.path.join(subject, filename)
-    questions_module = import_module_from_file(file_path)
-
-    if questions_module is None:
-        st.error(f"⚠️ File {filename} not found or cannot be imported.")
-        return
-
-    questions = getattr(questions_module, "questions", [])
-    Links = getattr(questions_module, "Links", [])
-
-    # تهيئة حالة الأسئلة في الجلسة
-    if ("questions_count" not in st.session_state) or \
-       (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture", None) != lec_num) or \
-       (st.session_state.get("current_subject", None) != subject) or \
-       (st.session_state.get("current_version", None) != selected_version):
-
-        st.session_state.questions_count = len(questions)
-        st.session_state.current_question = 0
-        st.session_state.user_answers = [None] * len(questions)
-        st.session_state.answer_shown = [False] * len(questions)
-        st.session_state.quiz_completed = False
-        st.session_state.current_lecture = lec_num
-        st.session_state.current_subject = subject
-        st.session_state.current_version = selected_version
-
-    def normalize_answer(q):
-        answer = q.get("answer") or q.get("correct_answer")
-        options = q["options"]
-
-        if isinstance(answer, int) and 0 <= answer < len(options):
-            return options[answer]
-
-        if isinstance(answer, str):
-            answer_clean = answer.strip().upper()
-            if answer_clean in ["A", "B", "C", "D"]:
-                idx = ord(answer_clean) - ord("A")
-                if 0 <= idx < len(options):
-                    return options[idx]
-            if answer in options:
-                return answer
-
-        return None
-
-    with st.sidebar:
-        st.markdown(f"### 🧪 {subject.upper()}")
-
-        for i in range(len(questions)):
-            correct_text = normalize_answer(questions[i])
-            user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
-            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                st.session_state.current_question = i
-
-    def show_question(index):
-        q = questions[index]
-        correct_text = normalize_answer(q)
-
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-        default_idx = 0
-        if st.session_state.user_answers[index] in q["options"]:
-            default_idx = q["options"].index(st.session_state.user_answers[index])
-
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
+    if delete:
+        if not sha:
+            return
+        res = requests.delete(
+            url,
+            headers={"Authorization": f"token {token}"},
+            json={"message": commit_message, "sha": sha, "branch": "main"}
         )
-
-        if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
-        else:
-            user_ans = st.session_state.user_answers[index]
-            if user_ans == correct_text:
-                st.success("✅ Correct answer")
-            else:
-                st.error(f"❌ Correct answer: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 Explanation: {q['explanation']}")
-
-            if st.button("Next Question", key=f"next_{index}"):
-                if index + 1 < len(questions):
-                    st.session_state.current_question += 1
-                else:
-                    st.session_state.quiz_completed = True
-                st.rerun()
-
-        if Links:
-            st.markdown("---")
-            for link in Links:
-                st.markdown(f"- [{link['title']}]({link['url']})")
-
-    if not st.session_state.quiz_completed:
-        show_question(st.session_state.current_question)
     else:
-        st.header("🎉 Quiz Completed!")
-        correct = 0
-        for i, q in enumerate(questions):
-            correct_text = normalize_answer(q)
-            user = st.session_state.user_answers[i]
-            if user == correct_text:
-                correct += 1
-                st.write(f"Question {i+1}: ✅ Correct")
-            else:
-                st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
-        st.success(f"Score: {correct} out of {len(questions)}")
+        with open(file_path, "rb") as f:
+            content = base64.b64encode(f.read()).decode()
 
-        if st.button("🔁 Restart Quiz"):
-            st.session_state.current_question = 0
-            st.session_state.user_answers = [None] * len(questions)
-            st.session_state.answer_shown = [False] * len(questions)
-            st.session_state.quiz_completed = False
-            st.rerun()
+        data = {"message": commit_message, "content": content, "branch": "main"}
+        if sha:
+            data["sha"] = sha
 
-def main():
-    st.markdown(
-        """
-        <div style="
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            border-radius: 15px;
-            padding: 20px;
-            color: #003049;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        ">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
-        </div>
-        """
-    , unsafe_allow_html=True)
-    orders_o()
+        res = requests.put(url, headers={"Authorization": f"token {token}"}, json=data)
 
-    st.markdown('''
-    <div style="display:flex; justify-content:center; margin-top:50px;">
-        <a href="https://t.me/dentistryonly0" target="_blank" style="display:inline-flex; align-items:center; background:#0088cc; color:#fff; padding:8px 16px; border-radius:30px; text-decoration:none; font-family:sans-serif;">
-            Telegram Channel
-            <span style="width:24px; height:24px; background:#fff; border-radius:50%; display:flex; justify-content:center; align-items:center; margin-left:8px;">
-                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px; fill:#0088cc;">
-                    <path d="M120 0C53.7 0 0 53.7 0 120s53.7 120 120 120 120-53.7 120-120S186.3 0 120 0zm58 84.6l-19.7 92.8c-1.5 6.7-5.5 8.4-11.1 5.2l-30.8-22.7-14.9 14.3c-1.7 1.7-3.2 3.2-6.5 3.2l2.3-33.3 60.6-54.7c2.6-2.3-0.6-3.5-4-2.2L93.5 123.7 56.7 104.9c-6.1-1.9-6.2-6.1 1.3-9l90-34.7c4.1-1.5 7.7 1 6.7 8.4z"/>
-                </svg>
-            </span>
-        </a>
-    </div>
-    ''', unsafe_allow_html=True)
+    if res.status_code not in [200, 201]:
+        st.error(f"❌ خطأ في GitHub: {res.status_code}")
+        st.json(res.json())
+
+def add_or_delete_lecture_page():
+    st.title("📚 إدارة المحاضرات (إضافة / حذف)")
+
+    subjects = [
+        "endodontics", "generalmedicine", "generalsurgery", "operative",
+        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
+        "periodontology", "prosthodontics"
+    ]
+    subject = st.selectbox("اختر المادة", subjects)
+
+    lecture_titles = load_lecture_titles(subject)
+    lecture_dict = get_existing_lectures(subject)
+
+    st.subheader("📋 المحاضرات الحالية")
+    if lecture_dict:
+        options = []
+        for lec_num in sorted(lecture_dict.keys()):
+            title = lecture_titles.get(lec_num, "بدون عنوان")
+            options.append(f"{lec_num} - {title}")
+
+        selected_option = st.selectbox("اختر محاضرة", options)
+        selected_lec_num = int(selected_option.split(" - ")[0])
+
+        versions = sorted(lecture_dict[selected_lec_num], key=lambda x: x[0])
+        version_options = [f"نسخة {v[0]} - {v[1]}" for v in versions]
+
+        selected_version = st.selectbox("اختر النسخة لحذفها", version_options)
+        selected_file = versions[version_options.index(selected_version)][1]
+
+        if st.button("❌ حذف النسخة المحددة"):
+            file_path = os.path.join(subject, selected_file)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
+                st.success(f"✅ تم حذف النسخة {selected_file}")
+                st.experimental_rerun()
+
+        if st.button("🚮 حذف كل النسخ لهذه المحاضرة"):
+            for _, f in versions:
+                file_path = os.path.join(subject, f)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    push_to_github(file_path, f"Delete lecture {f}", delete=True)
+
+            if selected_lec_num in lecture_titles:
+                lecture_titles.pop(selected_lec_num)
+                save_lecture_titles(subject, lecture_titles)
+
+            st.success(f"✅ تم حذف كل النسخ للمحاضرة {selected_lec_num}")
+            st.experimental_rerun()
+    else:
+        st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
+
+    st.subheader("➕ إضافة محاضرة جديدة")
+    lec_num = st.number_input("رقم المحاضرة", min_value=1, step=1)
+    lec_title = st.text_input("عنوان المحاضرة (سيظهر في الواجهة)")
+    version_num = st.number_input("رقم النسخة", min_value=1, step=1)
+    content_code = st.text_area("اكتب كود الأسئلة (questions و Links)", height=300)
+
+    if st.button("✅ إضافة وحفظ"):
+        if lec_num in lecture_dict:
+            st.warning("⚠️ هناك بالفعل ملفات لهذه المحاضرة، سيتم إضافة نسخة جديدة فقط.")
+
+        if not lec_title.strip():
+            st.error("❌ يجب كتابة عنوان المحاضرة")
+            return
+        if not content_code.strip():
+            st.error("❌ يجب كتابة الكود")
+            return
+
+        filename = f"{subject}{int(lec_num)}" + (f"_v{int(version_num)}" if version_num > 1 else "") + ".py"
+        file_path = os.path.join(subject, filename)
+
+        if not os.path.exists(subject):
+            os.makedirs(subject)
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content_code)
+
+        lecture_titles[int(lec_num)] = lec_title
+        save_lecture_titles(subject, lecture_titles)
+
+        st.success(f"✅ تم إنشاء الملف: {file_path}")
+        push_to_github(file_path, f"Add lecture {filename}")
 
 if __name__ == "__main__":
-    main()
+    add_or_delete_lecture_page()
