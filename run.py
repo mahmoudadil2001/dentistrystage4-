@@ -1,6 +1,6 @@
 import streamlit as st
 from login import login_page
-from orders import orders_o as orders_main  # غيرت هنا
+from orders import main as orders_main
 from add_lecture import add_lecture_page
 
 def local_css(file_name):
@@ -26,19 +26,19 @@ def main():
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
+                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
-                    ### 👋 أهلا شباب  
-                    فقط الأدمن يقدر يضيف ويحذف محاضرات.  
-                    إذا حاب تساعدني راسلني على التليجرام 👉 **@io_620**
+                ### 👋 أهلا شباب  
+                فقط الأدمن يقدر يضيف ويحذف محاضرات.  
+                إذا حاب تساعدني راسلني على التليجرام 👉 **@io_620**
                 """)
 
                 password = st.text_input("🔑 أدخل كلمة السر", type="password")
-
                 if st.button("تسجيل دخول"):
                     if password == st.secrets["ADMIN_PASSWORD"]:
                         st.session_state["admin_verified"] = True
                         st.success("✅ تم تسجيل الدخول بنجاح!")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ كلمة السر غير صحيحة")
             else:
