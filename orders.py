@@ -40,6 +40,26 @@ def orders_o():
     if not st.session_state.in_quiz_mode:
         # الوضع العادي: عرض كل عناصر اختيار المادة، المحاضرة، النسخة، وزر بدء الاختبار
 
+        st.markdown(
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 20px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                margin-bottom: 25px;
+            ">
+            Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         subjects = [
             "endodontics",
             "generalmedicine",
@@ -92,13 +112,19 @@ def orders_o():
             if st.button("▶️ الدخول في وضع الاختبار"):
                 st.session_state.in_quiz_mode = True
                 st.session_state.current_question = 0
-                st.session_state.user_answers = [None] * len(getattr(import_module_from_file(os.path.join(subject, versions_dict[selected_version])), "questions", []))
-                st.session_state.answer_shown = [False] * len(st.session_state.user_answers)
+                file_path = os.path.join(subject, versions_dict[selected_version])
+                questions_module = import_module_from_file(file_path)
+                questions = getattr(questions_module, "questions", [])
+                st.session_state.user_answers = [None] * len(questions)
+                st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.session_state.current_subject = subject
                 st.session_state.current_lecture = lec_num
                 st.session_state.current_version = selected_version
                 st.rerun()
+
+        # عرض الشرح أو محتوى المحاضرة هنا لو تحب (ضع الكود هنا)
+        # مثلاً يمكنك إضافة وصف أو نص محاضرة من ملف أو ثابت
 
     else:
         # وضع الاختبار: صفحة نظيفة جداً، فقط سؤال واحد وأزرار، لا شريط جانبي ولا ترحيب
@@ -205,7 +231,6 @@ def orders_o():
 
 
 def main():
-    # تم إزالة النص الترحيبي حسب طلبك
     orders_o()
 
 
