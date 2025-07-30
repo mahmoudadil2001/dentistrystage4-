@@ -1,65 +1,78 @@
 import streamlit as st
-from versions_manager import get_lectures_and_versions
-from orders1 import load_lecture_titles, import_module_from_file
 
-def load_subjects():
-    return [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
-    ]
+def normalize_answer(q):
+    answer = q.get("answer") or q.get("correct_answer")
+    options = q["options"]
 
-def get_selected_subject():
-    subjects = load_subjects()
-    subject = st.selectbox("Select Subject", subjects)
-    return subject
+    if isinstance(answer, int) and 0 <= answer < len(options):
+        return options[answer]
 
-def get_selected_lecture(subject):
-    lectures_versions = get_lectures_and_versions(subject)
-    if not lectures_versions:
-        st.error(f"⚠️ No lecture files found for subject {subject}!")
-        return None, None
+    if isinstance(answer, str):
+        answer_clean = answer.strip().upper()
+        if answer_clean in ["A", "B", "C", "D"]:
+            idx = ord(answer_clean) - ord("A")
+            if 0 <= idx < len(options):
+                return options[idx]
+        if answer in options:
+            return answer
+    return None
 
-    lecture_titles = load_lecture_titles(subject)
+def show_question(index, questions):
+    q = questions[index]
+    correct_text = normalize_answer(q)
 
-    lectures_options = []
-    for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, "").strip()
-        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))
+    current_q_num = index + 1
+    total_qs = len(questions)
+    st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
-    lec_num = st.selectbox(
-        "Select Lecture",
-        options=lectures_options,
-        format_func=lambda x: x[1]
-    )[0]
+    default_idx = 0
+    if st.session_state.user_answers[index] in q["options"]:
+        default_idx = q["options"].index(st.session_state.user_answers[index])
 
-    return lec_num, lectures_versions
-
-def get_selected_version(lec_num, lectures_versions):
-    versions_dict = lectures_versions.get(lec_num, {})
-
-    versions_keys = sorted(versions_dict.keys())
-    if not versions_keys:
-        st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
-        return None, None
-
-    if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
-        st.session_state.selected_version = versions_keys[0]
-
-    selected_version = st.selectbox(
-        "Select Version",
-        options=versions_keys,
-        index=versions_keys.index(st.session_state.selected_version)
+    selected_answer = st.radio(
+        "",
+        q["options"],
+        index=default_idx,
+        key=f"radio_{index}"
     )
-    st.session_state.selected_version = selected_version
 
-    filename = versions_dict[selected_version]
-    return selected_version, filename
+    if not st.session_state.answer_shown[index]:
+        if st.button("Answer", key=f"submit_{index}"):
+            st.session_state.user_answers[index] = selected_answer
+            st.session_state.answer_shown[index] = True
+            st.experimental_rerun()
+    else:
+        user_ans = st.session_state.user_answers[index]
+        if user_ans == correct_text:
+            st.success("✅ Correct answer")
+        else:
+            st.error(f"❌ Correct answer: {correct_text}")
+            if "explanation" in q:
+                st.info(f"💡 Explanation: {q['explanation']}")
+
+        if st.button("Next Question", key=f"next_{index}"):
+            if index + 1 < len(questions):
+                st.session_state.current_question += 1
+            else:
+                st.session_state.quiz_completed = True
+            st.experimental_rerun()
+
+def show_quiz_summary(questions):
+    st.header("🎉 Quiz Completed!")
+    correct = 0
+    for i, q in enumerate(questions):
+        correct_text = normalize_answer(q)
+        user = st.session_state.user_answers[i]
+        if user == correct_text:
+            correct += 1
+            st.write(f"Question {i+1}: ✅ Correct")
+        else:
+            st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
+    st.success(f"Score: {correct} out of {len(questions)}")
+
+    if st.button("🔁 Restart Quiz"):
+        st.session_state.current_question = 0
+        st.session_state.user_answers = [None] * len(questions)
+        st.session_state.answer_shown = [False] * len(questions)
+        st.session_state.quiz_completed = False
+        st.experimental_rerun()
