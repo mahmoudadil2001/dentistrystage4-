@@ -129,7 +129,7 @@ def add_lecture_page():
 
                             st.success(f"✅ تم إنشاء الملف: {file_path}")
                             st.info("📌 تم تحديث العنوان في lecture_titles.py ورفعه إلى GitHub ✅")
-                            st.experimental_rerun()
+                            st.rerun()
 
             elif operation == "نسخة جديدة":
                 lec_num = st.number_input("رقم المحاضرة", min_value=1, step=1, key="add_ver_lec_num")
@@ -156,7 +156,7 @@ def add_lecture_page():
 
                         push_to_github(file_path, f"Add version {version_num} for lecture {lec_num}")
                         st.success(f"✅ تم إنشاء النسخة: {file_path}")
-                        st.experimental_rerun()
+                        st.rerun()
 
     # 🗑️ إدارة / حذف المحاضرات
     with tab2:
@@ -190,7 +190,7 @@ def add_lecture_page():
                                 os.remove(file_path)
                                 push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
                                 st.success("✅ تم حذف الملف")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error("❌ الملف غير موجود للحذف")
 
@@ -243,7 +243,7 @@ def add_lecture_page():
                                 push_to_github(titles_path, f"Update lecture titles for {subject}")
 
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
-                                st.experimental_rerun()
+                                st.rerun()
 
 def main():
     st.markdown(
