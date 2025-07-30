@@ -7,13 +7,11 @@ from versions_manager import get_lectures_and_versions
 
 
 def load_lecture_titles(subject_name):
-    import os
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
     if not os.path.exists(titles_file):
         return {}
 
     module_name = f"{subject_name}_titles"
-
     if module_name in sys.modules:
         del sys.modules[module_name]
 
@@ -47,13 +45,16 @@ def orders_o():
         "prosthodontics"
     ]
 
+    # اختيار المادة
     subject = st.selectbox("Select Subject", subjects)
 
+    # جلب المحاضرات والنسخ
     lectures_versions = get_lectures_and_versions(subject)
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
+    # تحميل عناوين المحاضرات
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
@@ -70,6 +71,7 @@ def orders_o():
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
         return
 
+    # تعيين النسخة المختارة
     if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
         st.session_state.selected_version = versions_keys[0]
 
@@ -80,32 +82,36 @@ def orders_o():
     )
     st.session_state.selected_version = selected_version
 
-    st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة
+    st.markdown("<br>", unsafe_allow_html=True)  # مسافة
 
+    # حالة وضع الاختبار
     if "in_quiz_mode" not in st.session_state:
         st.session_state.in_quiz_mode = False
 
-    # زر الدخول والخروج من وضع الاختبار بالمنتصف تقريبًا بعد اختيار النسخة
+    # زر الدخول والخروج من وضع الاختبار (منتصف الصفحة)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if not st.session_state.in_quiz_mode:
             if st.button("▶️ الدخول في وضع الاختبار"):
                 st.session_state.in_quiz_mode = True
+                # تهيئة متغيرات الاختبار عند الدخول
+                st.session_state.current_question = 0
+                st.session_state.user_answers = [None] * len(getattr(import_module_from_file(os.path.join(subject, versions_dict[selected_version])), "questions", []))
+                st.session_state.answer_shown = [False] * len(st.session_state.user_answers)
+                st.session_state.quiz_completed = False
                 st.rerun()
         else:
             if st.button("⬅️ خروج من وضع الاختبار"):
                 st.session_state.in_quiz_mode = False
-
-                # إعادة ضبط المتغيرات الخاصة بالاختبار فقط
-                for key in ["quiz_completed", "answer_shown", "user_answers", "current_question"]:
+                # تنظيف متغيرات الاختبار
+                for key in ["current_question", "user_answers", "answer_shown", "quiz_completed"]:
                     if key in st.session_state:
                         del st.session_state[key]
-
                 st.rerun()
 
+    # استيراد ملف الأسئلة
     file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
-
     if questions_module is None:
         st.error(f"⚠️ File {versions_dict[selected_version]} not found or cannot be imported.")
         return
@@ -113,6 +119,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # إذا تغير عدد الأسئلة أو المادة أو المحاضرة أو النسخة، إعادة تهيئة الأسئلة وحالة الاختبار (غير وضع الاختبار)
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -150,9 +157,7 @@ def orders_o():
         q = questions[index]
         correct_text = normalize_answer(q)
 
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Question {index + 1}/{len(questions)}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
@@ -186,13 +191,8 @@ def orders_o():
                     st.session_state.quiz_completed = True
                 st.rerun()
 
-        if Links:
-            st.markdown("---")
-            for link in Links:
-                st.markdown(f"- [{link['title']}]({link['url']})")
-
     if st.session_state.in_quiz_mode:
-        # وضع الاختبار: عرض السؤال فقط مع الأزرار، لا عرض شريط جانبي أو شرح إضافي
+        # فقط السؤال والاختيارات بدون أي عناصر أخرى
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -203,9 +203,9 @@ def orders_o():
                 user = st.session_state.user_answers[i]
                 if user == correct_text:
                     correct += 1
-                    st.write(f"Question {i+1}: ✅ Correct")
+                    st.write(f"Question {i + 1}: ✅ Correct")
                 else:
-                    st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
+                    st.write(f"Question {i + 1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
             st.success(f"Score: {correct} out of {len(questions)}")
 
             if st.button("🔁 Restart Quiz"):
@@ -214,8 +214,9 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.rerun()
+
     else:
-        # الوضع العادي: عرض الترحيب، الشرح، الشريط الجانبي، والأسئلة مع التنقل
+        # الوضع الطبيعي كامل: ترحيب، شريط جانبي، شرح، تنقل
         st.markdown(
             """
             <div style="
@@ -248,7 +249,7 @@ def orders_o():
                 else:
                     status = "❌"
 
-                if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+                if st.button(f"{status} Question {i + 1}", key=f"nav_{i}"):
                     st.session_state.current_question = i
 
         # عرض السؤال الحالي مع التنقل الطبيعي
