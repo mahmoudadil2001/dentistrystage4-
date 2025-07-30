@@ -15,4 +15,4 @@ def add_sidebar_navigation(subject, questions):
 
         if st.sidebar.button(f"{status} Question {i+1}", key=f"nav_{i}"):
             st.session_state.current_question = i
-            st.experimental_rerun()
+            st.rerun()
