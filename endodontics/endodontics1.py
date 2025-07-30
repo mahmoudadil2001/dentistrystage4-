@@ -152,5 +152,5 @@ questions = [
 ]
 
 Links = [
-    {"title": "", "url": ""},
+    {"title": "شرح المحاضرة", "url": "https://www.youtube.com/watch?v=E6eYa-5eeJE"},
 ]
