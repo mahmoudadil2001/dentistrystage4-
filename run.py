@@ -16,24 +16,47 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         login_page()
     else:
-        # التحكم في وضع الاختبار
         if "exam_mode" not in st.session_state:
             st.session_state["exam_mode"] = False
 
-        # صفحة الاختبار فقط مع زر خروج
         if st.session_state["exam_mode"]:
-            st.button("⬅️ خروج من وضع الاختبار", key="exit_exam_mode", on_click=exit_exam_mode)
-            # عرض الأسئلة فقط بدون قائمة جانبية أو أي شيء آخر
+            # زر الخروج من وضع الاختبار في الأعلى
+            if st.button("⬅️ خروج من وضع الاختبار"):
+                st.session_state["exam_mode"] = False
+                st.experimental_rerun()
+
+            # عرض وضع الاختبار فقط (الأسئلة)
             orders_main()
             return
 
-        # الصفحة الرئيسية مع أزرار اختيار، مع زر للدخول لوضع الاختبار
+        # الوضع الطبيعي
         page = st.sidebar.radio("📂 اختر الصفحة", ["📖 الأسئلة", "➕ إضافة محاضرة"])
 
         if page == "📖 الأسئلة":
             orders_main()
-            # زر دخول وضع الاختبار تحت المحتوى (نفترض بعد orders_main)
-            st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة تحت المحتوى
+
+            # إضافة مسافة ثم زر الدخول في وضع الاختبار في الوسط
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            st.markdown(
+                """
+                <div style="text-align: center;">
+                    <button style="
+                        background-color: #0078d7; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 12px; 
+                        padding: 12px 30px; 
+                        font-size: 18px; 
+                        font-weight: 600; 
+                        cursor: pointer;
+                        box-shadow: 0 4px 8px rgba(0, 120, 215, 0.3);
+                    " id="start_exam_btn">🎯 الدخول في وضع الاختبار</button>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # بدي نستخدم st.button لكن ما بنقدر نضيف زر داخل html بسهولة، لذلك نستخدم st.button عادي وسط الصفحة:
             if st.button("🎯 الدخول في وضع الاختبار"):
                 st.session_state["exam_mode"] = True
                 st.experimental_rerun()
@@ -58,10 +81,6 @@ def main():
                         st.error("❌ كلمة السر غير صحيحة")
             else:
                 add_lecture_page()
-
-def exit_exam_mode():
-    st.session_state["exam_mode"] = False
-    st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
