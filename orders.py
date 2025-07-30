@@ -49,6 +49,8 @@ def orders_o():
     subject = st.selectbox("Select Subject", subjects)
 
     lectures_versions = get_lectures_and_versions(subject)
+    st.write("🔍 lectures_versions:", lectures_versions)  # Debug print
+
     if not lectures_versions:
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
@@ -72,10 +74,16 @@ def orders_o():
     )[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
+    st.write(f"🔍 versions_dict for lecture {lec_num}:", versions_dict)  # Debug print
+
+    versions_keys = list(versions_dict.keys())
+    if not versions_keys:
+        st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
+        return
 
     selected_version = select_version_ui(versions_dict)
+    st.write(f"🔍 selected_version: {selected_version}")  # Debug print
 
-    # إضافة التحقق هنا
     if selected_version not in versions_dict:
         st.error("⚠️ نسخة المحاضرة غير موجودة. الرجاء إعادة اختيار النسخة.")
         return
@@ -245,6 +253,7 @@ def main():
         Subscribe to the Telegram channel to get all updates and new lectures I will upload here, God willing.
     </div>
     ''', unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
