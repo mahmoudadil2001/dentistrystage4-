@@ -1,4 +1,7 @@
-
+import streamlit as st
+import os
+import importlib.util
+import sys
 
 from versions_manager import get_lectures_and_versions
 
