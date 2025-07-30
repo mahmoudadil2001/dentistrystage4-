@@ -19,14 +19,16 @@ def load_lecture_titles(subject):
 
 def save_lecture_titles(subject, lecture_titles):
     titles_path = os.path.join(subject, "edit", "lecture_titles.py")
-    if not os.path.exists(os.path.dirname(titles_path)):
-        os.makedirs(os.path.dirname(titles_path))
+    os.makedirs(os.path.dirname(titles_path), exist_ok=True)
 
+    # ✅ نكتب جميع الأرقام حتى لو ماكو عنوان
+    max_key = max(lecture_titles.keys()) if lecture_titles else 0
     with open(titles_path, "w", encoding="utf-8") as f:
         f.write("lecture_titles = {\n")
-        for k in sorted(lecture_titles.keys()):
-            title = lecture_titles[k].replace('"', '\\"')
-            f.write(f'    {k}: "{title}",\n')
+        for k in range(1, max_key + 1):
+            title = lecture_titles.get(k, "")
+            safe_title = title.replace('"', '\\"')
+            f.write(f'    {k}: "{safe_title}",\n')
         f.write("}\n")
 
 def push_to_github(file_path, commit_message, delete=False):
@@ -84,6 +86,7 @@ def add_lecture_page():
 
     tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
 
+    # -------------------- إضافة محاضرة --------------------
     with tab1:
         subject = st.selectbox("اختر المادة", subjects, key="add_subject")
         lecture_titles = load_lecture_titles(subject)
@@ -95,9 +98,6 @@ def add_lecture_page():
         content_code = st.text_area("اكتب كود الأسئلة (questions و Links)", height=300)
 
         if st.button("✅ إضافة وحفظ"):
-            if lec_num in lecture_dict:
-                st.warning("⚠️ هناك بالفعل ملفات لهذه المحاضرة، سيتم إضافة نسخة جديدة فقط.")
-
             if not lec_title.strip():
                 st.error("❌ يجب كتابة عنوان المحاضرة")
                 return
@@ -111,15 +111,18 @@ def add_lecture_page():
             if not os.path.exists(subject):
                 os.makedirs(subject)
 
+            # ✅ كتابة ملف المحاضرة
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content_code)
 
+            # ✅ تحديث عنوان المحاضرة في lecture_titles
             lecture_titles[int(lec_num)] = lec_title.strip()
             save_lecture_titles(subject, lecture_titles)
 
             st.success(f"✅ تم إنشاء الملف: {file_path}")
             push_to_github(file_path, f"Add lecture {filename}")
 
+    # -------------------- حذف محاضرة --------------------
     with tab2:
         subject = st.selectbox("اختر المادة", subjects, key="delete_subject")
         lecture_titles = load_lecture_titles(subject)
