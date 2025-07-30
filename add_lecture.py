@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import base64
+import json
 import requests
 import re
 
@@ -83,7 +84,6 @@ def add_lecture_page():
 
     tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
 
-    # ✅ تبويب الإضافة
     with tab1:
         subject = st.selectbox("اختر المادة", subjects, key="add_subject")
         lecture_titles = load_lecture_titles(subject)
@@ -95,6 +95,9 @@ def add_lecture_page():
         content_code = st.text_area("اكتب كود الأسئلة (questions و Links)", height=300)
 
         if st.button("✅ إضافة وحفظ"):
+            if lec_num in lecture_dict:
+                st.warning("⚠️ هناك بالفعل ملفات لهذه المحاضرة، سيتم إضافة نسخة جديدة فقط.")
+
             if not lec_title.strip():
                 st.error("❌ يجب كتابة عنوان المحاضرة")
                 return
@@ -102,29 +105,27 @@ def add_lecture_page():
                 st.error("❌ يجب كتابة الكود")
                 return
 
-            st.warning(f"هل تريد بالتأكيد إضافة المحاضرة رقم {int(lec_num)} للمادة {subject}؟")
-            if st.button("تأكيد الإضافة ✅"):
-                filename = f"{subject}{int(lec_num)}" + (f"_v{int(version_num)}" if version_num > 1 else "") + ".py"
-                file_path = os.path.join(subject, filename)
+            filename = f"{subject}{int(lec_num)}" + (f"_v{int(version_num)}" if version_num > 1 else "") + ".py"
+            file_path = os.path.join(subject, filename)
 
-                if not os.path.exists(subject):
-                    os.makedirs(subject)
+            if not os.path.exists(subject):
+                os.makedirs(subject)
 
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(content_code)
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(content_code)
 
-                lecture_titles[int(lec_num)] = lec_title.strip()
-                save_lecture_titles(subject, lecture_titles)
+            lecture_titles[int(lec_num)] = lec_title.strip()
+            save_lecture_titles(subject, lecture_titles)
 
-                push_to_github(file_path, f"Add lecture {filename}")
-                st.success(f"✅ تم إنشاء الملف: {file_path}")
+            st.success(f"✅ تم إنشاء الملف: {file_path}")
+            push_to_github(file_path, f"Add lecture {filename}")
 
-    # ✅ تبويب الحذف
     with tab2:
         subject = st.selectbox("اختر المادة", subjects, key="delete_subject")
         lecture_titles = load_lecture_titles(subject)
         lecture_dict = get_existing_lectures(subject)
 
+        st.subheader("📋 المحاضرات الحالية")
         if lecture_dict:
             options = []
             for lec_num in sorted(lecture_dict.keys()):
@@ -141,15 +142,13 @@ def add_lecture_page():
             selected_file = versions[version_options.index(selected_version)][1]
 
             if st.button("❌ حذف النسخة المحددة"):
-                st.warning(f"هل تريد بالتأكيد حذف النسخة {selected_file}؟")
-                if st.button("تأكيد الحذف ❌"):
-                    file_path = os.path.join(subject, selected_file)
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
-                        push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
-                        st.rerun()
-                    else:
-                        st.error("❌ الملف غير موجود للحذف")
+                file_path = os.path.join(subject, selected_file)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
+                    st.rerun()
+                else:
+                    st.error("❌ الملف غير موجود للحذف")
         else:
             st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
