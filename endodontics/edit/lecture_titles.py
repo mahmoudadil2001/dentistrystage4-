@@ -1,7 +1,7 @@
 lecture_titles = {
     1: "Introduction",
     2: "Classification of periapical disease",
-    3: "",
+    3: "hhhh",
     4: "",
     5: "",
     6: "",
@@ -23,5 +23,5 @@ lecture_titles = {
     22: "",
     23: "",
     24: "",
-    25: ""
+    25: "",
 }
