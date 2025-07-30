@@ -75,6 +75,11 @@ def orders_o():
 
     selected_version = select_version_ui(versions_dict)
 
+    # إضافة التحقق هنا
+    if selected_version not in versions_dict:
+        st.error("⚠️ نسخة المحاضرة غير موجودة. الرجاء إعادة اختيار النسخة.")
+        return
+
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
@@ -240,7 +245,6 @@ def main():
         Subscribe to the Telegram channel to get all updates and new lectures I will upload here, God willing.
     </div>
     ''', unsafe_allow_html=True)
-
 
 if __name__ == "__main__":
     main()
