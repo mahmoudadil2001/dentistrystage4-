@@ -31,14 +31,17 @@ def push_to_github(file_path, commit_message, delete=False):
 
     url = f"https://api.github.com/repos/{user}/{repo}/contents/{file_path}"
 
-    # تحقق من وجود الملف للحصول على sha
     r = requests.get(url, headers={"Authorization": f"token {token}"})
     sha = r.json().get("sha") if r.status_code == 200 else None
 
     if delete:
         if not sha:
             return
-        res = requests.delete(url, headers={"Authorization": f"token {token}"}, json={"message": commit_message, "sha": sha, "branch": "main"})
+        res = requests.delete(
+            url,
+            headers={"Authorization": f"token {token}"},
+            json={"message": commit_message, "sha": sha, "branch": "main"}
+        )
     else:
         with open(file_path, "rb") as f:
             content = base64.b64encode(f.read()).decode()
@@ -67,21 +70,20 @@ def add_lecture_page():
 
     st.subheader("📋 المحاضرات الحالية")
     if lecture_titles:
-        for lec_num, lec_title in sorted(lecture_titles.items()):
-            col1, col2 = st.columns([4, 1])
-            col1.write(f"📖 {lec_num} - {lec_title}")
-            if col2.button("❌", key=f"del_{lec_num}"):
-                # حذف ملفات المحاضرة
-                for f in os.listdir(subject):
-                    if f.startswith(f"{subject}{lec_num}"):
-                        os.remove(os.path.join(subject, f))
-                        push_to_github(os.path.join(subject, f), f"Delete lecture {f}", delete=True)
+        options = [f"{lec_num} - {lec_title}" for lec_num, lec_title in sorted(lecture_titles.items())]
+        selected_option = st.selectbox("اختر محاضرة لحذفها", options)
+        selected_lec_num = int(selected_option.split(" - ")[0])
 
-                # حذف من القاموس
-                lecture_titles.pop(lec_num)
-                save_lecture_titles(subject, lecture_titles)
-                st.success(f"✅ تم حذف المحاضرة {lec_num}")
-                st.rerun()
+        if st.button("❌ حذف المحاضرة"):
+            for f in os.listdir(subject):
+                if f.startswith(f"{subject}{selected_lec_num}"):
+                    os.remove(os.path.join(subject, f))
+                    push_to_github(os.path.join(subject, f), f"Delete lecture {f}", delete=True)
+
+            lecture_titles.pop(selected_lec_num)
+            save_lecture_titles(subject, lecture_titles)
+            st.success(f"✅ تم حذف المحاضرة {selected_lec_num}")
+            st.rerun()
     else:
         st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
@@ -102,6 +104,7 @@ def add_lecture_page():
             st.error("❌ يجب كتابة الكود")
             return
 
+        # ✅ إنشاء ملف المحاضرة
         filename = f"{subject}{int(lec_num)}" + (f"_v{int(version_num)}" if version_num > 1 else "") + ".py"
         file_path = os.path.join(subject, filename)
 
@@ -111,6 +114,7 @@ def add_lecture_page():
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content_code)
 
+        # ✅ تحديث lecture_titles.py
         lecture_titles[int(lec_num)] = lec_title
         save_lecture_titles(subject, lecture_titles)
 
