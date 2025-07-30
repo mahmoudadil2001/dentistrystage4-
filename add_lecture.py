@@ -28,7 +28,7 @@ def save_lecture_titles(subject, lecture_titles):
             f.write(f'    {k}: "{title}",\n')
         f.write("}\n")
 
-    return titles_path  # ✅ نرجع مسار الملف حتى نرفعه على GitHub
+    return titles_path
 
 def push_to_github(file_path, commit_message, delete=False):
     token = st.secrets["GITHUB_TOKEN"]
@@ -85,7 +85,6 @@ def add_lecture_page():
 
     tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
 
-    # ✅ تبويب إضافة محاضرة
     with tab1:
         subject = st.selectbox("اختر المادة", subjects, key="add_subject")
         lecture_titles = load_lecture_titles(subject)
@@ -97,6 +96,13 @@ def add_lecture_page():
         content_code = st.text_area("اكتب كود الأسئلة (questions و Links)", height=300)
 
         if st.button("✅ إضافة وحفظ"):
+            # ✅ التحقق من وجود المحاضرة أو النسخة
+            if lec_num in lecture_dict:
+                versions = [v[0] for v in lecture_dict[lec_num]]
+                if version_num in versions:
+                    st.error("❌ عذراً، هذه المحاضرة وهذه النسخة موجودة بالفعل!")
+                    return
+
             if not lec_title.strip():
                 st.error("❌ يجب كتابة عنوان المحاضرة")
                 return
@@ -110,22 +116,18 @@ def add_lecture_page():
             if not os.path.exists(subject):
                 os.makedirs(subject)
 
-            # ✅ إنشاء ملف الأسئلة
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content_code)
 
-            # ✅ تحديث عنوان المحاضرة في lecture_titles
             lecture_titles[int(lec_num)] = lec_title.strip()
             titles_path = save_lecture_titles(subject, lecture_titles)
 
-            # ✅ رفع الملفات إلى GitHub
             push_to_github(file_path, f"Add lecture {filename}")
             push_to_github(titles_path, f"Update lecture titles for {subject}")
 
             st.success(f"✅ تم إنشاء الملف: {file_path}")
             st.info("📌 تم تحديث العنوان في lecture_titles.py ورفعه إلى GitHub ✅")
 
-    # ✅ تبويب الحذف
     with tab2:
         subject = st.selectbox("اختر المادة", subjects, key="delete_subject")
         lecture_titles = load_lecture_titles(subject)
