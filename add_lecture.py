@@ -85,97 +85,117 @@ def add_lecture_page():
 
     tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
 
-    # تبويب الإضافة
     with tab1:
-        if "add_subject" not in st.session_state:
-            st.session_state.add_subject = None
-        if "action_choice" not in st.session_state:
-            st.session_state.action_choice = None
-
+        # اختيار المادة
         subject = st.selectbox("📌 اختر المادة", subjects, key="add_subject")
-        st.session_state.add_subject = subject
 
-        if st.session_state.add_subject:
-            action = st.radio("⚙️ اختر العملية", ["➕ محاضرة جديدة", "📄 نسخة جديدة"], key="action_choice")
-            st.session_state.action_choice = action
+        # إذا اختار المستخدم المادة استمر في إظهار باقي الخيارات
+        if subject:
 
-            lecture_dict = get_existing_lectures(st.session_state.add_subject)
-            lecture_titles = load_lecture_titles(st.session_state.add_subject)
+            # اختيار العملية: محاضرة جديدة أم نسخة جديدة
+            action = st.radio("⚙️ اختر العملية", ["➕ محاضرة جديدة", "📄 نسخة جديدة"], key="add_action")
 
-            if st.session_state.action_choice == "➕ محاضرة جديدة":
-                lec_num = st.number_input("🔢 رقم المحاضرة", min_value=1, step=1, key="new_lec_num")
-                lec_title = st.text_input("🏷️ عنوان المحاضرة (سيظهر في الواجهة)", key="new_lec_title")
-                content_code = st.text_area("📜 اكتب كود الأسئلة", height=300, key="new_lec_code")
+            # تحميل العناوين الموجودة والمحاضرات
+            lecture_titles = load_lecture_titles(subject)
+            lecture_dict = get_existing_lectures(subject)
 
-                if st.button("✅ إضافة وحفظ", key="save_new_lecture"):
-                    if lec_num in lecture_dict:
-                        st.error("❌ هذه المحاضرة موجودة بالفعل!")
+            lec_num = st.number_input("📖 رقم المحاضرة", min_value=1, step=1, key="lec_num")
+
+            if action == "➕ محاضرة جديدة":
+                lec_title = st.text_input("📝 عنوان المحاضرة (سيظهر في الواجهة)", key="lec_title")
+                content_code = st.text_area("✍️ اكتب كود الأسئلة (questions و Links)", height=300, key="content_code")
+
+                if st.button("✅ إضافة وحفظ"):
+                    # تحقق من وجود المحاضرة والنسخة مسبقًا
+                    if lec_num in lecture_dict and any(v[0] == 1 for v in lecture_dict[lec_num]):
+                        st.error(f"❌ عذراً، المحاضرة رقم {lec_num} موجودة بالفعل!")
+
+                    elif not lec_title.strip():
+                        st.error("❌ يجب كتابة عنوان المحاضرة")
+
+                    elif not content_code.strip():
+                        st.error("❌ يجب كتابة كود الأسئلة")
+
                     else:
-                        filename = f"{st.session_state.add_subject}{int(lec_num)}.py"
-                        file_path = os.path.join(st.session_state.add_subject, filename)
+                        filename = f"{subject}{int(lec_num)}.py"
+                        file_path = os.path.join(subject, filename)
 
-                        if not os.path.exists(st.session_state.add_subject):
-                            os.makedirs(st.session_state.add_subject)
+                        if not os.path.exists(subject):
+                            os.makedirs(subject)
 
                         with open(file_path, "w", encoding="utf-8") as f:
                             f.write(content_code)
 
                         lecture_titles[int(lec_num)] = lec_title.strip()
-                        titles_path = save_lecture_titles(st.session_state.add_subject, lecture_titles)
+                        titles_path = save_lecture_titles(subject, lecture_titles)
 
                         push_to_github(file_path, f"Add lecture {filename}")
-                        push_to_github(titles_path, f"Update lecture titles for {st.session_state.add_subject}")
-                        st.success(f"✅ تم إنشاء الملف: {file_path}")
+                        push_to_github(titles_path, f"Update lecture titles for {subject}")
 
-            elif st.session_state.action_choice == "📄 نسخة جديدة":
-                lec_num = st.number_input("🔢 اختر رقم المحاضرة لإضافة نسخة جديدة", min_value=1, step=1, key="copy_lec_num")
-                version_num = st.number_input("📄 رقم النسخة", min_value=2, step=1, key="copy_version_num")
-                content_code = st.text_area("📜 اكتب كود الأسئلة", height=300, key="copy_code")
+                        st.success(f"✅ تم إنشاء المحاضرة رقم {lec_num} بنجاح!")
+                        st.experimental_rerun()
 
-                if st.button("✅ إضافة النسخة", key="save_new_version"):
+            elif action == "📄 نسخة جديدة":
+                version_num = st.number_input("🔢 رقم النسخة", min_value=2, step=1, key="version_num")
+                content_code = st.text_area("✍️ اكتب كود النسخة الجديدة فقط", height=300, key="version_code")
+
+                if st.button("✅ إضافة وحفظ نسخة جديدة"):
                     if lec_num not in lecture_dict:
-                        st.error("❌ هذه المحاضرة غير موجودة لإضافة نسخة جديدة!")
+                        st.error(f"❌ لا توجد محاضرة برقم {lec_num} لإضافة نسخة لها!")
+
+                    elif any(v[0] == version_num for v in lecture_dict[lec_num]):
+                        st.error(f"❌ النسخة رقم {version_num} موجودة بالفعل للمحاضرة {lec_num}!")
+
+                    elif not content_code.strip():
+                        st.error("❌ يجب كتابة كود النسخة الجديدة")
+
                     else:
-                        filename = f"{st.session_state.add_subject}{int(lec_num)}_v{int(version_num)}.py"
-                        file_path = os.path.join(st.session_state.add_subject, filename)
+                        filename = f"{subject}{int(lec_num)}_v{int(version_num)}.py"
+                        file_path = os.path.join(subject, filename)
 
-                        if os.path.exists(file_path):
-                            st.error("❌ هذه النسخة موجودة بالفعل!")
-                        else:
-                            with open(file_path, "w", encoding="utf-8") as f:
-                                f.write(content_code)
+                        if not os.path.exists(subject):
+                            os.makedirs(subject)
 
-                            push_to_github(file_path, f"Add new version {filename}")
-                            st.success(f"✅ تم إنشاء النسخة: {file_path}")
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(content_code)
 
-    # تبويب الحذف
+                        # لا نحتاج لتحديث lecture_titles هنا لأنه نفس المحاضرة
+                        push_to_github(file_path, f"Add version {version_num} for lecture {lec_num}")
+
+                        st.success(f"✅ تم إضافة النسخة رقم {version_num} للمحاضرة رقم {lec_num} بنجاح!")
+                        st.experimental_rerun()
+
     with tab2:
         subject = st.selectbox("📌 اختر المادة", subjects, key="delete_subject")
 
         if subject:
-            lecture_dict = get_existing_lectures(subject)
             lecture_titles = load_lecture_titles(subject)
+            lecture_dict = get_existing_lectures(subject)
 
+            st.subheader("📋 المحاضرات الحالية")
             if lecture_dict:
-                lec_num = st.selectbox("🔢 اختر المحاضرة", sorted(lecture_dict.keys()), key="del_lec_num")
+                options = []
+                for lec_num in sorted(lecture_dict.keys()):
+                    title = lecture_titles.get(lec_num, "بدون عنوان")
+                    options.append(f"{lec_num} - {title}")
 
-                if lec_num:
-                    versions = sorted(lecture_dict[lec_num], key=lambda x: x[0])
-                    version_options = [f"نسخة {v[0]} - {v[1]}" for v in versions]
-                    selected_version = st.selectbox("📄 اختر النسخة", version_options, key="del_version")
+                selected_option = st.selectbox("📚 اختر محاضرة", options, key="lecture_select")
+                selected_lec_num = int(selected_option.split(" - ")[0])
 
-                    if selected_version:
-                        selected_file = versions[version_options.index(selected_version)][1]
+                versions = sorted(lecture_dict[selected_lec_num], key=lambda x: x[0])
+                version_options = [f"نسخة {v[0]} - {v[1]}" for v in versions]
 
-                        if st.button("❌ حذف النسخة المحددة", key="delete_btn"):
-                            file_path = os.path.join(subject, selected_file)
-                            if os.path.exists(file_path):
-                                os.remove(file_path)
-                                push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
-                                st.success("🗑️ تم الحذف بنجاح!")
-                                st.experimental_rerun()
-                            else:
-                                st.error("❌ الملف غير موجود للحذف")
+                selected_version = st.selectbox("📄 اختر النسخة لحذفها", version_options, key="version_select")
+                selected_file = versions[version_options.index(selected_version)][1]
+
+                if st.button("❌ حذف النسخة المحددة"):
+                    file_path = os.path.join(subject, selected_file)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
+                        st.experimental_rerun()
+                    else:
+                        st.error("❌ الملف غير موجود للحذف")
             else:
                 st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
