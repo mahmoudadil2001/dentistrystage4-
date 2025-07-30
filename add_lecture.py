@@ -4,6 +4,7 @@ import base64
 import requests
 import re
 
+# ✅ تحميل عناوين المحاضرات
 def load_lecture_titles(subject):
     titles_path = os.path.join(subject, "edit", "lecture_titles.py")
     if not os.path.exists(titles_path):
@@ -16,9 +17,11 @@ def load_lecture_titles(subject):
     exec(content, namespace)
     return namespace.get("lecture_titles", {})
 
+# ✅ حفظ عناوين المحاضرات
 def save_lecture_titles(subject, lecture_titles):
     titles_path = os.path.join(subject, "edit", "lecture_titles.py")
-    os.makedirs(os.path.dirname(titles_path), exist_ok=True)
+    if not os.path.exists(os.path.dirname(titles_path)):
+        os.makedirs(os.path.dirname(titles_path))
 
     with open(titles_path, "w", encoding="utf-8") as f:
         f.write("lecture_titles = {\n")
@@ -26,8 +29,10 @@ def save_lecture_titles(subject, lecture_titles):
             title = lecture_titles[k].replace('"', '\\"')
             f.write(f'    {k}: "{title}",\n')
         f.write("}\n")
+
     return titles_path
 
+# ✅ رفع ملف إلى GitHub
 def push_to_github(file_path, commit_message, delete=False):
     token = st.secrets["GITHUB_TOKEN"]
     user = st.secrets["GITHUB_USER"]
@@ -38,9 +43,13 @@ def push_to_github(file_path, commit_message, delete=False):
     sha = r.json().get("sha") if r.status_code == 200 else None
 
     if delete:
-        if sha:
-            requests.delete(url, headers={"Authorization": f"token {token}"},
-                            json={"message": commit_message, "sha": sha, "branch": "main"})
+        if not sha:
+            return
+        requests.delete(
+            url,
+            headers={"Authorization": f"token {token}"},
+            json={"message": commit_message, "sha": sha, "branch": "main"}
+        )
     else:
         with open(file_path, "rb") as f:
             content = base64.b64encode(f.read()).decode()
@@ -48,115 +57,98 @@ def push_to_github(file_path, commit_message, delete=False):
         data = {"message": commit_message, "content": content, "branch": "main"}
         if sha:
             data["sha"] = sha
-        requests.put(url, headers={"Authorization": f"token {token}"}, json=data)
 
+        res = requests.put(url, headers={"Authorization": f"token {token}"}, json=data)
+
+        if res.status_code not in [200, 201]:
+            st.error(f"❌ خطأ في GitHub: {res.status_code}")
+            st.json(res.json())
+
+# ✅ معرفة المحاضرات الموجودة
 def get_existing_lectures(subject):
     lecture_files = os.listdir(subject) if os.path.exists(subject) else []
     lecture_dict = {}
+
     for f in lecture_files:
         match = re.match(rf"{subject}(\d+)(?:_v(\d+))?\.py$", f)
         if match:
             lec_num = int(match.group(1))
             version = int(match.group(2)) if match.group(2) else 1
-            lecture_dict.setdefault(lec_num, []).append((version, f))
+            if lec_num not in lecture_dict:
+                lecture_dict[lec_num] = []
+            lecture_dict[lec_num].append((version, f))
+
     return lecture_dict
 
+# ✅ واجهة الإضافة
 def add_lecture_page():
-    subjects = ["endodontics", "generalmedicine", "generalsurgery", "operative",
-                "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
-                "periodontology", "prosthodontics"]
+    st.title("➕ إضافة محاضرة أو نسخة جديدة")
 
-    if "add_msg" not in st.session_state:
-        st.session_state.add_msg = ""
+    subjects = [
+        "endodontics", "generalmedicine", "generalsurgery", "operative",
+        "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
+        "periodontology", "prosthodontics"
+    ]
 
-    tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
+    subject = st.selectbox("📚 اختر المادة", [""] + subjects)
 
-    # ✅ تبويب إضافة محاضرة
-    with tab1:
-        subject = st.selectbox("اختر المادة", subjects, key="add_subject")
+    if subject:
+        action = st.radio("ماذا تريد؟", ["محاضرة جديدة", "نسخة جديدة"])
+
         lecture_titles = load_lecture_titles(subject)
         lecture_dict = get_existing_lectures(subject)
 
-        action = st.radio("ماذا تريد؟", ["➕ محاضرة جديدة", "📄 نسخة جديدة"])
-
-        if action == "➕ محاضرة جديدة":
+        if action == "محاضرة جديدة":
             lec_num = st.number_input("رقم المحاضرة", min_value=1, step=1)
-            lec_title = st.text_input("عنوان المحاضرة (سيظهر في الواجهة)")
-            content_code = st.text_area("اكتب كود الأسئلة", height=300)
+            lec_title = st.text_input("عنوان المحاضرة")
+            content_code = st.text_area("كود الأسئلة")
 
-            if st.button("✅ إضافة وحفظ", key="add_btn"):
+            if st.button("✅ إضافة المحاضرة"):
                 if lec_num in lecture_dict:
-                    st.session_state.add_msg = "❌ هذه المحاضرة موجودة بالفعل!"
+                    st.error("❌ هذه المحاضرة موجودة بالفعل!")
                 elif not lec_title.strip() or not content_code.strip():
-                    st.session_state.add_msg = "❌ يجب كتابة العنوان والكود"
+                    st.error("❌ يرجى إدخال جميع البيانات")
                 else:
                     filename = f"{subject}{int(lec_num)}.py"
                     file_path = os.path.join(subject, filename)
-                    os.makedirs(subject, exist_ok=True)
+                    if not os.path.exists(subject):
+                        os.makedirs(subject)
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(content_code)
+
                     lecture_titles[int(lec_num)] = lec_title.strip()
                     titles_path = save_lecture_titles(subject, lecture_titles)
+
                     push_to_github(file_path, f"Add lecture {filename}")
                     push_to_github(titles_path, f"Update lecture titles for {subject}")
-                    st.session_state.add_msg = "✅ تمت إضافة المحاضرة بنجاح!"
 
-        elif action == "📄 نسخة جديدة":
-            if not lecture_dict:
-                st.warning("⚠️ لا توجد محاضرات لإضافة نسخة!")
-            else:
-                lec_num = st.selectbox("اختر المحاضرة", sorted(lecture_dict.keys()))
-                version_num = st.number_input("رقم النسخة", min_value=2, step=1)
-                content_code = st.text_area("اكتب كود النسخة", height=300)
+                    st.success("✅ تم إضافة المحاضرة بنجاح")
 
-                if st.button("✅ إضافة النسخة", key="add_version_btn"):
-                    versions = [v for v, _ in lecture_dict[lec_num]]
-                    if version_num in versions:
-                        st.session_state.add_msg = "❌ هذه النسخة موجودة بالفعل!"
+        else:  # نسخة جديدة
+            lec_num = st.number_input("اختر المحاضرة", min_value=1, step=1)
+            version_num = st.number_input("رقم النسخة", min_value=2, step=1)
+            content_code = st.text_area("كود النسخة")
+
+            if st.button("✅ إضافة النسخة"):
+                if lec_num not in lecture_dict:
+                    st.error("❌ هذه المحاضرة غير موجودة!")
+                else:
+                    existing_versions = [v[0] for v in lecture_dict[lec_num]]
+                    if version_num in existing_versions:
+                        st.error("❌ هذه النسخة موجودة بالفعل!")
+                    elif not content_code.strip():
+                        st.error("❌ يرجى إدخال كود النسخة")
                     else:
                         filename = f"{subject}{int(lec_num)}_v{int(version_num)}.py"
                         file_path = os.path.join(subject, filename)
-                        os.makedirs(subject, exist_ok=True)
+                        if not os.path.exists(subject):
+                            os.makedirs(subject)
                         with open(file_path, "w", encoding="utf-8") as f:
                             f.write(content_code)
-                        push_to_github(file_path, f"Add new version {filename}")
-                        st.session_state.add_msg = "✅ تمت إضافة النسخة بنجاح!"
 
-        # ✅ عرض الرسائل بعد كل عملية
-        if st.session_state.add_msg:
-            if "✅" in st.session_state.add_msg:
-                st.success(st.session_state.add_msg)
-            else:
-                st.error(st.session_state.add_msg)
+                        push_to_github(file_path, f"Add version {filename}")
+                        st.success("✅ تم إضافة النسخة بنجاح")
 
-    # ✅ تبويب الحذف يبقى كما هو
-    with tab2:
-        subject = st.selectbox("اختر المادة", subjects, key="delete_subject")
-        lecture_titles = load_lecture_titles(subject)
-        lecture_dict = get_existing_lectures(subject)
-
-        st.subheader("📋 المحاضرات الحالية")
-        if lecture_dict:
-            options = [f"{lec} - {lecture_titles.get(lec, 'بدون عنوان')}" for lec in sorted(lecture_dict.keys())]
-            selected_option = st.selectbox("اختر محاضرة", options, key="lecture_select")
-            selected_lec_num = int(selected_option.split(" - ")[0])
-
-            versions = sorted(lecture_dict[selected_lec_num], key=lambda x: x[0])
-            version_options = [f"نسخة {v[0]} - {v[1]}" for v in versions]
-
-            selected_version = st.selectbox("اختر النسخة لحذفها", version_options, key="version_select")
-            selected_file = versions[version_options.index(selected_version)][1]
-
-            if st.button("❌ حذف النسخة المحددة", key="delete_btn"):
-                file_path = os.path.join(subject, selected_file)
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
-                    st.rerun()
-                else:
-                    st.error("❌ الملف غير موجود للحذف")
-        else:
-            st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
 if __name__ == "__main__":
     add_lecture_page()
