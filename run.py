@@ -1,6 +1,7 @@
 import streamlit as st
 from login import login_page
 from orders import main as orders_main
+from add_lecture import add_lecture_page  # ✅ استدعاء الصفحة الجديدة
 
 def local_css(file_name):
     try:
@@ -15,7 +16,12 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         login_page()
     else:
-        orders_main()
+        page = st.sidebar.radio("📂 اختر الصفحة", ["📖 الأسئلة", "➕ إضافة محاضرة"])
+        
+        if page == "📖 الأسئلة":
+            orders_main()
+        elif page == "➕ إضافة محاضرة":
+            add_lecture_page()
 
 if __name__ == "__main__":
     main()
