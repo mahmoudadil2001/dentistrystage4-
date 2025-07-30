@@ -76,8 +76,6 @@ def get_existing_lectures(subject):
     return lecture_dict
 
 def add_lecture_page():
-    st.title("📚 إدارة المحاضرات (إضافة / حذف)")
-
     subjects = [
         "endodontics", "generalmedicine", "generalsurgery", "operative",
         "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
@@ -109,7 +107,6 @@ def add_lecture_page():
             if os.path.exists(file_path):
                 os.remove(file_path)
                 push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
-                st.success(f"✅ تم حذف النسخة {selected_file}")
                 st.rerun()
             else:
                 st.error("❌ الملف غير موجود للحذف")
