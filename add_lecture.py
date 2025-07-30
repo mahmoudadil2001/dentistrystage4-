@@ -110,7 +110,7 @@ def add_lecture_page():
                 os.remove(file_path)
                 push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
                 st.success(f"✅ تم حذف النسخة {selected_file}")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ الملف غير موجود للحذف")
 
@@ -126,7 +126,7 @@ def add_lecture_page():
                 save_lecture_titles(subject, lecture_titles)
 
             st.success(f"✅ تم حذف كل النسخ للمحاضرة {selected_lec_num}")
-            st.experimental_rerun()
+            st.rerun()
     else:
         st.info("ℹ️ لا توجد محاضرات لهذه المادة بعد")
 
