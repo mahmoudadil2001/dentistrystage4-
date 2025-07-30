@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import importlib.util
 import sys
-import importlib
 
 from versions_manager import get_lectures_and_versions
 
@@ -16,7 +15,7 @@ def load_lecture_titles(subject_name):
     module_name = f"{subject_name}_titles"
 
     if module_name in sys.modules:
-        del sys.modules[module_name]  # حذف من الكاش
+        del sys.modules[module_name]
 
     spec = importlib.util.spec_from_file_location(module_name, titles_file)
     module = importlib.util.module_from_spec(spec)
@@ -55,26 +54,17 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
     for lec_num in sorted(lectures_versions.keys()):
         title = lecture_titles.get(lec_num, "").strip()
-        if title:
-            display_name = f"Lec {lec_num}  {title}"
-        else:
-            display_name = f"Lec {lec_num}"
+        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
         lectures_options.append((lec_num, display_name))
 
-    lec_num = st.selectbox(
-        "Select Lecture",
-        options=lectures_options,
-        format_func=lambda x: x[1]
-    )[0]
+    lec_num = st.selectbox("Select Lecture", options=lectures_options, format_func=lambda x: x[1])[0]
 
     versions_dict = lectures_versions.get(lec_num, {})
-
     versions_keys = sorted(versions_dict.keys())
     if not versions_keys:
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
@@ -88,21 +78,35 @@ def orders_o():
         options=versions_keys,
         index=versions_keys.index(st.session_state.selected_version)
     )
-
     st.session_state.selected_version = selected_version
 
-    filename = versions_dict[selected_version]
-    file_path = os.path.join(subject, filename)
+    st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة
+
+    if "in_quiz_mode" not in st.session_state:
+        st.session_state.in_quiz_mode = False
+
+    # **هنا الزر بالمنتصف تقريبًا بعد اختيار النسخة**
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if not st.session_state.in_quiz_mode:
+            if st.button("▶️ الدخول في وضع الاختبار"):
+                st.session_state.in_quiz_mode = True
+                st.experimental_rerun()
+        else:
+            if st.button("⬅️ خروج من وضع الاختبار"):
+                st.session_state.in_quiz_mode = False
+                st.experimental_rerun()
+
+    file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
 
     if questions_module is None:
-        st.error(f"⚠️ File {filename} not found or cannot be imported.")
+        st.error(f"⚠️ File {versions_dict[selected_version]} not found or cannot be imported.")
         return
 
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # تهيئة المتغيرات عند تغيير المحاضرة أو النسخة أو الموضوع
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -117,7 +121,6 @@ def orders_o():
         st.session_state.current_lecture = lec_num
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
-        st.session_state.in_quiz_mode = False  # وضع الاختبار
 
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
@@ -137,135 +140,55 @@ def orders_o():
 
         return None
 
-    # زر خروج من وضع الاختبار (يظهر فقط في وضع الاختبار)
+    def show_question(index):
+        q = questions[index]
+        correct_text = normalize_answer(q)
+
+        current_q_num = index + 1
+        total_qs = len(questions)
+        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+
+        default_idx = 0
+        if st.session_state.user_answers[index] in q["options"]:
+            default_idx = q["options"].index(st.session_state.user_answers[index])
+
+        selected_answer = st.radio(
+            "",
+            q["options"],
+            index=default_idx,
+            key=f"radio_{index}"
+        )
+
+        if not st.session_state.answer_shown[index]:
+            if st.button("Answer", key=f"submit_{index}"):
+                st.session_state.user_answers[index] = selected_answer
+                st.session_state.answer_shown[index] = True
+                st.experimental_rerun()
+        else:
+            user_ans = st.session_state.user_answers[index]
+            if user_ans == correct_text:
+                st.success("✅ Correct answer")
+            else:
+                st.error(f"❌ Correct answer: {correct_text}")
+                if "explanation" in q:
+                    st.info(f"💡 Explanation: {q['explanation']}")
+
+            if st.button("Next Question", key=f"next_{index}"):
+                if index + 1 < len(questions):
+                    st.session_state.current_question += 1
+                else:
+                    st.session_state.quiz_completed = True
+                st.experimental_rerun()
+
+        if Links:
+            st.markdown("---")
+            for link in Links:
+                st.markdown(f"- [{link['title']}]({link['url']})")
+
     if st.session_state.in_quiz_mode:
-        if st.button("⬅️ رجوع إلى العرض العادي"):
-            st.session_state.in_quiz_mode = False
-            st.experimental_rerun()
-        st.markdown("---")
-
-    # محتوى الصفحة حسب الوضع
-    if not st.session_state.in_quiz_mode:
-        # عرض قائمة التنقل في الشريط الجانبي
-        with st.sidebar:
-            st.markdown(f"### 🧪 {subject.upper()}")
-
-            for i in range(len(questions)):
-                correct_text = normalize_answer(questions[i])
-                user_ans = st.session_state.user_answers[i]
-                if user_ans is None:
-                    status = "⬜"
-                elif user_ans == correct_text:
-                    status = "✅"
-                else:
-                    status = "❌"
-
-                if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                    st.session_state.current_question = i
-
-        def show_question(index):
-            q = questions[index]
-            correct_text = normalize_answer(q)
-
-            current_q_num = index + 1
-            total_qs = len(questions)
-            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-            default_idx = 0
-            if st.session_state.user_answers[index] in q["options"]:
-                default_idx = q["options"].index(st.session_state.user_answers[index])
-
-            selected_answer = st.radio(
-                "",
-                q["options"],
-                index=default_idx,
-                key=f"radio_{index}"
-            )
-
-            if not st.session_state.answer_shown[index]:
-                if st.button("Answer", key=f"submit_{index}"):
-                    st.session_state.user_answers[index] = selected_answer
-                    st.session_state.answer_shown[index] = True
-                    st.experimental_rerun()
-            else:
-                user_ans = st.session_state.user_answers[index]
-                if user_ans == correct_text:
-                    st.success("✅ Correct answer")
-                else:
-                    st.error(f"❌ Correct answer: {correct_text}")
-                    if "explanation" in q:
-                        st.info(f"💡 Explanation: {q['explanation']}")
-
-                if st.button("Next Question", key=f"next_{index}"):
-                    if index + 1 < len(questions):
-                        st.session_state.current_question += 1
-                    else:
-                        st.session_state.quiz_completed = True
-                    st.experimental_rerun()
-
-            if Links:
-                st.markdown("---")
-                for link in Links:
-                    st.markdown(f"- [{link['title']}]({link['url']})")
-
-        show_question(st.session_state.current_question)
-
-        st.markdown("<br><br>", unsafe_allow_html=True)  # مسافة بين المحتوى والزر
-
-        # زر الدخول في وضع الاختبار في منتصف الصفحة تحت المحتوى
-        if st.button("▶️ الدخول في وضع الاختبار"):
-            st.session_state.in_quiz_mode = True
-            st.experimental_rerun()
-
-    else:
-        # وضع الاختبار - عرض الأسئلة واحدًا تلو الآخر مع التحكم في التنقل
-        def show_question_quiz(index):
-            q = questions[index]
-            correct_text = normalize_answer(q)
-
-            current_q_num = index + 1
-            total_qs = len(questions)
-            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-            default_idx = 0
-            if st.session_state.user_answers[index] in q["options"]:
-                default_idx = q["options"].index(st.session_state.user_answers[index])
-
-            selected_answer = st.radio(
-                "",
-                q["options"],
-                index=default_idx,
-                key=f"quiz_radio_{index}"
-            )
-
-            if not st.session_state.answer_shown[index]:
-                if st.button("Answer", key=f"quiz_submit_{index}"):
-                    st.session_state.user_answers[index] = selected_answer
-                    st.session_state.answer_shown[index] = True
-                    st.experimental_rerun()
-            else:
-                user_ans = st.session_state.user_answers[index]
-                if user_ans == correct_text:
-                    st.success("✅ Correct answer")
-                else:
-                    st.error(f"❌ Correct answer: {correct_text}")
-                    if "explanation" in q:
-                        st.info(f"💡 Explanation: {q['explanation']}")
-
-                if st.button("Next Question", key=f"quiz_next_{index}"):
-                    if index + 1 < len(questions):
-                        st.session_state.current_question += 1
-                    else:
-                        st.session_state.quiz_completed = True
-                    st.experimental_rerun()
-
-            if Links:
-                st.markdown("---")
-                for link in Links:
-                    st.markdown(f"- [{link['title']}]({link['url']})")
-
+        # عرض السؤال فقط مع الأزرار
         if not st.session_state.quiz_completed:
-            show_question_quiz(st.session_state.current_question)
+            show_question(st.session_state.current_question)
         else:
             st.header("🎉 Quiz Completed!")
             correct = 0
@@ -285,6 +208,26 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.experimental_rerun()
+    else:
+        # الوضع العادي: عرض الشريط الجانبي مع التنقل بالأسئلة
+        with st.sidebar:
+            st.markdown(f"### 🧪 {subject.upper()}")
+
+            for i in range(len(questions)):
+                correct_text = normalize_answer(questions[i])
+                user_ans = st.session_state.user_answers[i]
+                if user_ans is None:
+                    status = "⬜"
+                elif user_ans == correct_text:
+                    status = "✅"
+                else:
+                    status = "❌"
+
+                if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+                    st.session_state.current_question = i
+
+        # عرض السؤال الحالي
+        show_question(st.session_state.current_question)
 
 
 def main():
