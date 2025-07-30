@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import base64
-import json
 import requests
 import re
 
@@ -19,17 +18,17 @@ def load_lecture_titles(subject):
 
 def save_lecture_titles(subject, lecture_titles):
     titles_path = os.path.join(subject, "edit", "lecture_titles.py")
-    os.makedirs(os.path.dirname(titles_path), exist_ok=True)
+    if not os.path.exists(os.path.dirname(titles_path)):
+        os.makedirs(os.path.dirname(titles_path))
 
-    # ✅ نكتب جميع الأرقام حتى لو ماكو عنوان
-    max_key = max(lecture_titles.keys()) if lecture_titles else 0
     with open(titles_path, "w", encoding="utf-8") as f:
         f.write("lecture_titles = {\n")
-        for k in range(1, max_key + 1):
-            title = lecture_titles.get(k, "")
-            safe_title = title.replace('"', '\\"')
-            f.write(f'    {k}: "{safe_title}",\n')
+        for k in sorted(lecture_titles.keys()):
+            title = lecture_titles[k].replace('"', '\\"')
+            f.write(f'    {k}: "{title}",\n')
         f.write("}\n")
+
+    return titles_path  # ✅ نرجع مسار الملف حتى نرفعه على GitHub
 
 def push_to_github(file_path, commit_message, delete=False):
     token = st.secrets["GITHUB_TOKEN"]
@@ -43,7 +42,7 @@ def push_to_github(file_path, commit_message, delete=False):
     if delete:
         if not sha:
             return
-        res = requests.delete(
+        requests.delete(
             url,
             headers={"Authorization": f"token {token}"},
             json={"message": commit_message, "sha": sha, "branch": "main"}
@@ -58,9 +57,9 @@ def push_to_github(file_path, commit_message, delete=False):
 
         res = requests.put(url, headers={"Authorization": f"token {token}"}, json=data)
 
-    if res.status_code not in [200, 201]:
-        st.error(f"❌ خطأ في GitHub: {res.status_code}")
-        st.json(res.json())
+        if res.status_code not in [200, 201]:
+            st.error(f"❌ خطأ في GitHub: {res.status_code}")
+            st.json(res.json())
 
 def get_existing_lectures(subject):
     lecture_files = os.listdir(subject) if os.path.exists(subject) else []
@@ -86,7 +85,7 @@ def add_lecture_page():
 
     tab1, tab2 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات"])
 
-    # -------------------- إضافة محاضرة --------------------
+    # ✅ تبويب إضافة محاضرة
     with tab1:
         subject = st.selectbox("اختر المادة", subjects, key="add_subject")
         lecture_titles = load_lecture_titles(subject)
@@ -111,18 +110,22 @@ def add_lecture_page():
             if not os.path.exists(subject):
                 os.makedirs(subject)
 
-            # ✅ كتابة ملف المحاضرة
+            # ✅ إنشاء ملف الأسئلة
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content_code)
 
             # ✅ تحديث عنوان المحاضرة في lecture_titles
             lecture_titles[int(lec_num)] = lec_title.strip()
-            save_lecture_titles(subject, lecture_titles)
+            titles_path = save_lecture_titles(subject, lecture_titles)
+
+            # ✅ رفع الملفات إلى GitHub
+            push_to_github(file_path, f"Add lecture {filename}")
+            push_to_github(titles_path, f"Update lecture titles for {subject}")
 
             st.success(f"✅ تم إنشاء الملف: {file_path}")
-            push_to_github(file_path, f"Add lecture {filename}")
+            st.info("📌 تم تحديث العنوان في lecture_titles.py ورفعه إلى GitHub ✅")
 
-    # -------------------- حذف محاضرة --------------------
+    # ✅ تبويب الحذف
     with tab2:
         subject = st.selectbox("اختر المادة", subjects, key="delete_subject")
         lecture_titles = load_lecture_titles(subject)
