@@ -80,22 +80,12 @@ def orders_o():
     )
     st.session_state.selected_version = selected_version
 
-    st.markdown("<br>", unsafe_allow_html=True)  # مسافة بسيطة
+    # مسافة بسيطة
+    st.markdown("<br>", unsafe_allow_html=True)
 
+    # إعداد حالة وضع الاختبار إذا غير موجودة
     if "in_quiz_mode" not in st.session_state:
         st.session_state.in_quiz_mode = False
-
-    # **هنا الزر بالمنتصف تقريبًا بعد اختيار النسخة**
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if not st.session_state.in_quiz_mode:
-            if st.button("▶️ الدخول في وضع الاختبار"):
-                st.session_state.in_quiz_mode = True
-                st.rerun()
-        else:
-            if st.button("⬅️ خروج من وضع الاختبار"):
-                st.session_state.in_quiz_mode = False
-                st.rerun()
 
     file_path = os.path.join(subject, versions_dict[selected_version])
     questions_module = import_module_from_file(file_path)
@@ -107,6 +97,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # تهيئة الحالة عند تغير البيانات
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -185,8 +176,22 @@ def orders_o():
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
+    # زر خروج من وضع الاختبار أعلى الصفحة إذا في وضع الاختبار
     if st.session_state.in_quiz_mode:
-        # عرض السؤال فقط مع الأزرار
+        if st.button("⬅️ خروج من وضع الاختبار"):
+            st.session_state.in_quiz_mode = False
+            st.rerun()
+
+    # زر الدخول في وضع الاختبار تحت اختيار النسخة فقط إذا لم نكن في وضع الاختبار
+    if not st.session_state.in_quiz_mode:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("▶️ الدخول في وضع الاختبار"):
+                st.session_state.in_quiz_mode = True
+                st.rerun()
+
+    # عرض المحتوى حسب الوضع
+    if st.session_state.in_quiz_mode:
         if not st.session_state.quiz_completed:
             show_question(st.session_state.current_question)
         else:
@@ -208,8 +213,9 @@ def orders_o():
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
                 st.rerun()
+
     else:
-        # الوضع العادي: عرض الشريط الجانبي مع التنقل بالأسئلة
+        # الوضع العادي: الشريط الجانبي مع التنقل بالأسئلة
         with st.sidebar:
             st.markdown(f"### 🧪 {subject.upper()}")
 
@@ -226,7 +232,6 @@ def orders_o():
                 if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                     st.session_state.current_question = i
 
-        # عرض السؤال الحالي
         show_question(st.session_state.current_question)
 
 
