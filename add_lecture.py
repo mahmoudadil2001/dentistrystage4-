@@ -17,9 +17,11 @@ def load_lecture_titles(subject):
     return namespace.get("lecture_titles", {})
 
 def save_lecture_titles(subject, lecture_titles):
-    titles_path = os.path.join(subject, "edit", "lecture_titles.py")
-    if not os.path.exists(os.path.dirname(titles_path)):
-        os.makedirs(os.path.dirname(titles_path))
+    titles_dir = os.path.join(subject, "edit")
+    if not os.path.exists(titles_dir):
+        os.makedirs(titles_dir)
+
+    titles_path = os.path.join(titles_dir, "lecture_titles.py")
 
     with open(titles_path, "w", encoding="utf-8") as f:
         f.write("lecture_titles = {\n")
@@ -62,7 +64,10 @@ def push_to_github(file_path, commit_message, delete=False):
             st.json(res.json())
 
 def get_existing_lectures(subject):
-    lecture_files = os.listdir(subject) if os.path.exists(subject) else []
+    if not os.path.exists(subject):
+        return {}
+
+    lecture_files = os.listdir(subject)
     lecture_dict = {}
 
     for f in lecture_files:
@@ -124,6 +129,7 @@ def add_lecture_page():
 
                             st.success(f"✅ تم إنشاء الملف: {file_path}")
                             st.info("📌 تم تحديث العنوان في lecture_titles.py ورفعه إلى GitHub ✅")
+                            st.experimental_rerun()
 
             elif operation == "نسخة جديدة":
                 lec_num = st.number_input("رقم المحاضرة", min_value=1, step=1, key="add_ver_lec_num")
@@ -150,6 +156,7 @@ def add_lecture_page():
 
                         push_to_github(file_path, f"Add version {version_num} for lecture {lec_num}")
                         st.success(f"✅ تم إنشاء النسخة: {file_path}")
+                        st.experimental_rerun()
 
     # 🗑️ إدارة / حذف المحاضرات
     with tab2:
@@ -236,6 +243,7 @@ def add_lecture_page():
                                 push_to_github(titles_path, f"Update lecture titles for {subject}")
 
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
+                                st.experimental_rerun()
 
 def main():
     st.markdown(
