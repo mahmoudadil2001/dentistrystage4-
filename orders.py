@@ -36,11 +36,14 @@ def orders_o():
     if "show_quiz_controls" not in st.session_state:
         st.session_state.show_quiz_controls = True
 
-    col1, col2 = st.columns([1,2])
+    # تغيير النص حسب الحالة
+    button_text = "Hide Quiz Controls" if st.session_state.show_quiz_controls else "Show Quiz Controls"
+
+    col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        if st.button("مود الاختبار"):
+        if st.button(button_text):
             st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
-            st.rerun()
+            st.experimental_rerun()
 
     if st.session_state.show_quiz_controls:
         st.markdown(
