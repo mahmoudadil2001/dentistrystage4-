@@ -285,7 +285,7 @@ questions = [
         elif section == "📚 تعليمات إضافة نسخة":
             st.markdown("1- روح لـ **تعديل المحاضرة** وانسخ النسخ الموجودة")
             st.markdown("2- روح لموقع **chat.deepseek.com**")
-            st.markdown("3- ارسل النسخ اللي نسختها، بعدها حمل المحاضرة واكتبله وغير عدد الاسئلة:")
+            st.markdown("3- ارسل النسخ اللي نسختها، بعدها حمل المحاضرة, اكتبله هالنص وغير عدد الاسئلة:")
 
             code2 = '''make number of Mcqs in python language in this patern Provided that you do not repeat or send any questions similar to the ones I sent.
 questions = [
