@@ -88,7 +88,12 @@ def add_lecture_page():
         "periodontology", "prosthodontics"
     ]
 
-    tab1, tab2, tab3 = st.tabs(["➕ إضافة محاضرة", "🗑️ إدارة / حذف المحاضرات", "✏️ تعديل المحاضرة"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "➕ إضافة محاضرة", 
+        "🗑️ إدارة / حذف المحاضرات", 
+        "✏️ تعديل المحاضرة", 
+        "🤖 شدز للـ AI"
+    ])
 
     # ➕ إضافة محاضرة
     with tab1:
@@ -244,6 +249,14 @@ def add_lecture_page():
 
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
                                 st.rerun()
+
+    # 🤖 شدز للـ AI
+    with tab4:
+        st.header("🤖 شدز للـ AI")
+        st.write("Hello")
+        code = "Hello"
+        st.code(code, language="text")
+        st.download_button("📋 نسخ", data=code, file_name="hello.txt", mime="text/plain")
 
 def main():
     st.markdown(
