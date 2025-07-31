@@ -38,8 +38,6 @@ def orders_o():
     if "show_quiz_controls" not in st.session_state:
         st.session_state.show_quiz_controls = True
 
-col1, col2, col3 = st.columns([1,2,1])
-with col2:
     if st.button("Toggle Quiz Controls"):
         st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
         st.rerun()
