@@ -253,10 +253,21 @@ def add_lecture_page():
     # 🤖 شدز للـ AI
     with tab4:
         st.header("🤖 شدز للـ AI")
+
+        # القسم الأول Hello
         st.write("Hello")
-        code = "Hello"
-        st.code(code, language="text")
-        st.download_button("📋 نسخ", data=code, file_name="hello.txt", mime="text/plain")
+        code1 = "Hello"
+        st.code(code1, language="text")
+        st.download_button("📋 نسخ Hello", data=code1, file_name="hello.txt", mime="text/plain")
+
+        st.write("---")  # خط فاصل بين الاثنين
+
+        # القسم الثاني Hi
+        st.write("Hi")
+        code2 = "Hi"
+        st.code(code2, language="text")
+        st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
+
 
 def main():
     st.markdown(
