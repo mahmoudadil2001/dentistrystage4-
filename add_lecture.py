@@ -252,7 +252,7 @@ def add_lecture_page():
 
     # 🤖 شدز للـ AI
     with tab4:
-        st.header("🤖 شدز للـ AI")
+
 
         # القسم الأول Hello
         st.write("Hello")
