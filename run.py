@@ -1,6 +1,6 @@
 import streamlit as st
 from login import login_page
-from orders import main as orders_main
+from orders import orders_o as orders_main
 from add_lecture import add_lecture_page
 
 def local_css(file_name):
