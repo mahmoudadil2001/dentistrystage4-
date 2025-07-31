@@ -1,6 +1,6 @@
 import streamlit as st
 from login import login_page
-from orders_quiz import orders_o
+from orders import main as orders_main
 from add_lecture import add_lecture_page
 
 def local_css(file_name):
@@ -19,13 +19,14 @@ def main():
         page = st.sidebar.radio("📂 اختر الصفحة", ["📖 الأسئلة", "➕ إضافة محاضرة"])
 
         if page == "📖 الأسئلة":
-            orders_o()
+            orders_main()
 
         elif page == "➕ إضافة محاضرة":
             if "admin_verified" not in st.session_state:
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
+                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
                 ### 👋 أهلا شباب  
                 فقط الأدمن يقدر يضيف ويحذف محاضرات.  
