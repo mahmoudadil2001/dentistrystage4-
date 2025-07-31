@@ -250,20 +250,20 @@ def add_lecture_page():
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
                                 st.experimental_rerun()
 
-# 🤖 شدز للـ AI
-with tab4:
-    section = st.selectbox(
-        "اختر القسم:", 
-        ["📌 تعليمات إضافة محاضرة", "📚 تعليمات إضافة نسخة", "💬 كود اضافة رابط"], 
-        key="select_tab4_section"
-    )
+    # 🤖 شدز للـ AI
+    with tab4:
+        section = st.selectbox(
+            "اختر القسم:", 
+            ["📌 تعليمات إضافة محاضرة", "📚 تعليمات إضافة نسخة", "💬 كود اضافة رابط"], 
+            key="select_tab4_section"
+        )
 
-    if section == "📌 تعليمات إضافة محاضرة":
-        st.markdown("1- روح لموقع **chat.deepseek.com**")
-        st.markdown("2- حمل المحاضرة المطلوبة")
-        st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
+        if section == "📌 تعليمات إضافة محاضرة":
+            st.markdown("1- روح لموقع **chat.deepseek.com**")
+            st.markdown("2- حمل المحاضرة المطلوبة")
+            st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
 
-        code1 = '''make number of Mcqs in python language in this patern
+            code1 = '''make number of Mcqs in python language in this patern
 questions = [
     {
         "question": "What is monkey?",
@@ -273,59 +273,37 @@ questions = [
     }
 ]'''
 
-        st.code(code1, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code1, 
-            file_name="mcqs_template.py", 
-            mime="text/plain", 
-            key="download_mcqs_template"
-        )
+            st.code(code1, language="python")
+            st.download_button(
+                "📋 نسخ", 
+                data=code1, 
+                file_name="mcqs_template.py", 
+                mime="text/plain", 
+                key="download_mcqs_template"
+            )
 
-    elif section == "📚 تعليمات إضافة نسخة":
-        st.markdown("1- اختر المحاضرة الموجودة التي تريد إنشاء نسخة جديدة لها")
-        st.markdown("2- حدّد رقم النسخة الجديدة (يجب أن يكون 2 أو أكثر)")
-        st.markdown("3- اكتب كود الأسئلة كما هو موضح في المثال")
+        elif section == "📚 تعليمات إضافة نسخة":
+            st.write("نفس خطوات إضافة نسخة في الزر الأول لكن هذه للتعليمات فقط.")
+            st.markdown("1- اكتب رقم المحاضرة الموجودة.")
+            st.markdown("2- اختر رقم النسخة الجديدة.")
+            st.markdown("3- أضف كود الأسئلة (questions و Links).")
 
-        code_version = '''make number of Mcqs in python language in this patern
-questions = [
-    {
-        "question": "What is monkey?",
-        "options": ["animal", "plant", "car", "donkey"],
-        "answer": "animal",
-        "explanation": "'make a good explantation."
-    }
-]
-# Example: version = 2
-'''
+        elif section == "💬 كود اضافة رابط":
+            st.write("تحطه في نهاية ملف الاسئلة")
+            st.write("تكتب اسم ونص الرابط")
 
-        st.code(code_version, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code_version, 
-            file_name="mcqs_version_template.py", 
-            mime="text/plain", 
-            key="download_version_template"
-        )
-
-    elif section == "💬 كود اضافة رابط":
-        st.write("تحطه في نهاية ملف الاسئلة")
-        st.write("تكتب اسم ونص الرابط")
-
-        code2 = '''Links = [
+            code2 = '''Links = [
     {"title": "الاسم", "url": "النص"},
 ]'''
 
-        st.code(code2, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code2, 
-            file_name="links_code.py", 
-            mime="text/plain", 
-            key="download_links"
-        )
-
-
+            st.code(code2, language="python")
+            st.download_button(
+                "📋 نسخ", 
+                data=code2, 
+                file_name="links_code.py", 
+                mime="text/plain", 
+                key="download_links"
+            )
 
 def main():
     st.markdown(
