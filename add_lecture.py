@@ -256,7 +256,6 @@ def add_lecture_page():
         section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 Hi"])
 
         if section == "📌 تعليمات إضافة محاضرة":
-            st.write("اذا تضيف محاضرة:")
             st.markdown("1- روح لموقع **chat.deepseek.com**")
             st.markdown("2- حمل المحاضرة المطلوبة")
             st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
@@ -274,9 +273,12 @@ questions = [
             st.code(code1, language="python")
             st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain", key="download_mcqs_template")
 
-        elif section == "💬 Hi":
-            st.write("Hi")
-            code2 = "Hi"
+        elif section == "💬 كود اضافة رابط":
+            st.write("تحطه في نهاية ملف الاسئلة")
+            st.write("تكتب اسم ونص الرابط")
+            code2 = "Links = [
+    {"title": "الاسم", "url": "النص"},
+]"
             st.code(code2, language="text")
             st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain", key="download_hi")
 
