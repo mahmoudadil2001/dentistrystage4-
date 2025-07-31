@@ -34,12 +34,13 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
+    # زر التبديل بين إظهار/إخفاء الواجهة
     if "show_quiz_controls" not in st.session_state:
         st.session_state.show_quiz_controls = True
 
     if st.button("Toggle Quiz Controls"):
         st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
-        st.experimental_rerun()
+        st.rerun()
 
     if st.session_state.show_quiz_controls:
         st.markdown(
