@@ -281,6 +281,13 @@ questions = [
             st.code(code2, language="text")
             st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
 
+
+        elif section == "💬 Hi":
+            st.write("Hi")
+            code2 = "Hi"
+            st.code(code2, language="text")
+            st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
+
         st.write("---")  # خط فاصل بين الاثنين
 
         # القسم الثاني Hi
