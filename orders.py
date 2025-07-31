@@ -32,8 +32,6 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
 def orders_o():
     subjects = [
         "endodontics",
@@ -47,10 +45,6 @@ def orders_o():
         "periodontology",
         "prosthodontics"
     ]
-
-    # --- إضافة حالة وضع التركيز ---
-    if "focus_mode" not in st.session_state:
-        st.session_state.focus_mode = False
 
     subject = st.selectbox("Select Subject", subjects)
 
@@ -76,10 +70,8 @@ def orders_o():
         options=lectures_options,
         format_func=lambda x: x[1]
     )[0]
-
     versions_dict = lectures_versions.get(lec_num, {})
 
-    # ----- تعديل هنا لضمان اختيار نسخة موجودة -----
     versions_keys = sorted(versions_dict.keys())
     if not versions_keys:
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
@@ -95,11 +87,6 @@ def orders_o():
     )
 
     st.session_state.selected_version = selected_version
-
-    # --- إضافة Checkbox وضع التركيز ---
-    st.checkbox("⚡️ وضع التركيز (إخفاء كل شيء عدا السؤال والاختيارات)", key="focus_mode")
-
-    # ---------------------------------------------
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -126,6 +113,14 @@ def orders_o():
         st.session_state.current_lecture = lec_num
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
+
+    # زر إخفاء/إظهار السؤال والاختيارات
+    if "hide_quiz" not in st.session_state:
+        st.session_state.hide_quiz = False
+
+    if st.button("إظهار / إخفاء السؤال والاختيارات"):
+        st.session_state.hide_quiz = not st.session_state.hide_quiz
+        st.experimental_rerun()
 
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
@@ -164,45 +159,11 @@ def orders_o():
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
+
         current_q_num = index + 1
         total_qs = len(questions)
 
-        if st.session_state.focus_mode:
-            # وضع التركيز - إخفاء الروابط والشرح وغيره
-            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-            default_idx = 0
-            if st.session_state.user_answers[index] in q["options"]:
-                default_idx = q["options"].index(st.session_state.user_answers[index])
-
-            selected_answer = st.radio(
-                "",
-                q["options"],
-                index=default_idx,
-                key=f"radio_{index}"
-            )
-
-            if not st.session_state.answer_shown[index]:
-                if st.button("Answer", key=f"submit_{index}"):
-                    st.session_state.user_answers[index] = selected_answer
-                    st.session_state.answer_shown[index] = True
-                    st.experimental_rerun()
-            else:
-                user_ans = st.session_state.user_answers[index]
-                if user_ans == correct_text:
-                    st.success("✅ Correct answer")
-                else:
-                    st.error(f"❌ Correct answer: {correct_text}")
-
-                if st.button("Next Question", key=f"next_{index}"):
-                    if index + 1 < total_qs:
-                        st.session_state.current_question += 1
-                    else:
-                        st.session_state.quiz_completed = True
-                    st.experimental_rerun()
-
-        else:
-            # الوضع العادي - عرض كامل مع روابط وشروحات
+        if not st.session_state.hide_quiz:
             st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
             default_idx = 0
@@ -231,7 +192,7 @@ def orders_o():
                         st.info(f"💡 Explanation: {q['explanation']}")
 
                 if st.button("Next Question", key=f"next_{index}"):
-                    if index + 1 < total_qs:
+                    if index + 1 < len(questions):
                         st.session_state.current_question += 1
                     else:
                         st.session_state.quiz_completed = True
@@ -241,6 +202,8 @@ def orders_o():
                 st.markdown("---")
                 for link in Links:
                     st.markdown(f"- [{link['title']}]({link['url']})")
+        else:
+            st.info("تم إخفاء السؤال والاختيارات.")
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -263,29 +226,3 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.experimental_rerun()
-
-
-def main():
-    st.markdown(
-        """
-        <div style="
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            border-radius: 15px;
-            padding: 20px;
-            color: #003049;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        ">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
-        </div>
-        """
-    , unsafe_allow_html=True)
-    orders_o()
-
-
-if __name__ == "__main__":
-    main()
