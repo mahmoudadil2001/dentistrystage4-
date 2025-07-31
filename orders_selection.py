@@ -1,54 +1,25 @@
 import streamlit as st
-from versions_manager import get_lectures_and_versions
-from orders_loader import load_lecture_titles
+from versions_manager import get_lectures_and_versions, select_version_ui
 
 def select_subject():
-    subjects = [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
-    ]
-    return st.selectbox("Select Subject", subjects)
+    subjects = ["endodontics", "implant", "periodontics"]  # مثال
+    return st.sidebar.selectbox("اختر المادة", subjects)
 
 def select_lecture(subject):
-    lectures_versions = get_lectures_and_versions(subject)
-    if not lectures_versions:
-        st.error(f"⚠️ No lecture files found for subject {subject}!")
+    if "in_quiz_mode" in st.session_state and st.session_state.in_quiz_mode:
+        # في وضع الاختبار لا نعرض الاختيارات، نعطي القيم من الحالة مباشرة
+        return st.session_state.get("current_lecture"), st.session_state.get("current_subject")
+
+    lectures = get_lectures_and_versions(subject)
+    if not lectures:
+        st.sidebar.warning("لا توجد محاضرات متاحة لهذه المادة.")
         return None, None
 
-    lecture_titles = load_lecture_titles(subject)
-    lectures_options = []
-    for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, "").strip()
-        display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))
+    lecture_nums = sorted(lectures.keys())
+    lec_num = st.sidebar.selectbox("اختر رقم المحاضرة", lecture_nums)
 
-    lec_num = st.selectbox("Select Lecture", options=lectures_options, format_func=lambda x: x[1])[0]
+    versions = lectures[lec_num]
+    version_num = select_version_ui(versions, sidebar_title="اختر نسخة السؤال", sidebar_label="النسخ المتاحة", key="version_select")
 
-    versions_dict = lectures_versions.get(lec_num, {})
-    if not versions_dict:
-        st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
-        return None, None
-
-    versions_keys = sorted(versions_dict.keys())
-
-    # حفظ أو تحديث النسخة المحددة في session_state
-    if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
-        st.session_state.selected_version = versions_keys[0]
-
-    selected_version = st.selectbox(
-        "Select Version",
-        options=versions_keys,
-        index=versions_keys.index(st.session_state.selected_version)
-    )
-    st.session_state.selected_version = selected_version
-
-    filename = versions_dict[selected_version]
+    filename = versions.get(version_num)
     return filename, subject
