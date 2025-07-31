@@ -48,6 +48,10 @@ def orders_o():
         "prosthodontics"
     ]
 
+    # --- إضافة حالة وضع التركيز ---
+    if "focus_mode" not in st.session_state:
+        st.session_state.focus_mode = False
+
     subject = st.selectbox("Select Subject", subjects)
 
     lectures_versions = get_lectures_and_versions(subject)
@@ -91,6 +95,10 @@ def orders_o():
     )
 
     st.session_state.selected_version = selected_version
+
+    # --- إضافة Checkbox وضع التركيز ---
+    st.checkbox("⚡️ وضع التركيز (إخفاء كل شيء عدا السؤال والاختيارات)", key="focus_mode")
+
     # ---------------------------------------------
 
     filename = versions_dict[selected_version]
@@ -156,47 +164,83 @@ def orders_o():
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-
         current_q_num = index + 1
         total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
-        default_idx = 0
-        if st.session_state.user_answers[index] in q["options"]:
-            default_idx = q["options"].index(st.session_state.user_answers[index])
+        if st.session_state.focus_mode:
+            # وضع التركيز - إخفاء الروابط والشرح وغيره
+            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
 
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
+            default_idx = 0
+            if st.session_state.user_answers[index] in q["options"]:
+                default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
-        else:
-            user_ans = st.session_state.user_answers[index]
-            if user_ans == correct_text:
-                st.success("✅ Correct answer")
+            selected_answer = st.radio(
+                "",
+                q["options"],
+                index=default_idx,
+                key=f"radio_{index}"
+            )
+
+            if not st.session_state.answer_shown[index]:
+                if st.button("Answer", key=f"submit_{index}"):
+                    st.session_state.user_answers[index] = selected_answer
+                    st.session_state.answer_shown[index] = True
+                    st.experimental_rerun()
             else:
-                st.error(f"❌ Correct answer: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 Explanation: {q['explanation']}")
-
-            if st.button("Next Question", key=f"next_{index}"):
-                if index + 1 < len(questions):
-                    st.session_state.current_question += 1
+                user_ans = st.session_state.user_answers[index]
+                if user_ans == correct_text:
+                    st.success("✅ Correct answer")
                 else:
-                    st.session_state.quiz_completed = True
-                st.rerun()
+                    st.error(f"❌ Correct answer: {correct_text}")
 
-        if Links:
-            st.markdown("---")
-            for link in Links:
-                st.markdown(f"- [{link['title']}]({link['url']})")
+                if st.button("Next Question", key=f"next_{index}"):
+                    if index + 1 < total_qs:
+                        st.session_state.current_question += 1
+                    else:
+                        st.session_state.quiz_completed = True
+                    st.experimental_rerun()
+
+        else:
+            # الوضع العادي - عرض كامل مع روابط وشروحات
+            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+
+            default_idx = 0
+            if st.session_state.user_answers[index] in q["options"]:
+                default_idx = q["options"].index(st.session_state.user_answers[index])
+
+            selected_answer = st.radio(
+                "",
+                q["options"],
+                index=default_idx,
+                key=f"radio_{index}"
+            )
+
+            if not st.session_state.answer_shown[index]:
+                if st.button("Answer", key=f"submit_{index}"):
+                    st.session_state.user_answers[index] = selected_answer
+                    st.session_state.answer_shown[index] = True
+                    st.experimental_rerun()
+            else:
+                user_ans = st.session_state.user_answers[index]
+                if user_ans == correct_text:
+                    st.success("✅ Correct answer")
+                else:
+                    st.error(f"❌ Correct answer: {correct_text}")
+                    if "explanation" in q:
+                        st.info(f"💡 Explanation: {q['explanation']}")
+
+                if st.button("Next Question", key=f"next_{index}"):
+                    if index + 1 < total_qs:
+                        st.session_state.current_question += 1
+                    else:
+                        st.session_state.quiz_completed = True
+                    st.experimental_rerun()
+
+            if Links:
+                st.markdown("---")
+                for link in Links:
+                    st.markdown(f"- [{link['title']}]({link['url']})")
 
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
@@ -218,7 +262,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
@@ -241,6 +285,7 @@ def main():
         """
     , unsafe_allow_html=True)
     orders_o()
+
 
 if __name__ == "__main__":
     main()
