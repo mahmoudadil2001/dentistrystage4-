@@ -1,69 +1,47 @@
 import streamlit as st
 
 def exam_mode_ui(questions, Links):
-    def normalize_answer(q):
-        answer = q.get("answer") or q.get("correct_answer")
-        options = q["options"]
+    st.title("🎯 وضع الاختبار")
 
-        if isinstance(answer, int) and 0 <= answer < len(options):
-            return options[answer]
+    if "exam_question_index" not in st.session_state:
+        st.session_state.exam_question_index = 0
+        st.session_state.exam_answers = [None] * len(questions)
+        st.session_state.exam_finished = False
 
-        if isinstance(answer, str):
-            answer_clean = answer.strip().upper()
-            if answer_clean in ["A", "B", "C", "D"]:
-                idx = ord(answer_clean) - ord("A")
-                if 0 <= idx < len(options):
-                    return options[idx]
-            if answer in options:
-                return answer
-
-        return None
-
-    if "in_exam_mode" not in st.session_state:
-        st.session_state.in_exam_mode = True  # هنا نضمن تفعيل الوضع عند الدخول لأول مرة
-
-    # زر خروج أو دخول وضع الاختبار - سيتم التحكم فيه من orders.py، هنا نترك فقط العرض
-    # لكن إذا أردنا عرض زر هنا (اختياري) يمكن إزالة هذا التعليق.
-
-    index = st.session_state.current_question
-
+    index = st.session_state.exam_question_index
     q = questions[index]
-    correct_text = normalize_answer(q)
 
-    current_q_num = index + 1
-    total_qs = len(questions)
-    st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+    st.markdown(f"### السؤال {index + 1} من {len(questions)}")
+    st.write(q['question'])
 
-    default_idx = 0
-    if st.session_state.user_answers[index] in q["options"]:
-        default_idx = q["options"].index(st.session_state.user_answers[index])
+    selected = st.radio("اختر الإجابة", q["options"], key=f"exam_radio_{index}")
 
-    selected_answer = st.radio(
-        "",
-        q["options"],
-        index=default_idx,
-        key=f"exam_radio_{index}"
-    )
-
-    if not st.session_state.answer_shown[index]:
-        if st.button("Answer", key=f"exam_submit_{index}"):
-            st.session_state.user_answers[index] = selected_answer
-            st.session_state.answer_shown[index] = True
-            st.experimental_rerun()
-    else:
-        user_ans = st.session_state.user_answers[index]
-        if user_ans == correct_text:
-            st.success("✅ Correct answer")
+    if st.button("تأكيد الإجابة"):
+        st.session_state.exam_answers[index] = selected
+        if index + 1 < len(questions):
+            st.session_state.exam_question_index += 1
         else:
-            st.error(f"❌ Correct answer: {correct_text}")
-            if "explanation" in q:
-                st.info(f"💡 Explanation: {q['explanation']}")
+            st.session_state.exam_finished = True
+        st.experimental_rerun()
 
-        if st.button("Next Question", key=f"exam_next_{index}"):
-            if index + 1 < len(questions):
-                st.session_state.current_question += 1
-            else:
-                st.session_state.quiz_completed = True
+    if st.session_state.exam_finished:
+        st.success("🎉 انتهى الاختبار!")
+        # حساب الدرجات
+        correct_count = 0
+        for i, q in enumerate(questions):
+            answer = q.get("answer") or q.get("correct_answer")
+            correct = q["options"][answer] if isinstance(answer, int) else answer
+            if st.session_state.exam_answers[i] == correct:
+                correct_count += 1
+
+        st.write(f"الدرجة: {correct_count} من {len(questions)}")
+
+        if st.button("خروج من وضع الاختبار"):
+            st.session_state.exam_mode = False
+            # تنظيف حالات الاختبار
+            del st.session_state.exam_question_index
+            del st.session_state.exam_answers
+            del st.session_state.exam_finished
             st.experimental_rerun()
 
     if Links:
