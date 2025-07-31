@@ -259,9 +259,18 @@ def add_lecture_page():
         st.markdown("2- حمل المحاضرة المطلوبة")
         st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
 
-        code1 = "Hello"
-        st.code(code1, language="text")
-        st.download_button("📋 نسخ Hello", data=code1, file_name="hello.txt", mime="text/plain")
+        code1 = '''make number of Mcqs in python language in this patern
+questions = [
+    {
+        "question": "What is monkey?",
+        "options": ["animal", "plant", "car", "donkey"],
+        "answer": "animal",
+        "explanation": "'make a good explantation."
+    }
+]'''
+
+        st.code(code1, language="python")
+        st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain")
 
         st.write("---")  # خط فاصل بين الاثنين
 
@@ -270,6 +279,7 @@ def add_lecture_page():
         code2 = "Hi"
         st.code(code2, language="text")
         st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
+
 
 
 
