@@ -273,15 +273,6 @@ questions = [
     }
 ]'''
 
-            st.code(code1, language="python")
-            st.download_button(
-                "📋 نسخ", 
-                data=code1, 
-                file_name="mcqs_template.py", 
-                mime="text/plain", 
-                key="download_mcqs_template"
-            )
-
         elif section == "💬 كود اضافة رابط":
             st.write("تحطه في نهاية ملف الاسئلة")
             st.write("تكتب اسم ونص الرابط")
@@ -289,15 +280,6 @@ questions = [
             code2 = '''Links = [
     {"title": "الاسم", "url": "النص"},
 ]'''
-
-            st.code(code2, language="python")
-            st.download_button(
-                "📋 نسخ", 
-                data=code2, 
-                file_name="links_code.py", 
-                mime="text/plain", 
-                key="download_links"
-            )
 
 
 def main():
