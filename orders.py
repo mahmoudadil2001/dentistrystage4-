@@ -2,10 +2,8 @@ import streamlit as st
 import os
 import importlib.util
 import sys
-import importlib
-
 from versions_manager import get_lectures_and_versions
-
+from exam_mode import exam_mode_ui  # استيراد وضع الاختبار
 
 def load_lecture_titles(subject_name):
     import os
@@ -55,7 +53,6 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
-    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
@@ -75,7 +72,6 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
-    # ----- تعديل هنا لضمان اختيار نسخة موجودة -----
     versions_keys = sorted(versions_dict.keys())
     if not versions_keys:
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
@@ -91,7 +87,6 @@ def orders_o():
     )
 
     st.session_state.selected_version = selected_version
-    # ---------------------------------------------
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -153,72 +148,76 @@ def orders_o():
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
-    def show_question(index):
-        q = questions[index]
-        correct_text = normalize_answer(q)
-
-        current_q_num = index + 1
-        total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-        default_idx = 0
-        if st.session_state.user_answers[index] in q["options"]:
-            default_idx = q["options"].index(st.session_state.user_answers[index])
-
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
-
-        if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
-        else:
-            user_ans = st.session_state.user_answers[index]
-            if user_ans == correct_text:
-                st.success("✅ Correct answer")
-            else:
-                st.error(f"❌ Correct answer: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 Explanation: {q['explanation']}")
-
-            if st.button("Next Question", key=f"next_{index}"):
-                if index + 1 < len(questions):
-                    st.session_state.current_question += 1
-                else:
-                    st.session_state.quiz_completed = True
-                st.rerun()
-
-        if Links:
-            st.markdown("---")
-            for link in Links:
-                st.markdown(f"- [{link['title']}]({link['url']})")
-
-    if not st.session_state.quiz_completed:
-        show_question(st.session_state.current_question)
+    # إذا في وضع الاختبار، اعرض واجهة exam_mode_ui فقط، غير ذلك اعرض العرض العادي
+    if st.session_state.get("in_exam_mode", False):
+        exam_mode_ui(questions, Links)
     else:
-        st.header("🎉 Quiz Completed!")
-        correct = 0
-        for i, q in enumerate(questions):
+        def show_question(index):
+            q = questions[index]
             correct_text = normalize_answer(q)
-            user = st.session_state.user_answers[i]
-            if user == correct_text:
-                correct += 1
-                st.write(f"Question {i+1}: ✅ Correct")
-            else:
-                st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
-        st.success(f"Score: {correct} out of {len(questions)}")
 
-        if st.button("🔁 Restart Quiz"):
-            st.session_state.current_question = 0
-            st.session_state.user_answers = [None] * len(questions)
-            st.session_state.answer_shown = [False] * len(questions)
-            st.session_state.quiz_completed = False
-            st.rerun()
+            current_q_num = index + 1
+            total_qs = len(questions)
+            st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+
+            default_idx = 0
+            if st.session_state.user_answers[index] in q["options"]:
+                default_idx = q["options"].index(st.session_state.user_answers[index])
+
+            selected_answer = st.radio(
+                "",
+                q["options"],
+                index=default_idx,
+                key=f"radio_{index}"
+            )
+
+            if not st.session_state.answer_shown[index]:
+                if st.button("Answer", key=f"submit_{index}"):
+                    st.session_state.user_answers[index] = selected_answer
+                    st.session_state.answer_shown[index] = True
+                    st.rerun()
+            else:
+                user_ans = st.session_state.user_answers[index]
+                if user_ans == correct_text:
+                    st.success("✅ Correct answer")
+                else:
+                    st.error(f"❌ Correct answer: {correct_text}")
+                    if "explanation" in q:
+                        st.info(f"💡 Explanation: {q['explanation']}")
+
+                if st.button("Next Question", key=f"next_{index}"):
+                    if index + 1 < len(questions):
+                        st.session_state.current_question += 1
+                    else:
+                        st.session_state.quiz_completed = True
+                    st.rerun()
+
+            if Links:
+                st.markdown("---")
+                for link in Links:
+                    st.markdown(f"- [{link['title']}]({link['url']})")
+
+        if not st.session_state.quiz_completed:
+            show_question(st.session_state.current_question)
+        else:
+            st.header("🎉 Quiz Completed!")
+            correct = 0
+            for i, q in enumerate(questions):
+                correct_text = normalize_answer(q)
+                user = st.session_state.user_answers[i]
+                if user == correct_text:
+                    correct += 1
+                    st.write(f"Question {i+1}: ✅ Correct")
+                else:
+                    st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
+            st.success(f"Score: {correct} out of {len(questions)}")
+
+            if st.button("🔁 Restart Quiz"):
+                st.session_state.current_question = 0
+                st.session_state.user_answers = [None] * len(questions)
+                st.session_state.answer_shown = [False] * len(questions)
+                st.session_state.quiz_completed = False
+                st.rerun()
 
 
 def main():
