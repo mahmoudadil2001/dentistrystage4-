@@ -38,7 +38,7 @@ def orders_o():
 
     col1, col2 = st.columns([1,2])
     with col2:
-        if st.button("Toggle Quiz Controls"):
+        if st.button("مود الاختبار"):
             st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
             st.rerun()
 
