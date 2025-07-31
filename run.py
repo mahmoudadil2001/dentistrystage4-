@@ -26,6 +26,7 @@ def main():
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
+                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
                 ### 👋 أهلا شباب  
                 فقط الأدمن يقدر يضيف ويحذف محاضرات.  
@@ -37,7 +38,7 @@ def main():
                     if password == st.secrets["ADMIN_PASSWORD"]:
                         st.session_state["admin_verified"] = True
                         st.success("✅ تم تسجيل الدخول بنجاح!")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.error("❌ كلمة السر غير صحيحة")
             else:
