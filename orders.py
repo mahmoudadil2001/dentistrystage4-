@@ -2,8 +2,10 @@ import streamlit as st
 import os
 import importlib.util
 import sys
+import importlib
+
 from versions_manager import get_lectures_and_versions
-from exam_mode import exam_mode_ui  # استيراد وضع الاختبار
+from exam_mode import exam_mode_ui
 
 def load_lecture_titles(subject_name):
     import os
@@ -53,6 +55,7 @@ def orders_o():
         st.error(f"⚠️ No lecture files found for subject {subject}!")
         return
 
+    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
     lecture_titles = load_lecture_titles(subject)
 
     lectures_options = []
@@ -72,6 +75,7 @@ def orders_o():
 
     versions_dict = lectures_versions.get(lec_num, {})
 
+    # ----- تعديل هنا لضمان اختيار نسخة موجودة -----
     versions_keys = sorted(versions_dict.keys())
     if not versions_keys:
         st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
@@ -87,6 +91,7 @@ def orders_o():
     )
 
     st.session_state.selected_version = selected_version
+    # ---------------------------------------------
 
     filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
@@ -114,6 +119,40 @@ def orders_o():
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
 
+    # تعريف متغير وضع الاختبار لو مش موجود
+    if "in_exam_mode" not in st.session_state:
+        st.session_state.in_exam_mode = False
+
+    def toggle_exam_mode():
+        st.session_state.in_exam_mode = not st.session_state.in_exam_mode
+        st.session_state.current_question = 0
+        st.session_state.user_answers = [None] * len(questions)
+        st.session_state.answer_shown = [False] * len(questions)
+        st.session_state.quiz_completed = False
+        st.experimental_rerun()
+
+    # زر دخول / خروج وضع الاختبار يظهر دائمًا في الأعلى
+    st.button(
+        "🧪 " + ("خروج من وضع الاختبار" if st.session_state.in_exam_mode else "دخول وضع الاختبار"),
+        on_click=toggle_exam_mode
+    )
+
+    with st.sidebar:
+        st.markdown(f"### 🧪 {subject.upper()}")
+
+        for i in range(len(questions)):
+            correct_text = normalize_answer(questions[i])
+            user_ans = st.session_state.user_answers[i]
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
+            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+                st.session_state.current_question = i
+
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
@@ -132,24 +171,7 @@ def orders_o():
 
         return None
 
-    with st.sidebar:
-        st.markdown(f"### 🧪 {subject.upper()}")
-
-        for i in range(len(questions)):
-            correct_text = normalize_answer(questions[i])
-            user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
-            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                st.session_state.current_question = i
-
-    # إذا في وضع الاختبار، اعرض واجهة exam_mode_ui فقط، غير ذلك اعرض العرض العادي
-    if st.session_state.get("in_exam_mode", False):
+    if st.session_state.in_exam_mode:
         exam_mode_ui(questions, Links)
     else:
         def show_question(index):
@@ -175,7 +197,7 @@ def orders_o():
                 if st.button("Answer", key=f"submit_{index}"):
                     st.session_state.user_answers[index] = selected_answer
                     st.session_state.answer_shown[index] = True
-                    st.rerun()
+                    st.experimental_rerun()
             else:
                 user_ans = st.session_state.user_answers[index]
                 if user_ans == correct_text:
@@ -190,7 +212,7 @@ def orders_o():
                         st.session_state.current_question += 1
                     else:
                         st.session_state.quiz_completed = True
-                    st.rerun()
+                    st.experimental_rerun()
 
             if Links:
                 st.markdown("---")
@@ -217,7 +239,7 @@ def orders_o():
                 st.session_state.user_answers = [None] * len(questions)
                 st.session_state.answer_shown = [False] * len(questions)
                 st.session_state.quiz_completed = False
-                st.rerun()
+                st.experimental_rerun()
 
 
 def main():
@@ -240,6 +262,7 @@ def main():
         """
     , unsafe_allow_html=True)
     orders_o()
+
 
 if __name__ == "__main__":
     main()
