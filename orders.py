@@ -43,7 +43,7 @@ def orders_o():
     with col2:
         if st.button(button_text):
             st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
-            st.experimental_rerun()
+            st.rerun()
 
     if st.session_state.show_quiz_controls:
         st.markdown(
