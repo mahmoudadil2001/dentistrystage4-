@@ -204,3 +204,5 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.experimental_rerun()
+def main():
+    orders_o()
