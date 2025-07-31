@@ -26,19 +26,18 @@ def exam_mode_ui(questions, Links):
 
     if st.session_state.exam_finished:
         st.success("🎉 انتهى الاختبار!")
-        # حساب الدرجات
+
         correct_count = 0
         for i, q in enumerate(questions):
-            answer = q.get("answer") or q.get("correct_answer")
-            correct = q["options"][answer] if isinstance(answer, int) else answer
+            ans = q.get("answer") or q.get("correct_answer")
+            correct = q["options"][ans] if isinstance(ans, int) else ans
             if st.session_state.exam_answers[i] == correct:
                 correct_count += 1
 
-        st.write(f"الدرجة: {correct_count} من {len(questions)}")
+        st.write(f"✅ الدرجة: {correct_count} من {len(questions)}")
 
         if st.button("خروج من وضع الاختبار"):
             st.session_state.exam_mode = False
-            # تنظيف حالات الاختبار
             del st.session_state.exam_question_index
             del st.session_state.exam_answers
             del st.session_state.exam_finished
