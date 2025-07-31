@@ -250,10 +250,9 @@ def add_lecture_page():
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
                                 st.rerun()
 
-    # 🤖 شدز للـ AI
-    with tab4:
+    # 🤖 شدز للـ AI    with tab4:
 
-        section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 Hi"])
+        section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 كود اضافة رابط"])
 
         if section == "📌 تعليمات إضافة محاضرة":
             st.markdown("1- روح لموقع **chat.deepseek.com**")
@@ -276,11 +275,14 @@ questions = [
         elif section == "💬 كود اضافة رابط":
             st.write("تحطه في نهاية ملف الاسئلة")
             st.write("تكتب اسم ونص الرابط")
-            code2 = "Links = [
+
+            code2 = '''Links = [
     {"title": "الاسم", "url": "النص"},
-]"
-            st.code(code2, language="text")
-            st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain", key="download_hi")
+]'''
+
+            st.code(code2, language="python")
+            st.download_button("📋 نسخ", data=code2, file_name="links_code.py", mime="text/plain", key="download_links")
+
 
 def main():
     st.markdown(
