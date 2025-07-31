@@ -253,9 +253,8 @@ def add_lecture_page():
     # 🤖 شدز للـ AI
     with tab4:
 
-
-        # القسم الأول Hello
-        st.write("Hello")
+        # القسم الأول - تعليمات إضافة محاضرة
+        st.write("اذا تضيف محاضرة:\n1- روح لموقع chat.deepseek.com\n2- حمل المحاضرة المطلوبة\n3- تكتبله هذا النص بس تبدل عدد ال MCQs")
         code1 = "Hello"
         st.code(code1, language="text")
         st.download_button("📋 نسخ Hello", data=code1, file_name="hello.txt", mime="text/plain")
