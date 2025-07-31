@@ -37,7 +37,7 @@ def orders_o():
         st.session_state.show_quiz_controls = True
 
     # تغيير النص حسب الحالة
-    button_text = "Hide Quiz Controls" if st.session_state.show_quiz_controls else "Show Quiz Controls"
+    button_text = "Enter Quiz Mode" if st.session_state.show_quiz_controls else "Exit Quiz Mode"
 
     col1, col2 = st.columns([1,2])
     with col2:
