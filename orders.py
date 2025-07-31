@@ -33,17 +33,18 @@ def import_module_from_file(filepath):
     return module
 
 def orders_o():
-    if "الخروج من وضع الأختبار" not in st.session_state:
+    if "show_quiz_controls" not in st.session_state:
         st.session_state.show_quiz_controls = True
 
     # تغيير النص حسب الحالة
-    button_text = "Hide Quiz Controls" if st.session_state.show_quiz_controls else "الدخول الى وضع الأختبار"
+    button_text = "Hide Quiz Controls" if st.session_state.show_quiz_controls else "Show Quiz Controls"
 
-    col1, col2 = st.columns([1,2])
+    col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button(button_text):
             st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
             st.rerun()
+
 
     if st.session_state.show_quiz_controls:
         st.markdown(
