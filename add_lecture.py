@@ -253,13 +253,16 @@ def add_lecture_page():
     # 🤖 شدز للـ AI
     with tab4:
 
-        # القسم الأول - تعليمات إضافة محاضرة
-        st.write("اذا تضيف محاضرة:")
-        st.markdown("1- روح لموقع **chat.deepseek.com**")
-        st.markdown("2- حمل المحاضرة المطلوبة")
-        st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
+        # صندوق اختيار القسم
+        section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 Hi"])
 
-        code1 = '''make number of Mcqs in python language in this patern
+        if section == "📌 تعليمات إضافة محاضرة":
+            st.write("اذا تضيف محاضرة:")
+            st.markdown("1- روح لموقع **chat.deepseek.com**")
+            st.markdown("2- حمل المحاضرة المطلوبة")
+            st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
+
+            code1 = '''make number of Mcqs in python language in this patern
 questions = [
     {
         "question": "What is monkey?",
@@ -269,8 +272,14 @@ questions = [
     }
 ]'''
 
-        st.code(code1, language="python")
-        st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain")
+            st.code(code1, language="python")
+            st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain")
+
+        elif section == "💬 Hi":
+            st.write("Hi")
+            code2 = "Hi"
+            st.code(code2, language="text")
+            st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
 
         st.write("---")  # خط فاصل بين الاثنين
 
