@@ -254,7 +254,11 @@ def add_lecture_page():
     with tab4:
 
         # القسم الأول - تعليمات إضافة محاضرة
-        st.write("اذا تضيف محاضرة:\n1- روح لموقع chat.deepseek.com\n2- حمل المحاضرة المطلوبة\n3- تكتبله هذا النص بس تبدل عدد ال MCQs")
+        st.write("اذا تضيف محاضرة:")
+        st.markdown("1- روح لموقع **chat.deepseek.com**")
+        st.markdown("2- حمل المحاضرة المطلوبة")
+        st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
+
         code1 = "Hello"
         st.code(code1, language="text")
         st.download_button("📋 نسخ Hello", data=code1, file_name="hello.txt", mime="text/plain")
@@ -266,6 +270,7 @@ def add_lecture_page():
         code2 = "Hi"
         st.code(code2, language="text")
         st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
+
 
 
 def main():
