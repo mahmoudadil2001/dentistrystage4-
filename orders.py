@@ -39,8 +39,7 @@ def orders_o():
 
     if st.button("Toggle Quiz Controls"):
         st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
-        st.rerun()
-
+        st.experimental_rerun()
 
     if st.session_state.show_quiz_controls:
         st.markdown(
