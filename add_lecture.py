@@ -134,7 +134,7 @@ def add_lecture_page():
 
                             st.success(f"✅ تم إنشاء الملف: {file_path}")
                             st.info("📌 تم تحديث العنوان في lecture_titles.py ورفعه إلى GitHub ✅")
-                            st.rerun()
+                            st.experimental_rerun()
 
             elif operation == "نسخة جديدة":
                 lec_num = st.number_input("رقم المحاضرة", min_value=1, step=1, key="add_ver_lec_num")
@@ -161,7 +161,7 @@ def add_lecture_page():
 
                         push_to_github(file_path, f"Add version {version_num} for lecture {lec_num}")
                         st.success(f"✅ تم إنشاء النسخة: {file_path}")
-                        st.rerun()
+                        st.experimental_rerun()
 
     # 🗑️ إدارة / حذف المحاضرات
     with tab2:
@@ -195,7 +195,7 @@ def add_lecture_page():
                                 os.remove(file_path)
                                 push_to_github(file_path, f"Delete lecture {selected_file}", delete=True)
                                 st.success("✅ تم حذف الملف")
-                                st.rerun()
+                                st.experimental_rerun()
                             else:
                                 st.error("❌ الملف غير موجود للحذف")
 
@@ -248,11 +248,15 @@ def add_lecture_page():
                                 push_to_github(titles_path, f"Update lecture titles for {subject}")
 
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
-                                st.rerun()
+                                st.experimental_rerun()
 
-    # 🤖 شدز للـ AI    with tab4:
-
-        section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 كود اضافة رابط"])
+    # 🤖 شدز للـ AI
+    with tab4:
+        section = st.selectbox(
+            "اختر القسم:", 
+            ["📌 تعليمات إضافة محاضرة", "💬 كود اضافة رابط"], 
+            key="select_tab4_section"
+        )
 
         if section == "📌 تعليمات إضافة محاضرة":
             st.markdown("1- روح لموقع **chat.deepseek.com**")
@@ -270,7 +274,13 @@ questions = [
 ]'''
 
             st.code(code1, language="python")
-            st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain", key="download_mcqs_template")
+            st.download_button(
+                "📋 نسخ", 
+                data=code1, 
+                file_name="mcqs_template.py", 
+                mime="text/plain", 
+                key="download_mcqs_template"
+            )
 
         elif section == "💬 كود اضافة رابط":
             st.write("تحطه في نهاية ملف الاسئلة")
@@ -281,8 +291,13 @@ questions = [
 ]'''
 
             st.code(code2, language="python")
-            st.download_button("📋 نسخ", data=code2, file_name="links_code.py", mime="text/plain", key="download_links")
-
+            st.download_button(
+                "📋 نسخ", 
+                data=code2, 
+                file_name="links_code.py", 
+                mime="text/plain", 
+                key="download_links"
+            )
 
 def main():
     st.markdown(
