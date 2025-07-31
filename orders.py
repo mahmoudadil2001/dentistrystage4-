@@ -39,7 +39,7 @@ def orders_o():
     # تغيير النص حسب الحالة
     button_text = "Hide Quiz Controls" if st.session_state.show_quiz_controls else "Show Quiz Controls"
 
-    col1, col2, col3 = st.columns([1,2,1])
+    col1, col2 = st.columns([1,2])
     with col2:
         if st.button(button_text):
             st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
