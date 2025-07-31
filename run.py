@@ -26,13 +26,11 @@ def main():
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
-                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
                 ### 👋 أهلا شباب  
                 فقط الأدمن يقدر يضيف ويحذف محاضرات.  
                 إذا حاب تساعدني راسلني على التليجرام 👉 **@io_620**
                 """)
-
                 password = st.text_input("🔑 أدخل كلمة السر", type="password")
                 if st.button("تسجيل دخول"):
                     if password == st.secrets["ADMIN_PASSWORD"]:
