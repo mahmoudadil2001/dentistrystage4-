@@ -1,6 +1,6 @@
 lecture_titles = {
     1: "",
-    2: "",
+    2: "Classification of Cavities",
     3: "",
     4: "",
     5: "",
@@ -23,5 +23,5 @@ lecture_titles = {
     22: "",
     23: "",
     24: "",
-    25: ""
+    25: "",
 }
