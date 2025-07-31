@@ -37,7 +37,7 @@ def main():
                     if password == st.secrets["ADMIN_PASSWORD"]:
                         st.session_state["admin_verified"] = True
                         st.success("✅ تم تسجيل الدخول بنجاح!")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ كلمة السر غير صحيحة")
             else:
