@@ -48,6 +48,8 @@ def normalize_answer(q):
             return answer
 
     return None
+
+
 def orders_o():
     subjects = [
         "endodontics", "generalmedicine", "generalsurgery", "operative",
@@ -96,7 +98,7 @@ def orders_o():
         st.session_state.exam_mode = True
         st.experimental_rerun()
 
-    # إذا كان وضع الاختبار مفعّل → نخفي الشريط الجانبي، الهيدر، ونعرض واجهة الامتحان فقط
+    # إذا كان وضع الاختبار مفعّل → نخفي الشريط الجانبي والهيدر ونعرض فقط الامتحان
     if st.session_state.exam_mode:
         st.markdown(
             """
@@ -112,7 +114,7 @@ def orders_o():
         exam_mode_ui(questions, Links)
         return
 
-    # تهيئة حالة الأسئلة إذا لم يتم تهيئتها أو تغيرت المحاضرة أو النسخة
+    # تهيئة حالة الأسئلة إذا لم تكن موجودة أو تغيرت المحاضرة أو النسخة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture") != lec_num) or \
@@ -128,7 +130,7 @@ def orders_o():
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
 
-    # عرض الشريط الجانبي مع أزرار التنقل بين الأسئلة مع الحالة (صح/خطأ)
+    # عرض الشريط الجانبي مع أزرار التنقل وحالة الإجابات
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
         for i in range(len(questions)):
