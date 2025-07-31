@@ -250,20 +250,20 @@ def add_lecture_page():
                                 st.success("✅ تم حفظ التعديلات ورفعها إلى GitHub")
                                 st.experimental_rerun()
 
-# 🤖 شدز للـ AI
-with tab4:
-    section = st.selectbox(
-        "اختر القسم:", 
-        ["📌 تعليمات إضافة محاضرة", "📚 تعليمات إضافة نسخة", "💬 كود اضافة رابط"], 
-        key="select_tab4_section"
-    )
+    # 🤖 شدز للـ AI
+    with tab4:
+        section = st.selectbox(
+            "اختر القسم:", 
+            ["📌 تعليمات إضافة محاضرة", "📚 تعليمات إضافة نسخة", "💬 كود اضافة رابط"], 
+            key="select_tab4_section"
+        )
 
-    if section == "📌 تعليمات إضافة محاضرة":
-        st.markdown("1- روح لموقع **chat.deepseek.com**")
-        st.markdown("2- حمل المحاضرة المطلوبة")
-        st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
+        if section == "📌 تعليمات إضافة محاضرة":
+            st.markdown("1- روح لموقع **chat.deepseek.com**")
+            st.markdown("2- حمل المحاضرة المطلوبة")
+            st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
 
-        code1 = '''make number of Mcqs in python language in this patern
+            code1 = '''make number of Mcqs in python language in this patern
 questions = [
     {
         "question": "What is monkey?",
@@ -273,21 +273,21 @@ questions = [
     }
 ]'''
 
-        st.code(code1, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code1, 
-            file_name="mcqs_template.py", 
-            mime="text/plain", 
-            key="download_mcqs_template"
-        )
+            st.code(code1, language="python")
+            st.download_button(
+                "📋 نسخ", 
+                data=code1, 
+                file_name="mcqs_template.py", 
+                mime="text/plain", 
+                key="download_mcqs_template"
+            )
 
-    elif section == "📚 تعليمات إضافة نسخة":
-        st.markdown("1- روح لـ **تعديل المحاضرة** وانسخ النسخ الموجودة")
-        st.markdown("2- روح لموقع **chat.deepseek.com**")
-        st.markdown("3- ارسل النسخ اللي نسختها، بعدها حمل المحاضرة واكتبله:")
+        elif section == "📚 تعليمات إضافة نسخة":
+            st.markdown("1- روح لـ **تعديل المحاضرة** وانسخ النسخ الموجودة")
+            st.markdown("2- روح لموقع **chat.deepseek.com**")
+            st.markdown("3- ارسل النسخ اللي نسختها، بعدها حمل المحاضرة واكتبله:")
 
-        code2 = '''make number of Mcqs in python language in this patern Provided that you do not repeat or send any questions similar to the ones I sent.
+            code2 = '''make number of Mcqs in python language in this patern Provided that you do not repeat or send any questions similar to the ones I sent.
 questions = [
     {
         "question": "What is monkey?",
@@ -297,31 +297,31 @@ questions = [
     }
 ]'''
 
-        st.code(code2, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code2, 
-            file_name="mcqs_version_template.py", 
-            mime="text/plain", 
-            key="download_mcqs_version_template"
-        )
+            st.code(code2, language="python")
+            st.download_button(
+                "📋 نسخ", 
+                data=code2, 
+                file_name="mcqs_version_template.py", 
+                mime="text/plain", 
+                key="download_mcqs_version_template"
+            )
 
-    elif section == "💬 كود اضافة رابط":
-        st.write("تحطه في نهاية ملف الاسئلة")
-        st.write("تكتب اسم ونص الرابط")
+        elif section == "💬 كود اضافة رابط":
+            st.write("تحطه في نهاية ملف الاسئلة")
+            st.write("تكتب اسم ونص الرابط")
 
-        code3 = '''Links = [
+            code3 = '''Links = [
 {"title": "الاسم", "url": "النص"},
 ]'''
 
-        st.code(code3, language="python")
-        st.download_button(
-            "📋 نسخ", 
-            data=code3, 
-            file_name="links_code.py", 
-            mime="text/plain", 
-            key="download_links"
-        )
+            st.code(code3, language="python")
+            st.download_button(
+                "📋 نسخ", 
+                data=code3, 
+                file_name="links_code.py", 
+                mime="text/plain", 
+                key="download_links"
+            )
 
 
 def main():
