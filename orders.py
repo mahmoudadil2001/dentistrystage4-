@@ -147,7 +147,7 @@ def orders_o():
 
     if exam_mode:
         # استدعاء شاشة وضع الاختبار من ملف exam_mode.py مع تمرير المتغيرات المهمة
-        exam_mode_ui(questions, Links, normalize_answer)
+        exam_mode_ui(questions, Links)
         return  # لا تعرض باقي الواجهة العادية
 
     # --- الواجهة العادية (خارج وضع الاختبار) ---
