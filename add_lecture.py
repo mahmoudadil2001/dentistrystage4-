@@ -253,7 +253,6 @@ def add_lecture_page():
     # 🤖 شدز للـ AI
     with tab4:
 
-        # صندوق اختيار القسم
         section = st.selectbox("اختر القسم:", ["📌 تعليمات إضافة محاضرة", "💬 Hi"])
 
         if section == "📌 تعليمات إضافة محاضرة":
@@ -273,7 +272,14 @@ questions = [
 ]'''
 
             st.code(code1, language="python")
-            st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain")
+            st.download_button("📋 نسخ", data=code1, file_name="mcqs_template.py", mime="text/plain", key="download_mcqs_template")
+
+        elif section == "💬 Hi":
+            st.write("Hi")
+            code2 = "Hi"
+            st.code(code2, language="text")
+            st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain", key="download_hi")
+
 
         elif section == "💬 Hi":
             st.write("Hi")
