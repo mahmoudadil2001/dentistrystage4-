@@ -8,7 +8,6 @@ from versions_manager import get_lectures_and_versions
 
 
 def load_lecture_titles(subject_name):
-    import os
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
     if not os.path.exists(titles_file):
         return {}
@@ -35,65 +34,117 @@ def import_module_from_file(filepath):
 
 
 def orders_o():
-    subjects = [
-        "endodontics",
-        "generalmedicine",
-        "generalsurgery",
-        "operative",
-        "oralpathology",
-        "oralsurgery",
-        "orthodontics",
-        "pedodontics",
-        "periodontology",
-        "prosthodontics"
-    ]
+    # زر التبديل بين إظهار/إخفاء الواجهة
+    if "show_quiz_controls" not in st.session_state:
+        st.session_state.show_quiz_controls = True
 
-    subject = st.selectbox("Select Subject", subjects)
+    if st.button("Toggle Quiz Controls"):
+        st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
+        st.experimental_rerun()
+
+    if st.session_state.show_quiz_controls:
+        st.markdown(
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 20px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                margin-bottom: 25px;
+            ">
+            Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
+            </div>
+            """
+        , unsafe_allow_html=True)
+
+        subjects = [
+            "endodontics",
+            "generalmedicine",
+            "generalsurgery",
+            "operative",
+            "oralpathology",
+            "oralsurgery",
+            "orthodontics",
+            "pedodontics",
+            "periodontology",
+            "prosthodontics"
+        ]
+
+        subject = st.selectbox("Select Subject", subjects)
+
+        lectures_versions = get_lectures_and_versions(subject)
+        if not lectures_versions:
+            st.error(f"⚠️ No lecture files found for subject {subject}!")
+            return
+
+        lecture_titles = load_lecture_titles(subject)
+
+        lectures_options = []
+        for lec_num in sorted(lectures_versions.keys()):
+            title = lecture_titles.get(lec_num, "").strip()
+            if title:
+                display_name = f"Lec {lec_num}  {title}"
+            else:
+                display_name = f"Lec {lec_num}"
+            lectures_options.append((lec_num, display_name))
+
+        lec_num = st.selectbox(
+            "Select Lecture",
+            options=lectures_options,
+            format_func=lambda x: x[1]
+        )[0]
+
+        versions_dict = lectures_versions.get(lec_num, {})
+
+        versions_keys = sorted(versions_dict.keys())
+        if not versions_keys:
+            st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
+            return
+
+        if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
+            st.session_state.selected_version = versions_keys[0]
+
+        selected_version = st.selectbox(
+            "Select Version",
+            options=versions_keys,
+            index=versions_keys.index(st.session_state.selected_version)
+        )
+
+        st.session_state.selected_version = selected_version
+
+    else:
+        st.info("Quiz controls are hidden. Click the button above to show them.")
+
+    # بدء تحميل ملف الأسئلة وعرض الأسئلة بناءً على الاختيارات
+    if not st.session_state.show_quiz_controls:
+        # إذا الاختيارات مخفية، نعرض السؤال الحالي فقط مع التحكم بالأسئلة
+        # هنا أكمل العرض فقط بدون إعادة عرض الاختيارات
+        if "current_subject" in st.session_state and "current_lecture" in st.session_state and "current_version" in st.session_state:
+            subject = st.session_state.current_subject
+            lec_num = st.session_state.current_lecture
+            selected_version = st.session_state.current_version
+        else:
+            st.warning("Select subject, lecture and version first by showing quiz controls.")
+            return
+    else:
+        # الاختيارات ظاهرة، استخدم القيم المختارة حديثًا
+        subject = subject
+        lec_num = lec_num
+        selected_version = selected_version
 
     lectures_versions = get_lectures_and_versions(subject)
-    if not lectures_versions:
-        st.error(f"⚠️ No lecture files found for subject {subject}!")
-        return
-
-    # تحميل أسماء المحاضرات من ملف العناوين داخل مجلد edit
-    lecture_titles = load_lecture_titles(subject)
-
-    lectures_options = []
-    for lec_num in sorted(lectures_versions.keys()):
-        title = lecture_titles.get(lec_num, "").strip()
-        if title:
-            display_name = f"Lec {lec_num}  {title}"
-        else:
-            display_name = f"Lec {lec_num}"
-        lectures_options.append((lec_num, display_name))
-
-    lec_num = st.selectbox(
-        "Select Lecture",
-        options=lectures_options,
-        format_func=lambda x: x[1]
-    )[0]
-
     versions_dict = lectures_versions.get(lec_num, {})
+    filename = versions_dict.get(selected_version, None)
 
-    # ----- تعديل هنا لضمان اختيار نسخة موجودة -----
-    versions_keys = sorted(versions_dict.keys())
-    if not versions_keys:
-        st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
+    if not filename:
+        st.error("⚠️ الملف الخاص بالمحاضرة غير موجود.")
         return
 
-    if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
-        st.session_state.selected_version = versions_keys[0]
-
-    selected_version = st.selectbox(
-        "Select Version",
-        options=versions_keys,
-        index=versions_keys.index(st.session_state.selected_version)
-    )
-
-    st.session_state.selected_version = selected_version
-    # ---------------------------------------------
-
-    filename = versions_dict[selected_version]
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
 
@@ -104,6 +155,7 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
+    # إعادة تهيئة حالة الأسئلة عند تغير المادة/المحاضرة/النسخة أو عدد الأسئلة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -176,7 +228,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
@@ -191,7 +243,7 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -218,7 +270,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
@@ -241,6 +293,7 @@ def main():
         """
     , unsafe_allow_html=True)
     orders_o()
+
 
 if __name__ == "__main__":
     main()
