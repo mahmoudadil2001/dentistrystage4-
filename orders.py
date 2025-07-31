@@ -274,24 +274,6 @@ def orders_o():
 
 
 def main():
-    st.markdown(
-        """
-        <div style="
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            border-radius: 15px;
-            padding: 20px;
-            color: #003049;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-        ">
-        Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
-        </div>
-        """
-    , unsafe_allow_html=True)
     orders_o()
 
 
