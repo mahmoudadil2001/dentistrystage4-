@@ -263,7 +263,7 @@ def add_lecture_page():
             st.markdown("2- حمل المحاضرة المطلوبة")
             st.markdown("3- تكتبله هذا النص بس تبدل عدد الـ MCQs")
 
-            code1 = '''make number of Mcqs in python language in this patern
+            code1 = '''make number of Mcqs in python in this patern
 questions = [
     {
         "question": "What is monkey?",
@@ -288,7 +288,7 @@ questions = [
             st.markdown("3- ارسل النسخ اللي نسختها، حمل المحاضرة:")
             st.markdown("4- اكتبله هالنص وغير عدد الاسئلة:")
 
-            code2 = '''make number of Mcqs in python language in this patern Provided that you do not repeat or send any questions similar to the ones I sent.
+            code2 = '''make number of Mcqs in this patern Provided that you do not repeat or send any questions similar to the ones I sent.
 questions = [
     {
         "question": "What is monkey?",
