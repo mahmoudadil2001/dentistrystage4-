@@ -118,7 +118,6 @@ def orders_o():
         st.session_state.selected_version = selected_version
 
     else:
-        
 
     # بدء تحميل ملف الأسئلة وعرض الأسئلة بناءً على الاختيارات
     if not st.session_state.show_quiz_controls:
