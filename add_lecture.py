@@ -284,7 +284,7 @@ questions = [
         st.write("---")  # خط فاصل بين الاثنين
 
         # القسم الثاني Hi
-        st.write("Hi")
+        st.write("Hاi")
         code2 = "Hi"
         st.code(code2, language="text")
         st.download_button("📋 نسخ Hi", data=code2, file_name="hi.txt", mime="text/plain")
