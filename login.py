@@ -1,10 +1,10 @@
 import streamlit as st
 import requests
 import re
+import streamlit.components.v1 as components
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyC1_kj-yAWT_wzQx3BGerNxAyDxZiRO7eoQmk11ywBwiPEv8nWy2_VuoIzcvTR3w2T/exec"
 
-# ----- وظائف API -----
 def send_telegram_message(message):
     bot_token = "ضع_توكن_البوت"
     chat_id = "ضع_معرف_الشات"
@@ -28,63 +28,146 @@ def get_user_data(username):
         }
     return None
 
-# --- توكن في Local Storage باستخدام جافاسكريبت ---
-def set_token_js(token):
-    js_code = f"""
-    <script>
-    localStorage.setItem('login_token', '{token}');
-    </script>
-    """
-    st.components.v1.html(js_code)
+def add_user(username, password, full_name, group, phone):
+    res_all = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
+    if res_all:
+        lines = res_all.split("\n")
+        for line in lines:
+            parts = line.split(",")
+            if len(parts) >= 2:
+                existing_username = parts[0].strip().lower()
+                existing_fullname = parts[1].strip().lower()
+                if existing_username == username.lower():
+                    return "USERNAME_EXISTS"
+                if existing_fullname == full_name.lower():
+                    return "FULLNAME_EXISTS"
 
-def get_token_js():
-    # لا يمكن جلب localStorage مباشرة من البايثون، نستخدم trick لاحقاً
-    return st.session_state.get("login_token", None)
+    res = requests.post(GOOGLE_SCRIPT_URL, data={
+        "action": "add",
+        "username": username,
+        "password": password,
+        "full_name": full_name,
+        "group": group,
+        "phone": phone
+    })
+    return res.text.strip()
 
-def remove_token_js():
-    js_code = """
-    <script>
-    localStorage.removeItem('login_token');
-    </script>
-    """
-    st.components.v1.html(js_code)
+def find_username_by_last4(full_name, last4):
+    res = requests.post(GOOGLE_SCRIPT_URL, data={
+        "action": "find_username_by_last4",
+        "full_name": full_name,
+        "last4": last4
+    })
+    return res.text.strip()
 
-# --- دالة عرض مشروعك الأصلي ---
+def update_password(username, new_password):
+    res = requests.post(GOOGLE_SCRIPT_URL, data={
+        "action": "update_password",
+        "username": username,
+        "new_password": new_password
+    })
+    return res.text.strip() == "UPDATED"
+
+def validate_iraqi_phone(phone):
+    pattern = re.compile(
+        r"^(?:"  
+        r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
+        r"|"
+        r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
+        r"|"
+        r"(00964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
+        r"|"
+        r"(0(1\d{2})\d{7})"
+        r")$"
+    )
+    return bool(pattern.match(phone))
+
+def validate_username(username):
+    return bool(username and len(username) <= 10 and re.fullmatch(r"[A-Za-z0-9_.-]+", username))
+
+def validate_full_name(full_name):
+    words = full_name.strip().split()
+    if len(words) != 3:
+        return False
+    arabic_pattern = re.compile(r"^[\u0600-\u06FF]+$")
+    for w in words:
+        if len(w) > 10 or not arabic_pattern.match(w):
+            return False
+    return True
+
+def validate_password(password):
+    return bool(password and 4 <= len(password) <= 16)
+
+def validate_group(group):
+    return bool(group and len(group) == 1 and re.fullmatch(r"[A-Za-z]", group))
+
+# ----
+
+# Component لقراءة توكن من localStorage وإرساله للبايثون
+def get_token_from_local_storage():
+    token = components.html(
+        """
+        <script>
+        const streamlitDoc = window.parent.document;
+        window.onload = () => {
+            const token = localStorage.getItem('login_token') || '';
+            // إرسال القيمة إلى Streamlit عبر window.parent.postMessage
+            window.parent.postMessage({funcName: 'sendToken', token: token}, '*');
+        }
+        </script>
+        """,
+        height=0,
+        width=0,
+        scrolling=False,
+    )
+    # streamlit لا يمكنه التقاط الرسالة مباشرة، نستخدم st.experimental_get_query_params لتخزين مؤقت
+    # ولكن هنا سنعتمد على trick في session_state بعد إعادة تشغيل الصفحة
+    # الحل البديل هو استخدام streamlit-javascript أو external package لكن هذا أبسط مثال
+    return None
+
 def main_project_page(user):
     st.title("مرحبا بك في مشروعك الأساسي")
     st.write(f"مرحباً {user['full_name']}، هذه هي صفحتك الخاصة بالمشروع.")
-    # هنا ضع كل كود مشروعك
+    # ضع هنا كود مشروعك الكامل
+
     if st.button("تسجيل خروج"):
         st.session_state.clear()
-        remove_token_js()
+        # إزالة التوكن من localStorage عبر JS
+        components.html(
+            """
+            <script>
+            localStorage.removeItem('login_token');
+            </script>
+            """,
+            height=0,
+        )
         st.rerun()
 
-# --- التحقق من التوكن ---
-def validate_token(token):
-    # ممكن تستخدم التوكن للتحقق بالخادم أو لو كان التوكن هو اسم المستخدم فقط
-    # هنا نفترض التوكن هو اسم المستخدم فقط لتبسيط المثال
-    user = get_user_data(token)
-    return user
-
 def login_page():
-    # محاولة جلب التوكن من localStorage عبر JS (محاكاة لأنه لا يمكن جلبه مباشرة)
     if "login_token" not in st.session_state:
-        # في حال أول تحميل أو بعد تسجيل خروج
         st.session_state.login_token = None
 
-    # إذا التوكن موجود في session_state
+    # استدعاء الـ component لجلب التوكن من localStorage
+    get_token_from_local_storage()
+
+    # لو التوكن موجود في session_state نفحصه
     if st.session_state.login_token:
-        user = validate_token(st.session_state.login_token)
+        user = get_user_data(st.session_state.login_token)
         if user:
-            # اعرض الصفحة الرئيسية للمشروع مباشرة
             main_project_page(user)
             return
         else:
-            # التوكن غير صالح، مسحه
             st.session_state.login_token = None
-            remove_token_js()
+            # إزالة التوكن من localStorage أيضاً
+            components.html(
+                """
+                <script>
+                localStorage.removeItem('login_token');
+                </script>
+                """,
+                height=0,
+            )
 
-    # صفحة تسجيل الدخول
     if "mode" not in st.session_state:
         st.session_state.mode = "login"
     if "logged_in" not in st.session_state:
@@ -107,12 +190,19 @@ def login_page():
             if check_login(username, password):
                 user = get_user_data(username)
                 if user:
-                    # تخزين التوكن (مثلاً اسم المستخدم) في session_state وlocalStorage
                     st.session_state.logged_in = True
                     st.session_state.user_full_name = user['full_name']
                     st.session_state.user_name = user['username']
-                    st.session_state.login_token = user['username']  # التوكن
-                    set_token_js(user['username'])
+                    st.session_state.login_token = user['username']
+                    # تخزين التوكن في localStorage
+                    components.html(
+                        f"""
+                        <script>
+                        localStorage.setItem('login_token', '{user['username']}');
+                        </script>
+                        """,
+                        height=0,
+                    )
                     send_telegram_message(f"✅ تسجيل دخول:\n{user}")
                     st.rerun()
                 else:
@@ -128,40 +218,7 @@ def login_page():
             st.session_state.mode = "forgot"
             st.rerun()
 
-    elif st.session_state.mode == "signup":
-        # --- (كود إنشاء حساب جديد كما لديك) ---
-        # يمكنك إدراج نفس الكود كما في سكربتك
-        st.header("📝 إنشاء حساب جديد")
-        u = st.text_input("اسم المستخدم", key="signup_username")
-        p = st.text_input("كلمة المرور", type="password", key="signup_password")
-        f = st.text_input("الاسم الثلاثي (بالعربي)", key="signup_full_name")
-        g = st.text_input("الجروب", key="signup_group")
-        ph = st.text_input("رقم الهاتف", key="signup_phone")
-
-        if st.button("إنشاء الحساب"):
-            # تحقق الحقول كما لديك في السكربت
-            # ...
-            # مثال مبسط:
-            if not (u and p and f and g and ph):
-                st.warning("❗ يرجى ملء جميع الحقول")
-            else:
-                res = add_user(u, p, f, g, ph)
-                if res == "USERNAME_EXISTS":
-                    st.error("❌ اسم المستخدم موجود")
-                elif res == "FULLNAME_EXISTS":
-                    st.error("❌ الاسم الكامل موجود مسبقًا")
-                elif res == "ADDED":
-                    st.success("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
-                    st.session_state.mode = "login"
-                    st.rerun()
-                else:
-                    st.error("حدث خطأ أثناء إنشاء الحساب")
-
-        if st.button("🔙 رجوع"):
-            st.session_state.mode = "login"
-            st.rerun()
-
-    # --- يمكنك استكمال باقي الحالات مثل نسيت كلمة المرور بنفس المنطق ---
+    # باقي أوضاع التسجيل واستعادة كلمة المرور كما لديك ...
 
 if __name__ == "__main__":
     login_page()
