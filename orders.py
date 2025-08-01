@@ -33,20 +33,31 @@ def import_module_from_file(filepath):
     return module
 
 def orders_o():
-    if "show_quiz_controls" not in st.session_state:
-        st.session_state.show_quiz_controls = True
+    if "quiz_mode" not in st.session_state:
+        st.session_state.quiz_mode = False
 
-    # تغيير النص حسب الحالة
-    button_text = "Enter Quiz Mode" if st.session_state.show_quiz_controls else "Exit Quiz Mode"
+    if "selected_subject" not in st.session_state:
+        st.session_state.selected_subject = "endodontics"  # القيمة الافتراضية
 
-    col1, col2 = st.columns([1,2])
+    if "selected_lecture" not in st.session_state:
+        st.session_state.selected_lecture = None
+
+    if "selected_version" not in st.session_state:
+        st.session_state.selected_version = 1
+
+    button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
+
+    col1, col2 = st.columns([1, 2])
     with col2:
         if st.button(button_text):
-            st.session_state.show_quiz_controls = not st.session_state.show_quiz_controls
+            st.session_state.quiz_mode = not st.session_state.quiz_mode
+            if st.session_state.quiz_mode:
+                st.session_state.current_subject = st.session_state.selected_subject
+                st.session_state.current_lecture = st.session_state.selected_lecture
+                st.session_state.current_version = st.session_state.selected_version
             st.rerun()
 
-
-    if st.session_state.show_quiz_controls:
+    if not st.session_state.quiz_mode:
         st.markdown(
             """
             <div style="
@@ -79,7 +90,8 @@ def orders_o():
             "prosthodontics"
         ]
 
-        subject = st.selectbox("Select Subject", subjects)
+        subject = st.selectbox("Select Subject", subjects, index=subjects.index(st.session_state.selected_subject))
+        st.session_state.selected_subject = subject
 
         lectures_versions = get_lectures_and_versions(subject)
         if not lectures_versions:
@@ -97,20 +109,23 @@ def orders_o():
                 display_name = f"Lec {lec_num}"
             lectures_options.append((lec_num, display_name))
 
+        if st.session_state.selected_lecture in [lec[0] for lec in lectures_options]:
+            default_lecture_idx = [lec[0] for lec in lectures_options].index(st.session_state.selected_lecture)
+        else:
+            default_lecture_idx = 0
+
         lec_num = st.selectbox(
             "Select Lecture",
             options=lectures_options,
+            index=default_lecture_idx,
             format_func=lambda x: x[1]
         )[0]
 
+        st.session_state.selected_lecture = lec_num
+
         versions_dict = lectures_versions.get(lec_num, {})
-
         versions_keys = sorted(versions_dict.keys())
-        if not versions_keys:
-            st.error("⚠️ لا توجد نسخ متاحة لهذه المحاضرة.")
-            return
-
-        if "selected_version" not in st.session_state or st.session_state.get("selected_version") not in versions_dict:
+        if st.session_state.selected_version not in versions_keys:
             st.session_state.selected_version = versions_keys[0]
 
         selected_version = st.selectbox(
@@ -122,24 +137,9 @@ def orders_o():
         st.session_state.selected_version = selected_version
 
     else:
-        pass
-    
-    # بدء تحميل ملف الأسئلة وعرض الأسئلة بناءً على الاختيارات
-    if not st.session_state.show_quiz_controls:
-        # إذا الاختيارات مخفية، نعرض السؤال الحالي فقط مع التحكم بالأسئلة
-        # هنا أكمل العرض فقط بدون إعادة عرض الاختيارات
-        if "current_subject" in st.session_state and "current_lecture" in st.session_state and "current_version" in st.session_state:
-            subject = st.session_state.current_subject
-            lec_num = st.session_state.current_lecture
-            selected_version = st.session_state.current_version
-        else:
-            st.warning("Select subject, lecture and version first by showing quiz controls.")
-            return
-    else:
-        # الاختيارات ظاهرة، استخدم القيم المختارة حديثًا
-        subject = subject
-        lec_num = lec_num
-        selected_version = selected_version
+        subject = st.session_state.current_subject
+        lec_num = st.session_state.current_lecture
+        selected_version = st.session_state.current_version
 
     lectures_versions = get_lectures_and_versions(subject)
     versions_dict = lectures_versions.get(lec_num, {})
