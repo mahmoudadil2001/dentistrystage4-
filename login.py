@@ -1,8 +1,10 @@
 import streamlit as st
 import requests
 import re
+import uuid
+from datetime import datetime, timedelta
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5p9TJNJQOJ2Qhg58YrH2UkPMhmJDb468zJyiNxZLTM-YagYQW-TLs6VTmGB53MUPm/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyL1fo6kEQG3QmgnPqAVyVG5fuqOx2SSTPYwjKG8nTELY2UX9zqGYxKzMEbGD0dv124/exec"
 
 def send_telegram_message(message):
     bot_token = "ضع_توكن_البوت"
@@ -26,6 +28,22 @@ def get_user_data(username):
             "phone": parts[4]
         }
     return None
+
+def get_user_by_token(token):
+    res = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_user_by_token", "token": token})
+    parts = res.text.strip().split(",")
+    if len(parts) == 5:
+        return {
+            "username": parts[0],
+            "password": parts[1],
+            "full_name": parts[2],
+            "group": parts[3],
+            "phone": parts[4]
+        }
+    return None
+
+def set_session_token(username, token):
+    requests.post(GOOGLE_SCRIPT_URL, data={"action": "set_session_token", "username": username, "token": token})
 
 def add_user(username, password, full_name, group, phone):
     res_all = requests.post(GOOGLE_SCRIPT_URL, data={"action": "get_all_users"}).text.strip()
@@ -67,38 +85,16 @@ def update_password(username, new_password):
     })
     return res.text.strip() == "UPDATED"
 
-def validate_iraqi_phone(phone):
-    pattern = re.compile(
-        r"^(?:"  
-        r"(0(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
-        r"|"
-        r"(\+964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
-        r"|"
-        r"(00964(750|751|752|753|780|781|770|771|772|773|774|775|760|761|762|763|764|765)\d{7})"
-        r"|"
-        r"(0(1\d{2})\d{7})"
-        r")$"
-    )
-    return bool(pattern.match(phone))
-
-def validate_username(username):
-    return bool(username and len(username) <= 10 and re.fullmatch(r"[A-Za-z0-9_.-]+", username))
-
-def validate_full_name(full_name):
-    words = full_name.strip().split()
-    if len(words) != 3:
-        return False
-    arabic_pattern = re.compile(r"^[\u0600-\u06FF]+$")
-    for w in words:
-        if len(w) > 10 or not arabic_pattern.match(w):
-            return False
-    return True
-
-def validate_password(password):
-    return bool(password and 4 <= len(password) <= 16)
-
-def validate_group(group):
-    return bool(group and len(group) == 1 and re.fullmatch(r"[A-Za-z]", group))
+# 🔥 استرجاع المستخدم إذا كان عنده session_token محفوظ
+def auto_login():
+    if "session_token" not in st.session_state:
+        cookie_token = st.session_state.get("cookie_token", None)
+        if cookie_token:
+            user = get_user_by_token(cookie_token)
+            if user:
+                st.session_state.logged_in = True
+                st.session_state.user_full_name = user["full_name"]
+                st.session_state.user_name = user["username"]
 
 def login_page():
     if "mode" not in st.session_state:
@@ -106,11 +102,13 @@ def login_page():
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
 
+    auto_login()
+
     if st.session_state.get("logged_in"):
         st.header(f"مرحباً بك يا {st.session_state.get('user_full_name')} في صفحة الأسئلة!")
         if st.button("تسجيل خروج"):
             st.session_state.clear()
-            st.session_state.mode = "login"
+            st.success("تم تسجيل الخروج بنجاح")
             st.rerun()
         return
 
@@ -123,6 +121,10 @@ def login_page():
             if check_login(username, password):
                 user = get_user_data(username)
                 if user:
+                    # ✅ توليد session_token وتخزينه
+                    token = str(uuid.uuid4())
+                    set_session_token(username, token)
+                    st.session_state.cookie_token = token
                     st.session_state.logged_in = True
                     st.session_state.user_full_name = user['full_name']
                     st.session_state.user_name = user['username']
@@ -152,16 +154,6 @@ def login_page():
         if st.button("إنشاء الحساب"):
             if not (u and p and f and g and ph):
                 st.warning("❗ يرجى ملء جميع الحقول")
-            elif not validate_username(u):
-                st.error("❌ اسم المستخدم غير صالح (حتى 10 أحرف/أرقام/رموز بدون فراغات)")
-            elif not validate_password(p):
-                st.error("❌ كلمة المرور يجب أن تكون بين 4 و 16 رمز")
-            elif not validate_full_name(f):
-                st.error("❌ الاسم الكامل يجب أن يكون 3 كلمات بالعربي وكل كلمة ≤ 10 أحرف")
-            elif not validate_group(g):
-                st.error("❌ الجروب يجب أن يكون حرف واحد بالإنجليزي")
-            elif not validate_iraqi_phone(ph):
-                st.error("❌ رقم الهاتف غير صالح")
             else:
                 res = add_user(u, p, f, g, ph)
                 if res == "USERNAME_EXISTS":
@@ -170,15 +162,10 @@ def login_page():
                     st.error("❌ الاسم الكامل موجود مسبقًا")
                 elif res == "ADDED":
                     st.success("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
-                    st.session_state.signup_username = ""
-                    st.session_state.signup_password = ""
-                    st.session_state.signup_full_name = ""
-                    st.session_state.signup_group = ""
-                    st.session_state.signup_phone = ""
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
-                    st.error("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
+                    st.error("❌ حدث خطأ غير متوقع")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
@@ -226,7 +213,7 @@ def login_page():
         new_pass = st.text_input("🔑 أدخل كلمة مرور جديدة", type="password")
 
         if st.button("حفظ كلمة المرور"):
-            if validate_password(new_pass) and update_password(st.session_state.found_username, new_pass):
+            if update_password(st.session_state.found_username, new_pass):
                 st.success("✅ تم تحديث كلمة المرور")
                 st.session_state.mode = "login"
                 st.rerun()
