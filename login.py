@@ -1,9 +1,8 @@
 import streamlit as st
 import requests
 import re
-import uuid
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykZIaLYwBBB7Yr4nkC9g5eX6p0uou3JOjiVyz-wFP1oWDwthxU8rSPZEpAxfxDPid3/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjtvIYOS7Cb3O1ig53sYES6vsnY9xR9KowKnWRUF0x46jmXyY544hmXCcPMZBiBqYy/exec"
 
 def send_telegram_message(message):
     bot_token = "ضع_توكن_البوت"
@@ -68,21 +67,6 @@ def update_password(username, new_password):
     })
     return res.text.strip() == "UPDATED"
 
-def save_token(username, token):
-    res = requests.post(GOOGLE_SCRIPT_URL, data={
-        "action": "save_token",
-        "username": username,
-        "token": token
-    })
-    return res.text.strip() == "TOKEN_SAVED"
-
-def delete_token(username):
-    res = requests.post(GOOGLE_SCRIPT_URL, data={
-        "action": "delete_token",
-        "username": username
-    })
-    return res.text.strip() == "TOKEN_DELETED"
-
 def validate_iraqi_phone(phone):
     pattern = re.compile(
         r"^(?:"  
@@ -121,14 +105,10 @@ def login_page():
         st.session_state.mode = "login"
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
-    if "token" not in st.session_state:
-        st.session_state.token = None
 
-    # تسجيل الدخول التلقائي إذا هناك توكن محفوظ
-    if st.session_state.token and st.session_state.logged_in:
-        st.header(f"مرحباً بك يا {st.session_state.user_full_name} في مشروعك!")
+    if st.session_state.get("logged_in"):
+        st.header(f"مرحباً بك يا {st.session_state.get('user_full_name')} في صفحة الأسئلة!")
         if st.button("تسجيل خروج"):
-            delete_token(st.session_state.user_name)
             st.session_state.clear()
             st.session_state.mode = "login"
             st.rerun()
@@ -143,18 +123,11 @@ def login_page():
             if check_login(username, password):
                 user = get_user_data(username)
                 if user:
-                    # توليد توكن جديد
-                    token = str(uuid.uuid4())
-                    saved = save_token(username, token)
-                    if saved:
-                        st.session_state.logged_in = True
-                        st.session_state.user_full_name = user['full_name']
-                        st.session_state.user_name = user['username']
-                        st.session_state.token = token
-                        send_telegram_message(f"✅ تسجيل دخول:\n{user}")
-                        st.rerun()
-                    else:
-                        st.error("❌ خطأ في حفظ التوكن")
+                    st.session_state.logged_in = True
+                    st.session_state.user_full_name = user['full_name']
+                    st.session_state.user_name = user['username']
+                    send_telegram_message(f"✅ تسجيل دخول:\n{user}")
+                    st.rerun()
                 else:
                     st.error("❌ خطأ في جلب بيانات المستخدم")
             else:
@@ -205,7 +178,7 @@ def login_page():
                     st.session_state.mode = "login"
                     st.rerun()
                 else:
-                    st.error("❌ خطأ غير معروف أثناء إنشاء الحساب")
+                    st.error("✅ تم إنشاء الحساب بنجاح. الرجاء تسجيل الدخول الآن.")
 
         if st.button("🔙 رجوع"):
             st.session_state.mode = "login"
