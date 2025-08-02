@@ -1,5 +1,4 @@
 import streamlit as st
-from login import login_page
 from orders import main as orders_main
 from add_lecture import add_lecture_page
 
