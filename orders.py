@@ -198,7 +198,7 @@ def orders_o():
 
         current_q_num = index + 1
         total_qs = len(questions)
-        st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
