@@ -48,14 +48,32 @@ def orders_o():
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
     col1, col2 = st.columns([1, 2])
-    with col2:
-        if st.button(button_text):
-            st.session_state.quiz_mode = not st.session_state.quiz_mode
-            if st.session_state.quiz_mode:
-                st.session_state.current_subject = st.session_state.selected_subject
-                st.session_state.current_lecture = st.session_state.selected_lecture
-                st.session_state.current_version = st.session_state.selected_version
-            st.rerun()
+with col2:
+    if st.button(button_text):
+        st.session_state.quiz_mode = not st.session_state.quiz_mode
+        if st.session_state.quiz_mode:
+            st.session_state.current_subject = st.session_state.selected_subject
+            st.session_state.current_lecture = st.session_state.selected_lecture
+            st.session_state.current_version = st.session_state.selected_version
+        st.rerun()
+
+    # ✅ بعد الضغط وتحوّل الزر إلى Exit Quiz Mode، يظهر النص أسفله
+    if st.session_state.quiz_mode:
+        subject = st.session_state.current_subject
+        lec_num = st.session_state.current_lecture
+        version = st.session_state.current_version
+
+        lecture_titles = load_lecture_titles(subject)
+        title = lecture_titles.get(lec_num, "").strip()
+
+        # صيغة النص المطلوبة
+        display_text = f"{subject.lower()} lec{lec_num} {title.lower()} (v{version})"
+
+        st.markdown(
+            f"<p style='color:red; font-size:12px; margin-top:2px;'>{display_text}</p>",
+            unsafe_allow_html=True
+        )
+
 
     if not st.session_state.quiz_mode:
         st.markdown(
