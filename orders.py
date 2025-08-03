@@ -3,6 +3,7 @@ import os
 import importlib.util
 import sys
 import importlib
+from streamlit_javascript import st_javascript
 
 from versions_manager import get_lectures_and_versions
 
@@ -32,16 +33,6 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
-def play_sound(sound_file):
-    sound_path = f"assets/{sound_file}"
-    st.markdown(
-        f"""
-        <audio autoplay>
-            <source src="{sound_path}" type="audio/mpeg">
-        </audio>
-        """,
-        unsafe_allow_html=True
-    )
 
 def orders_o():
     if "quiz_mode" not in st.session_state:
@@ -244,12 +235,15 @@ def orders_o():
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
 
-                if selected_answer == correct_text:
-                    play_sound("correct.mp3")
-                else:
-                    play_sound("wrong.mp3")
+                sound_file = "correct.mp3" if selected_answer == correct_text else "wrong.mp3"
+                js_code = f"""
+                var audio = new Audio('assets/{sound_file}');
+                audio.play();
+                """
+                st_javascript(js_code)
 
-                st.rerun()
+                # نترك إعادة التحميل تلقائياً بعد سماع الصوت أو بناء على زر آخر
+
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
