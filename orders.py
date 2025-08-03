@@ -32,6 +32,7 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
+
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
@@ -44,6 +45,19 @@ def orders_o():
 
     if "selected_version" not in st.session_state:
         st.session_state.selected_version = 1
+
+    # إضافة مساحة بيضاء أسفل الصفحة فقط في وضع الاختبار
+    if st.session_state.quiz_mode:
+        st.markdown(
+            """
+            <style>
+            .main > div.block-container {
+                padding-bottom: 300px !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
 
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
@@ -215,25 +229,7 @@ def orders_o():
 
         current_q_num = index + 1
         total_qs = len(questions)
-
-        # عنصر مرجعي لتمرير السؤال لأعلى
-        st.markdown(f'<div id="question_current"></div>', unsafe_allow_html=True)
-
         st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
-
-        # إضافة كود جافاسكريبت للتمرير التلقائي للسؤال لأعلى الصفحة
-        scroll_script = """
-        <script>
-        const el = document.getElementById('question_current');
-        if(el) {
-            el.scrollIntoView({behavior: 'smooth'});
-        }
-        </script>
-        """
-        st.markdown(scroll_script, unsafe_allow_html=True)
-
-        # إضافة فراغ أبيض تحت السؤال لتوفير مساحة تمرير
-        st.markdown('<div style="height:400px"></div>', unsafe_allow_html=True)
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
