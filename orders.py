@@ -6,7 +6,6 @@ import importlib
 
 from versions_manager import get_lectures_and_versions
 
-
 def load_lecture_titles(subject_name):
     titles_file = os.path.join(subject_name, "edit", "lecture_titles.py")
     if not os.path.exists(titles_file):
@@ -15,14 +14,13 @@ def load_lecture_titles(subject_name):
     module_name = f"{subject_name}_titles"
 
     if module_name in sys.modules:
-        del sys.modules[module_name]  # حذف من الكاش
+        del sys.modules[module_name]
 
     spec = importlib.util.spec_from_file_location(module_name, titles_file)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
     return getattr(module, "lecture_titles", {})
-
 
 def import_module_from_file(filepath):
     if not os.path.exists(filepath):
@@ -37,7 +35,7 @@ def orders_o():
         st.session_state.quiz_mode = False
 
     if "selected_subject" not in st.session_state:
-        st.session_state.selected_subject = "endodontics"  # القيمة الافتراضية
+        st.session_state.selected_subject = "endodontics"
 
     if "selected_lecture" not in st.session_state:
         st.session_state.selected_lecture = None
@@ -48,32 +46,30 @@ def orders_o():
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
     col1, col2 = st.columns([1, 2])
-with col2:
-    if st.button(button_text):
-        st.session_state.quiz_mode = not st.session_state.quiz_mode
+    with col2:
+        if st.button(button_text):
+            st.session_state.quiz_mode = not st.session_state.quiz_mode
+            if st.session_state.quiz_mode:
+                st.session_state.current_subject = st.session_state.selected_subject
+                st.session_state.current_lecture = st.session_state.selected_lecture
+                st.session_state.current_version = st.session_state.selected_version
+            st.rerun()
+
+        # ✅ عرض النص أسفل الزر عندما يكون في وضع Exit Quiz Mode
         if st.session_state.quiz_mode:
-            st.session_state.current_subject = st.session_state.selected_subject
-            st.session_state.current_lecture = st.session_state.selected_lecture
-            st.session_state.current_version = st.session_state.selected_version
-        st.rerun()
+            subject = st.session_state.current_subject
+            lec_num = st.session_state.current_lecture
+            version = st.session_state.current_version
 
-    # ✅ بعد الضغط وتحوّل الزر إلى Exit Quiz Mode، يظهر النص أسفله
-    if st.session_state.quiz_mode:
-        subject = st.session_state.current_subject
-        lec_num = st.session_state.current_lecture
-        version = st.session_state.current_version
+            lecture_titles = load_lecture_titles(subject)
+            title = lecture_titles.get(lec_num, "").strip()
 
-        lecture_titles = load_lecture_titles(subject)
-        title = lecture_titles.get(lec_num, "").strip()
+            display_text = f"{subject.lower()} lec{lec_num} {title.lower()} (v{version})"
 
-        # صيغة النص المطلوبة
-        display_text = f"{subject.lower()} lec{lec_num} {title.lower()} (v{version})"
-
-        st.markdown(
-            f"<p style='color:red; font-size:12px; margin-top:2px;'>{display_text}</p>",
-            unsafe_allow_html=True
-        )
-
+            st.markdown(
+                f"<p style='color:red; font-size:12px; margin-top:2px;'>{display_text}</p>",
+                unsafe_allow_html=True
+            )
 
     if not st.session_state.quiz_mode:
         st.markdown(
@@ -92,20 +88,13 @@ with col2:
             ">
             Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
             </div>
-            """
-        , unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
         subjects = [
-            "endodontics",
-            "generalmedicine",
-            "generalsurgery",
-            "operative",
-            "oralpathology",
-            "oralsurgery",
-            "orthodontics",
-            "pedodontics",
-            "periodontology",
-            "prosthodontics"
+            "endodontics","generalmedicine","generalsurgery","operative","oralpathology",
+            "oralsurgery","orthodontics","pedodontics","periodontology","prosthodontics"
         ]
 
         subject = st.selectbox("Select Subject", subjects, index=subjects.index(st.session_state.selected_subject))
@@ -121,10 +110,7 @@ with col2:
         lectures_options = []
         for lec_num in sorted(lectures_versions.keys()):
             title = lecture_titles.get(lec_num, "").strip()
-            if title:
-                display_name = f"Lec {lec_num}  {title}"
-            else:
-                display_name = f"Lec {lec_num}"
+            display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
             lectures_options.append((lec_num, display_name))
 
         if st.session_state.selected_lecture in [lec[0] for lec in lectures_options]:
@@ -132,13 +118,7 @@ with col2:
         else:
             default_lecture_idx = 0
 
-        lec_num = st.selectbox(
-            "Select Lecture",
-            options=lectures_options,
-            index=default_lecture_idx,
-            format_func=lambda x: x[1]
-        )[0]
-
+        lec_num = st.selectbox("Select Lecture", options=lectures_options, index=default_lecture_idx, format_func=lambda x: x[1])[0]
         st.session_state.selected_lecture = lec_num
 
         versions_dict = lectures_versions.get(lec_num, {})
@@ -146,14 +126,8 @@ with col2:
         if st.session_state.selected_version not in versions_keys:
             st.session_state.selected_version = versions_keys[0]
 
-        selected_version = st.selectbox(
-            "Select Version",
-            options=versions_keys,
-            index=versions_keys.index(st.session_state.selected_version)
-        )
-
+        selected_version = st.selectbox("Select Version", options=versions_keys, index=versions_keys.index(st.session_state.selected_version))
         st.session_state.selected_version = selected_version
-
     else:
         subject = st.session_state.current_subject
         lec_num = st.session_state.current_lecture
@@ -177,7 +151,6 @@ with col2:
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # إعادة تهيئة حالة الأسئلة عند تغير المادة/المحاضرة/النسخة أو عدد الأسئلة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
        (st.session_state.get("current_lecture", None) != lec_num) or \
@@ -208,22 +181,14 @@ with col2:
                     return options[idx]
             if answer in options:
                 return answer
-
         return None
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
-
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
+            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
@@ -239,12 +204,7 @@ with col2:
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
+        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
 
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
@@ -294,10 +254,8 @@ with col2:
             st.session_state.quiz_completed = False
             st.rerun()
 
-
 def main():
     orders_o()
-
 
 if __name__ == "__main__":
     main()
