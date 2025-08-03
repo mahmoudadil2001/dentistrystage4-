@@ -33,27 +33,6 @@ def import_module_from_file(filepath):
     return module
 
 
-def get_current_questions_count(subject, lec_num, version):
-    """
-    دالة مساعدة لإرجاع عدد الأسئلة لمحاضرة معينة.
-    """
-    lectures_versions = get_lectures_and_versions(subject)
-    versions_dict = lectures_versions.get(lec_num, {})
-    filename = versions_dict.get(version, None)
-
-    if not filename:
-        return 0
-
-    file_path = os.path.join(subject, filename)
-    questions_module = import_module_from_file(file_path)
-
-    if questions_module is None:
-        return 0
-
-    questions = getattr(questions_module, "questions", [])
-    return len(questions)
-
-
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
@@ -69,17 +48,17 @@ def orders_o():
 
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
-    col1, col2 = st.columns([1, 2])
-    with col2:
-        if st.button(button_text):
-            st.session_state.quiz_mode = not st.session_state.quiz_mode
-            if st.session_state.quiz_mode:
-                st.session_state.current_subject = st.session_state.selected_subject
-                st.session_state.current_lecture = st.session_state.selected_lecture
-                st.session_state.current_version = st.session_state.selected_version
-            st.rerun()
-
     if not st.session_state.quiz_mode:
+        col1, col2 = st.columns([1, 2])
+        with col2:
+            if st.button(button_text):
+                st.session_state.quiz_mode = not st.session_state.quiz_mode
+                if st.session_state.quiz_mode:
+                    st.session_state.current_subject = st.session_state.selected_subject
+                    st.session_state.current_lecture = st.session_state.selected_lecture
+                    st.session_state.current_version = st.session_state.selected_version
+                st.experimental_rerun()
+
         st.markdown(
             """
             <div style="
@@ -215,7 +194,21 @@ def orders_o():
 
         return None
 
-    # **هنا لا نستخدم sidebar للعرض**
+    with st.sidebar:
+        st.markdown(f"### 🧪 {subject.upper()}")
+
+        for i in range(len(questions)):
+            correct_text = normalize_answer(questions[i])
+            user_ans = st.session_state.user_answers[i]
+            if user_ans is None:
+                status = "⬜"
+            elif user_ans == correct_text:
+                status = "✅"
+            else:
+                status = "❌"
+
+            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+                st.session_state.current_question = i
 
     if not st.session_state.quiz_completed:
         index = st.session_state.current_question
@@ -237,26 +230,36 @@ def orders_o():
             key=f"radio_{index}"
         )
 
-        if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
-        else:
-            user_ans = st.session_state.user_answers[index]
-            if user_ans == correct_text:
-                st.success("✅ Correct answer")
-            else:
-                st.error(f"❌ Correct answer: {correct_text}")
-                if "explanation" in q:
-                    st.info(f"💡 Explanation: {q['explanation']}")
+        # عرض زر Enter/Exit Quiz Mode بجانب زر "Answer" بحجم أصغر
+        col_answer, col_quizmode = st.columns([3, 1])
 
-            if st.button("Next Question", key=f"next_{index}"):
-                if index + 1 < len(questions):
-                    st.session_state.current_question += 1
+        with col_answer:
+            if not st.session_state.answer_shown[index]:
+                if st.button("Answer", key=f"submit_{index}"):
+                    st.session_state.user_answers[index] = selected_answer
+                    st.session_state.answer_shown[index] = True
+                    st.experimental_rerun()
+            else:
+                user_ans = st.session_state.user_answers[index]
+                if user_ans == correct_text:
+                    st.success("✅ Correct answer")
                 else:
-                    st.session_state.quiz_completed = True
-                st.rerun()
+                    st.error(f"❌ Correct answer: {correct_text}")
+                    if "explanation" in q:
+                        st.info(f"💡 Explanation: {q['explanation']}")
+
+                if st.button("Next Question", key=f"next_{index}"):
+                    if index + 1 < len(questions):
+                        st.session_state.current_question += 1
+                    else:
+                        st.session_state.quiz_completed = True
+                    st.experimental_rerun()
+
+        with col_quizmode:
+            # زر صغير للتحكم بوضع الاختبار
+            if st.button(button_text, key="toggle_quiz_mode", help="Exit quiz mode"):
+                st.session_state.quiz_mode = False
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
@@ -281,4 +284,12 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
+
+
+def main():
+    orders_o()
+
+
+if __name__ == "__main__":
+    main()
