@@ -26,6 +26,7 @@ def main():
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
+                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
                 ### 👋 أهلا شباب  
                 فقط الأدمن يقدر يضيف ويحذف محاضرات.  
