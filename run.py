@@ -16,7 +16,11 @@ def main():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         login_page()
     else:
-        page = st.sidebar.radio("📂 اختر الصفحة", ["📖 الأسئلة", "➕ إضافة محاضرة"])
+        with st.sidebar:
+            # أي محتوى جانبي آخر يمكن إضافته هنا
+            st.markdown("<br>" * 25, unsafe_allow_html=True)  # مساحة فارغة لدفع الاختيار للأسفل
+            
+            page = st.radio("📂 اختر الصفحة", ["📖 الأسئلة", "➕ إضافة محاضرة"])
 
         if page == "📖 الأسئلة":
             orders_main()
@@ -26,7 +30,6 @@ def main():
                 st.session_state["admin_verified"] = False
 
             if not st.session_state["admin_verified"]:
-                # ✅ إضافة الشرح فوق مربع كلمة السر
                 st.markdown("""
                 ### 👋 أهلا شباب  
                 فقط الأدمن يقدر يضيف ويحذف محاضرات.  
