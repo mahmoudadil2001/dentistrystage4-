@@ -45,15 +45,25 @@ def orders_o():
 
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
-    col1, col2 = st.columns([1, 2])
-    with col2:
-        if st.button(button_text):
-            st.session_state.quiz_mode = not st.session_state.quiz_mode
-            if st.session_state.quiz_mode:
-                st.session_state.current_subject = st.session_state.selected_subject
-                st.session_state.current_lecture = st.session_state.selected_lecture
-                st.session_state.current_version = st.session_state.selected_version
-            st.rerun()
+# نستخدم HTML لجعل الزر في الزاوية العليا بجانب القائمة الجانبية
+button_html = f"""
+    <div style="display:flex; justify-content:flex-start; align-items:center; margin-top:-50px;">
+        <form action="#" method="post">
+            <button style="
+                background-color:#0078d7;
+                color:white;
+                border:none;
+                border-radius:8px;
+                padding:6px 12px;
+                font-size:14px;
+                cursor:pointer;
+            ">{button_text}</button>
+        </form>
+    </div>
+"""
+
+clicked = st.markdown(button_html, unsafe_allow_html=True)
+
 
         # ✅ عرض النص أسفل الزر عندما يكون في وضع Exit Quiz Mode
         if st.session_state.quiz_mode:
