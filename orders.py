@@ -45,66 +45,44 @@ def orders_o():
 
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
-# نستخدم HTML لجعل الزر في الزاوية العليا بجانب القائمة الجانبية
-button_html = f"""
-    <div style="display:flex; justify-content:flex-start; align-items:center; margin-top:-50px;">
-        <form action="#" method="post">
-            <button style="
-                background-color:#0078d7;
-                color:white;
-                border:none;
-                border-radius:8px;
-                padding:6px 12px;
-                font-size:14px;
-                cursor:pointer;
-            ">{button_text}</button>
-        </form>
-    </div>
-"""
+    # ✅ وضع الزر في الصف العلوي بجانب القائمة الجانبية
+    top_col1, top_col2 = st.columns([0.3, 0.7])
+    with top_col1:
+        if st.button(button_text, key="quiz_mode_btn"):
+            st.session_state.quiz_mode = not st.session_state.quiz_mode
+            if st.session_state.quiz_mode:
+                st.session_state.current_subject = st.session_state.selected_subject
+                st.session_state.current_lecture = st.session_state.selected_lecture
+                st.session_state.current_version = st.session_state.selected_version
+            st.rerun()
 
-clicked = st.markdown(button_html, unsafe_allow_html=True)
-
-
-        # ✅ عرض النص أسفل الزر عندما يكون في وضع Exit Quiz Mode
+        # ✅ عرض النص الأحمر أسفل الزر عند تفعيل وضع الاختبار
         if st.session_state.quiz_mode:
             subject = st.session_state.current_subject
             lec_num = st.session_state.current_lecture
             version = st.session_state.current_version
 
             lecture_titles = load_lecture_titles(subject)
-            title = lecture_titles.get(lec_num, "").strip()
-
-            display_text = f"{subject.lower()} lec{lec_num} {title.lower()} (v{version})"
+            lec_title = lecture_titles.get(lec_num, "").strip()
 
             st.markdown(
-                f"<p style='color:red; font-size:12px; margin-top:2px;'>{display_text}</p>",
-                unsafe_allow_html=True
+                f"<p style='color:red; font-size:12px;'>"
+                f"{subject} lec{lec_num} {lec_title} (v{version})"
+                f"</p>", unsafe_allow_html=True
             )
 
     if not st.session_state.quiz_mode:
         st.markdown(
             """
-            <div style="
-                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-                border-radius: 15px;
-                padding: 20px;
-                color: #003049;
-                font-family: 'Tajawal', sans-serif;
-                font-size: 18px;
-                font-weight: 600;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 25px;
-            ">
+            <div style="background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); border-radius: 15px; padding: 20px; color: #003049; font-family: 'Tajawal', sans-serif; font-size: 18px; font-weight: 600; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); margin-bottom: 25px;">
             Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            """, unsafe_allow_html=True)
 
         subjects = [
-            "endodontics","generalmedicine","generalsurgery","operative","oralpathology",
-            "oralsurgery","orthodontics","pedodontics","periodontology","prosthodontics"
+            "endodontics", "generalmedicine", "generalsurgery", "operative",
+            "oralpathology", "oralsurgery", "orthodontics", "pedodontics",
+            "periodontology", "prosthodontics"
         ]
 
         subject = st.selectbox("Select Subject", subjects, index=subjects.index(st.session_state.selected_subject))
@@ -138,6 +116,7 @@ clicked = st.markdown(button_html, unsafe_allow_html=True)
 
         selected_version = st.selectbox("Select Version", options=versions_keys, index=versions_keys.index(st.session_state.selected_version))
         st.session_state.selected_version = selected_version
+
     else:
         subject = st.session_state.current_subject
         lec_num = st.session_state.current_lecture
@@ -195,11 +174,13 @@ clicked = st.markdown(button_html, unsafe_allow_html=True)
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
+
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
             status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
-            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
+
+            if st.button(f"{status} Q {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
@@ -208,7 +189,7 @@ clicked = st.markdown(button_html, unsafe_allow_html=True)
 
         current_q_num = index + 1
         total_qs = len(questions)
-        st.markdown(f"### Q{current_q_num}/{total_qs}: {q['question']}")
+        st.markdown(f"### Q {current_q_num}/{total_qs}: {q['question']}")
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
@@ -230,7 +211,7 @@ clicked = st.markdown(button_html, unsafe_allow_html=True)
                 if "explanation" in q:
                     st.info(f"💡 Explanation: {q['explanation']}")
 
-            if st.button("Next Question", key=f"next_{index}"):
+            if st.button("Next Q", key=f"next_{index}"):
                 if index + 1 < len(questions):
                     st.session_state.current_question += 1
                 else:
@@ -252,9 +233,9 @@ clicked = st.markdown(button_html, unsafe_allow_html=True)
             user = st.session_state.user_answers[i]
             if user == correct_text:
                 correct += 1
-                st.write(f"Question {i+1}: ✅ Correct")
+                st.write(f"Q {i+1}: ✅ Correct")
             else:
-                st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
+                st.write(f"Q {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
         st.success(f"Score: {correct} out of {len(questions)}")
 
         if st.button("🔁 Restart Quiz"):
