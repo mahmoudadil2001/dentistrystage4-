@@ -3,7 +3,6 @@ import os
 import importlib.util
 import sys
 import importlib
-from streamlit_javascript import st_javascript
 
 from versions_manager import get_lectures_and_versions
 
@@ -32,7 +31,6 @@ def import_module_from_file(filepath):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
 
 def orders_o():
     if "quiz_mode" not in st.session_state:
@@ -234,16 +232,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-
-                sound_file = "correct.mp3" if selected_answer == correct_text else "wrong.mp3"
-                js_code = f"""
-                var audio = new Audio('assets/{sound_file}');
-                audio.play();
-                """
-                st_javascript(js_code)
-
-                # نترك إعادة التحميل تلقائياً بعد سماع الصوت أو بناء على زر آخر
-
+                st.rerun()
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
