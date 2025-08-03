@@ -3,7 +3,6 @@ import os
 import importlib.util
 import sys
 import importlib
-
 from versions_manager import get_lectures_and_versions
 
 
@@ -15,7 +14,7 @@ def load_lecture_titles(subject_name):
     module_name = f"{subject_name}_titles"
 
     if module_name in sys.modules:
-        del sys.modules[module_name]  # حذف من الكاش
+        del sys.modules[module_name]
 
     spec = importlib.util.spec_from_file_location(module_name, titles_file)
     module = importlib.util.module_from_spec(spec)
@@ -32,16 +31,14 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
+
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
-
     if "selected_subject" not in st.session_state:
-        st.session_state.selected_subject = "endodontics"  # القيمة الافتراضية
-
+        st.session_state.selected_subject = "endodontics"
     if "selected_lecture" not in st.session_state:
         st.session_state.selected_lecture = None
-
     if "selected_version" not in st.session_state:
         st.session_state.selected_version = 1
 
@@ -74,19 +71,14 @@ def orders_o():
             ">
             Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
             </div>
-            """
-        , unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
         subjects = [
-            "endodontics",
-            "generalmedicine",
-            "generalsurgery",
-            "operative",
-            "oralpathology",
-            "oralsurgery",
-            "orthodontics",
-            "pedodontics",
-            "periodontology",
+            "endodontics", "generalmedicine", "generalsurgery",
+            "operative", "oralpathology", "oralsurgery",
+            "orthodontics", "pedodontics", "periodontology",
             "prosthodontics"
         ]
 
@@ -99,14 +91,10 @@ def orders_o():
             return
 
         lecture_titles = load_lecture_titles(subject)
-
         lectures_options = []
         for lec_num in sorted(lectures_versions.keys()):
             title = lecture_titles.get(lec_num, "").strip()
-            if title:
-                display_name = f"Lec {lec_num}  {title}"
-            else:
-                display_name = f"Lec {lec_num}"
+            display_name = f"Lec {lec_num}  {title}" if title else f"Lec {lec_num}"
             lectures_options.append((lec_num, display_name))
 
         if st.session_state.selected_lecture in [lec[0] for lec in lectures_options]:
@@ -120,7 +108,6 @@ def orders_o():
             index=default_lecture_idx,
             format_func=lambda x: x[1]
         )[0]
-
         st.session_state.selected_lecture = lec_num
 
         versions_dict = lectures_versions.get(lec_num, {})
@@ -133,7 +120,6 @@ def orders_o():
             options=versions_keys,
             index=versions_keys.index(st.session_state.selected_version)
         )
-
         st.session_state.selected_version = selected_version
 
     else:
@@ -151,7 +137,6 @@ def orders_o():
 
     file_path = os.path.join(subject, filename)
     questions_module = import_module_from_file(file_path)
-
     if questions_module is None:
         st.error(f"⚠️ File {filename} not found or cannot be imported.")
         return
@@ -159,12 +144,11 @@ def orders_o():
     questions = getattr(questions_module, "questions", [])
     Links = getattr(questions_module, "Links", [])
 
-    # إعادة تهيئة حالة الأسئلة عند تغير المادة/المحاضرة/النسخة أو عدد الأسئلة
     if ("questions_count" not in st.session_state) or \
        (st.session_state.questions_count != len(questions)) or \
-       (st.session_state.get("current_lecture", None) != lec_num) or \
-       (st.session_state.get("current_subject", None) != subject) or \
-       (st.session_state.get("current_version", None) != selected_version):
+       (st.session_state.get("current_lecture") != lec_num) or \
+       (st.session_state.get("current_subject") != subject) or \
+       (st.session_state.get("current_version") != selected_version):
 
         st.session_state.questions_count = len(questions)
         st.session_state.current_question = 0
@@ -178,10 +162,8 @@ def orders_o():
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
-
         if isinstance(answer, int) and 0 <= answer < len(options):
             return options[answer]
-
         if isinstance(answer, str):
             answer_clean = answer.strip().upper()
             if answer_clean in ["A", "B", "C", "D"]:
@@ -190,29 +172,32 @@ def orders_o():
                     return options[idx]
             if answer in options:
                 return answer
-
         return None
+
+    def play_sound(file_name: str):
+        file_path = f"assets/{file_name}"
+        if os.path.exists(file_path):
+            st.markdown(
+                f"""
+                <audio autoplay>
+                  <source src="{file_path}" type="audio/mpeg">
+                </audio>
+                """,
+                unsafe_allow_html=True
+            )
 
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
-
         for i in range(len(questions)):
             correct_text = normalize_answer(questions[i])
             user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
+            status = "⬜" if user_ans is None else ("✅" if user_ans == correct_text else "❌")
             if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
-
         current_q_num = index + 1
         total_qs = len(questions)
         st.markdown(f"### Q {current_q_num}/{total_qs}: {q['question']}")
@@ -221,12 +206,7 @@ def orders_o():
         if st.session_state.user_answers[index] in q["options"]:
             default_idx = q["options"].index(st.session_state.user_answers[index])
 
-        selected_answer = st.radio(
-            "",
-            q["options"],
-            index=default_idx,
-            key=f"radio_{index}"
-        )
+        selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
 
         if not st.session_state.answer_shown[index]:
             if st.button("Answer", key=f"submit_{index}"):
@@ -237,8 +217,10 @@ def orders_o():
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
                 st.success("✅ Correct answer")
+                play_sound("correct.mp3")
             else:
                 st.error(f"❌ Correct answer: {correct_text}")
+                play_sound("wrong.mp3")
                 if "explanation" in q:
                     st.info(f"💡 Explanation: {q['explanation']}")
 
@@ -267,6 +249,7 @@ def orders_o():
                 st.write(f"Question {i+1}: ✅ Correct")
             else:
                 st.write(f"Question {i+1}: ❌ Wrong (Your answer: {user}, Correct: {correct_text})")
+
         st.success(f"Score: {correct} out of {len(questions)}")
 
         if st.button("🔁 Restart Quiz"):
