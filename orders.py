@@ -206,7 +206,7 @@ def orders_o():
             else:
                 status = "❌"
 
-            if st.button(f"{status} Q {i+1}", key=f"nav_{i}"):
+            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
     def show_question(index):
