@@ -209,10 +209,16 @@ def orders_o():
         selected_answer = st.radio("", q["options"], index=default_idx, key=f"radio_{index}")
 
         if not st.session_state.answer_shown[index]:
-            if st.button("Answer", key=f"submit_{index}"):
-                st.session_state.user_answers[index] = selected_answer
-                st.session_state.answer_shown[index] = True
-                st.rerun()
+    if st.button("Answer", key=f"submit_{index}"):
+        st.session_state.user_answers[index] = selected_answer
+        st.session_state.answer_shown[index] = True
+
+        correct_text = normalize_answer(q)
+        if selected_answer == correct_text:
+            play_sound("correct.mp3")
+        else:
+            play_sound("wrong.mp3")
+
         else:
             user_ans = st.session_state.user_answers[index]
             if user_ans == correct_text:
