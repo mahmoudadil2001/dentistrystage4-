@@ -32,6 +32,28 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
+
+def get_current_questions_count(subject, lec_num, version):
+    """
+    دالة مساعدة لإرجاع عدد الأسئلة لمحاضرة معينة.
+    """
+    lectures_versions = get_lectures_and_versions(subject)
+    versions_dict = lectures_versions.get(lec_num, {})
+    filename = versions_dict.get(version, None)
+
+    if not filename:
+        return 0
+
+    file_path = os.path.join(subject, filename)
+    questions_module = import_module_from_file(file_path)
+
+    if questions_module is None:
+        return 0
+
+    questions = getattr(questions_module, "questions", [])
+    return len(questions)
+
+
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
@@ -193,23 +215,10 @@ def orders_o():
 
         return None
 
-    with st.sidebar:
-        st.markdown(f"### 🧪 {subject.upper()}")
+    # **هنا لا نستخدم sidebar للعرض**
 
-        for i in range(len(questions)):
-            correct_text = normalize_answer(questions[i])
-            user_ans = st.session_state.user_answers[i]
-            if user_ans is None:
-                status = "⬜"
-            elif user_ans == correct_text:
-                status = "✅"
-            else:
-                status = "❌"
-
-            if st.button(f"{status} Question {i+1}", key=f"nav_{i}"):
-                st.session_state.current_question = i
-
-    def show_question(index):
+    if not st.session_state.quiz_completed:
+        index = st.session_state.current_question
         q = questions[index]
         correct_text = normalize_answer(q)
 
@@ -254,8 +263,6 @@ def orders_o():
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
-    if not st.session_state.quiz_completed:
-        show_question(st.session_state.current_question)
     else:
         st.header("🎉 Quiz Completed!")
         correct = 0
@@ -275,11 +282,3 @@ def orders_o():
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
             st.rerun()
-
-
-def main():
-    orders_o()
-
-
-if __name__ == "__main__":
-    main()
