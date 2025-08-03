@@ -48,8 +48,48 @@ def orders_o():
         "oralsurgery", "orthodontics", "pedodontics", "periodontology", "prosthodontics"
     ]
 
-    # واجهة اختيار المادة والمحاضرة والنسخة
+    # زر الدخول/الخروج من وضع الاختبار دائماً فوق الصناديق
+    if st.button("Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"):
+        st.session_state.quiz_mode = not st.session_state.quiz_mode
+        if st.session_state.quiz_mode:
+            st.session_state.current_subject = st.session_state.selected_subject
+            st.session_state.current_lecture = st.session_state.selected_lecture
+            st.session_state.current_version = st.session_state.selected_version
+        st.experimental_rerun()
+
+    # نص أحمر يظهر فوق الزر في وضع الاختبار
+    if st.session_state.quiz_mode:
+        subject = st.session_state.current_subject
+        lec_num = st.session_state.current_lecture
+        selected_version = st.session_state.current_version
+
+        lecture_titles = load_lecture_titles(subject)
+        title = lecture_titles.get(lec_num, "").strip()
+        display_title = f"{subject} lec{lec_num} {title} (v{selected_version})".strip()
+        st.markdown(f"<p style='color:red;font-size:13px;font-weight:bold;margin-top:-15px;margin-bottom:10px'>{display_title}</p>", unsafe_allow_html=True)
+
+    # إذا لم يكن في وضع الاختبار نعرض رسالة ترحيب زرقاء وصناديق الاختيار
     if not st.session_state.quiz_mode:
+        st.markdown(
+            """
+            <div style="
+                background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+                border-radius: 15px;
+                padding: 20px;
+                color: #003049;
+                font-family: 'Tajawal', sans-serif;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                margin-bottom: 25px;
+            ">
+            Hello students! This content is for fourth-year dental students at Al-Esraa University. Select a subject and lecture and start the quiz. Good luck!
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         subject = st.selectbox("Select Subject", subjects, index=subjects.index(st.session_state.selected_subject))
         st.session_state.selected_subject = subject
 
@@ -80,6 +120,7 @@ def orders_o():
 
         selected_version = st.selectbox("Select Version", options=versions_keys, index=versions_keys.index(st.session_state.selected_version))
         st.session_state.selected_version = selected_version
+
     else:
         subject = st.session_state.current_subject
         lec_num = st.session_state.current_lecture
@@ -117,24 +158,6 @@ def orders_o():
         st.session_state.current_subject = subject
         st.session_state.current_version = selected_version
 
-    # 🔹 شريط علوي يحوي زر Enter/Exit Quiz Mode
-    top_col1, top_col2 = st.columns([1, 4])
-    with top_col1:
-        if st.session_state.quiz_mode:
-            lecture_titles = load_lecture_titles(subject)
-            title = lecture_titles.get(lec_num, "").strip()
-            display_title = f"{subject} lec{lec_num} {title} (v{selected_version})".strip()
-            st.markdown(f"<p style='color:red;font-size:13px;font-weight:bold;margin-bottom:3px'>{display_title}</p>", unsafe_allow_html=True)
-
-        if st.button("Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"):
-            st.session_state.quiz_mode = not st.session_state.quiz_mode
-            if st.session_state.quiz_mode:
-                st.session_state.current_subject = st.session_state.selected_subject
-                st.session_state.current_lecture = st.session_state.selected_lecture
-                st.session_state.current_version = st.session_state.selected_version
-            st.rerun()
-
-    # 🔹 الدوال المساعدة
     def normalize_answer(q):
         answer = q.get("answer") or q.get("correct_answer")
         options = q["options"]
@@ -149,7 +172,7 @@ def orders_o():
                 return answer
         return None
 
-    # 🔹 شريط جانبي للتنقل بين الأسئلة
+    # شريط التنقل في الشريط الجانبي
     with st.sidebar:
         st.markdown(f"### 🧪 {subject.upper()}")
         for i in range(len(questions)):
@@ -159,7 +182,6 @@ def orders_o():
             if st.button(f"{status} Q{i+1}", key=f"nav_{i}"):
                 st.session_state.current_question = i
 
-    # 🔹 عرض السؤال الحالي
     def show_question(index):
         q = questions[index]
         correct_text = normalize_answer(q)
@@ -181,7 +203,7 @@ def orders_o():
             if st.button("Answer", key=f"submit_{index}"):
                 st.session_state.user_answers[index] = selected_answer
                 st.session_state.answer_shown[index] = True
-                st.rerun()
+                st.experimental_rerun()
         else:
             if st.session_state.user_answers[index] == correct_text:
                 st.success("✅ Correct answer")
@@ -195,14 +217,13 @@ def orders_o():
                     st.session_state.current_question += 1
                 else:
                     st.session_state.quiz_completed = True
-                st.rerun()
+                st.experimental_rerun()
 
         if Links:
             st.markdown("---")
             for link in Links:
                 st.markdown(f"- [{link['title']}]({link['url']})")
 
-    # 🔹 التحكم في عرض الأسئلة
     if not st.session_state.quiz_completed:
         show_question(st.session_state.current_question)
     else:
@@ -217,7 +238,7 @@ def orders_o():
             st.session_state.user_answers = [None] * len(questions)
             st.session_state.answer_shown = [False] * len(questions)
             st.session_state.quiz_completed = False
-            st.rerun()
+            st.experimental_rerun()
 
 
 def main():
