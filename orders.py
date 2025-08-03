@@ -32,6 +32,7 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
+
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
@@ -215,7 +216,22 @@ def orders_o():
 
         current_q_num = index + 1
         total_qs = len(questions)
+
+        # العنصر الذي سنمرر إليه الصفحة تلقائيًا
+        st.markdown(f'<div id="question_current"></div>', unsafe_allow_html=True)
+
         st.markdown(f"### Question {current_q_num}/{total_qs}: {q['question']}")
+
+        # إضافة كود جافاسكريبت للتمرير التلقائي للسؤال
+        scroll_script = """
+        <script>
+        const el = document.getElementById('question_current');
+        if(el) {
+            el.scrollIntoView({behavior: 'smooth'});
+        }
+        </script>
+        """
+        st.markdown(scroll_script, unsafe_allow_html=True)
 
         default_idx = 0
         if st.session_state.user_answers[index] in q["options"]:
