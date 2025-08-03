@@ -120,6 +120,12 @@ def orders_o():
     # 🔹 شريط علوي يحوي زر Enter/Exit Quiz Mode
     top_col1, top_col2 = st.columns([1, 4])
     with top_col1:
+        if st.session_state.quiz_mode:
+            lecture_titles = load_lecture_titles(subject)
+            title = lecture_titles.get(lec_num, "").strip()
+            display_title = f"{subject} lec{lec_num} {title} (v{selected_version})".strip()
+            st.markdown(f"<p style='color:red;font-size:13px;font-weight:bold;margin-bottom:3px'>{display_title}</p>", unsafe_allow_html=True)
+
         if st.button("Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"):
             st.session_state.quiz_mode = not st.session_state.quiz_mode
             if st.session_state.quiz_mode:
@@ -127,13 +133,6 @@ def orders_o():
                 st.session_state.current_lecture = st.session_state.selected_lecture
                 st.session_state.current_version = st.session_state.selected_version
             st.rerun()
-
-    # 🔹 النص يظهر فوق الزر عند تفعيل وضع الاختبار
-    if st.session_state.quiz_mode:
-        lecture_titles = load_lecture_titles(subject)
-        title = lecture_titles.get(lec_num, "").strip()
-        display_title = f"{subject} lec{lec_num} {title} (v{selected_version})".strip()
-        st.markdown(f"<p style='color:red;font-size:13px;font-weight:bold;margin-top:-8px'>{display_title}</p>", unsafe_allow_html=True)
 
     # 🔹 الدوال المساعدة
     def normalize_answer(q):
