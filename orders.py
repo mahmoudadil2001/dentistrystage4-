@@ -32,7 +32,6 @@ def import_module_from_file(filepath):
     spec.loader.exec_module(module)
     return module
 
-
 def orders_o():
     if "quiz_mode" not in st.session_state:
         st.session_state.quiz_mode = False
@@ -45,19 +44,6 @@ def orders_o():
 
     if "selected_version" not in st.session_state:
         st.session_state.selected_version = 1
-
-    # إضافة مساحة بيضاء أسفل الصفحة فقط في وضع الاختبار
-    if st.session_state.quiz_mode:
-        st.markdown(
-            """
-            <style>
-            .main > div.block-container {
-                padding-bottom: 300px !important;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
 
     button_text = "Enter Quiz Mode" if not st.session_state.quiz_mode else "Exit Quiz Mode"
 
